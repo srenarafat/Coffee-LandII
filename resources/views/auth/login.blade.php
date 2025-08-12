@@ -60,12 +60,14 @@
         @enderror
     </div>
 
-    <div class="flex items-center justify-between text-sm text-gray-600">
-        <label class="flex items-center">
+    <div class="flex items-center justify-between text-sm">
+        <label class="flex items-center text-gray-600">
             <input type="checkbox" name="remember" class="mr-2 text-[#5f2e18]" {{ old('remember') ? 'checked' : '' }}>
             Remember me
         </label>
-        <a href="{{ route('password.request') }}" class="hover:underline">Forgot password?</a>
+        <a href="{{ route('password.request') }}" class="text-[#5f2e18] hover:underline font-semibold">
+            Forgot password?
+        </a>
     </div>
 
     <button type="submit" class="w-full bg-[#5f2e18] text-white py-2 rounded-md font-semibold hover:bg-[#3e1b0d] transition">
