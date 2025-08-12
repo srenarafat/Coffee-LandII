@@ -23,16 +23,15 @@ use App\Http\Controllers\Auth\NewPasswordController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
-        ->name('password.request');
+    ->middleware('guest')->name('password.request');
 
-    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->name('password.email');
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')->name('password.email');
 
-    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->middleware('guest')->name('password.reset');
 
-    Route::post('/reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.update');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('guest')->name('password.store');
 });
 
 // ✅ Default Landing: Redirect to POS or dashboard based on role
