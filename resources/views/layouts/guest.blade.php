@@ -17,6 +17,10 @@
 
     <!-- Custom Styles (optional) -->
     <style>
+        .border-brown-700 { border-color:#4e2e1c; }
+        .bg-brown-700 { background-color:#4e2e1c; }
+        .hover\:bg-brown-700:hover { background-color:#4e2e1c; }
+        .hover\:bg-brown-800:hover { background-color:#3e2416; }
         body {
             background-color:rgba(215, 211, 211, 1);
         }
