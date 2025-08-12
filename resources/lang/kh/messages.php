@@ -82,6 +82,8 @@ return [
     'user_created_successfully' => 'បង្កើតអ្នកប្រើបានជោគជ័យ',
     'user_updated_successfully' => 'កែប្រែអ្នកប្រើបានជោគជ័យ',
     'user_deleted_successfully' => 'លុបអ្នកប្រើបានជោគជ័យ',
+    'cannot_delete_superadmin' => 'មិនអាចលុបបានទេ',
+    'cannot_delete_self' => 'អ្នកមិនអាចលុបខ្លួនឯងបានទេ',
     'settings_updated_successfully' => 'កែប្រែការកំណត់បានជោគជ័យ',
     'total_sales' => 'ការលក់សរុប',
     'total_orders' => 'បញ្ជាទិញសរុប',

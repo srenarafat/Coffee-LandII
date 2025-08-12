@@ -82,6 +82,8 @@ return [
     'user_created_successfully' => 'User created successfully.',
     'user_updated_successfully' => 'User updated successfully.',
     'user_deleted_successfully' => 'User deleted successfully.',
+    'cannot_delete_superadmin' => 'Cannot delete a super admin.',
+    'cannot_delete_self' => 'You cannot delete yourself.',
     'settings_updated_successfully' => 'Settings updated successfully.',
     'total_sales' => 'Total Sales',
     'total_orders' => 'Total Orders',

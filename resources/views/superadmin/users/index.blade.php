@@ -54,13 +54,15 @@
                                     <a href="{{ route('superadmin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary">
                                          {{ __('messages.edit') }}
                                     </a>
-                                    <form action="{{ route('superadmin.users.destroy', $user->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('messages.delete_user_confirm') }}')">
-                                             {{ __('messages.delete') }}
-                                        </button>
-                                    </form>
+                                    @if ($user->role !== 'superadmin' && $user->id !== auth()->id())
+                                        <form action="{{ route('superadmin.users.destroy', $user->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ __('messages.delete_user_confirm') }}')">
+                                                 {{ __('messages.delete') }}
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

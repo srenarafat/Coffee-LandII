@@ -131,6 +131,14 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', __('messages.cannot_delete_self'));
+        }
+
+        if ($user->role === 'superadmin') {
+            return back()->with('error', __('messages.cannot_delete_superadmin'));
+        }
+
         $user->delete();
         SystemLog::create([
             'user_id' => auth()->id(),
