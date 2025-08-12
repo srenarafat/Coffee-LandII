@@ -1,0 +1,196 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\Snappy\Facades\SnappyPdf;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CashierController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SalesReportController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Cashier\SaleController as PosController;
+use App\Http\Controllers\Cashier\InvoiceController;
+use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
+use App\Http\Controllers\SystemLogController;
+use App\Http\Controllers\CommentController;
+
+// ✅ Default Landing: Redirect to POS or dashboard based on role
+Route::get('/', function () {
+    if (Auth::check()) {
+        if (Auth::user()->role === 'superadmin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+        return Auth::user()->role === 'admin'
+            ? redirect()->route('admin.pos.index')
+            : redirect()->route('cashier.pos.index');
+    }
+    return redirect()->route('login');
+});
+
+// ✅ Universal dashboard redirect
+Route::get('/dashboard', function () {
+    if (Auth::check()) {
+        if (Auth::user()->role === 'superadmin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+        return Auth::user()->role === 'admin'
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('cashier.dashboard');
+    }
+    return redirect()->route('login');
+})->middleware(['auth'])->name('dashboard');
+
+// ✅ Logout Route
+Route::get('/logout', function () {
+    Auth::logout();
+    return redirect('/login');
+})->name('logout');
+
+
+// ✅ Extra Profile Options
+Route::prefix('profile')->name('profile.')->middleware(['auth'])->group(function () {
+    Route::get('/info', [ProfileController::class, 'info'])->name('info');
+   
+});
+
+
+// ✅ Profile Info Route
+Route::get('/profile-info', [ProfileController::class, 'info'])
+    ->middleware('auth')
+    ->name('profile.info');
+
+// ✅ Super Admin Routes
+Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
+    Route::resource('products', ProductController::class)->except(['show']);
+    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
+    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
+    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
+    Route::resource('users', SuperAdminUserController::class);
+    Route::get('system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
+    
+    // POS Routes for Super Admin
+    Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+    Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
+    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
+    Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
+    Route::post('pos/table', [PosController::class, 'setTable'])->name('pos.table');
+    Route::match(['get', 'post'], 'pos/payment', [PosController::class, 'payment'])->name('pos.payment');
+    Route::post('pos/note', [PosController::class, 'updateNote'])->name('pos.note');
+
+    Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
+    Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
+    Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
+    
+    Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
+    Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
+    Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
+    Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
+});
+
+// ✅ Admin Routes
+Route::middleware(['auth', 'role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // ✅ AI Assistant Routes (for Admin)
+Route::get('ai-assistant', function () {
+    return view('admin.ai-assistant'); // Blade view
+})->name('ai.assistant');
+
+Route::post('/ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
+Route::get('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::class, 'index'])->name('admin.ai.index');
+Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('admin.ai.chat');
+
+
+
+    Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
+    Route::resource('products', ProductController::class)->except(['show']);
+
+    Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+    Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
+    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
+    Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
+    Route::post('pos/table', [PosController::class, 'setTable'])->name('pos.table');
+    Route::match(['get', 'post'], 'pos/payment', [PosController::class, 'payment'])->name('pos.payment');
+    
+    Route::post('pos/note', [PosController::class, 'updateNote'])->name('pos.note');
+
+    Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
+    Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
+    Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
+
+    Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
+    
+    Route::resource('users', UserController::class)->except(['show']);
+    Route::get('users/export', [UserController::class, 'exportCsv'])->name('users.export');
+
+    Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
+    Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
+    Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
+    
+    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
+    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
+    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
+
+});
+
+// ✅ Cashier Routes
+Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')->group(function () {
+    Route::get('dashboard', [CashierController::class, 'dashboard'])->name('dashboard');
+
+    Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+    Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
+    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
+    Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
+    Route::post('pos/table', [PosController::class, 'setTable'])->name('pos.table');
+    Route::match(['get', 'post'], 'pos/payment', [PosController::class, 'payment'])->name('pos.payment');
+    
+    Route::post('pos/note', [PosController::class, 'updateNote'])->name('pos.note');
+
+    Route::get('sales-history', [PosController::class, 'history'])->name('sales.history');
+
+    Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
+    Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
+    Route::get('invoice/{sale}/print', [InvoiceController::class, 'printView'])->name('invoice.print');
+    
+    // AI Assistant chat endpoint for cashiers
+    Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
+});
+   
+
+Route::get('/lang/switch', [LanguageController::class, 'switch'])->name('lang.switch');
+
+Route::get('/customer-screen', function () {
+    return view('customer.cart-view');
+})->name('customer.view');
+
+Route::get('/api/cart', function () {
+    $cart = session('cart', []);
+    return response()->json([
+        'items'        => array_values($cart), // Reset keys for frontend
+        'order_number' => session('order_number'),
+        'table_number' => session('table_number'),
+    ]);
+});
+
+// ✅ Authentication Routes
+require __DIR__.'/auth.php';
