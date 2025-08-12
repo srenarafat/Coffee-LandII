@@ -1,26 +1,28 @@
 @extends('layouts.guest')
-@section('title','Reset Password')
 @section('content')
-<div class="container py-5" style="max-width:480px">
-  <h4 class="mb-3">Set a new password</h4>
-  <form method="POST" action="{{ route('password.update') }}">
+<div class="mx-auto w-full max-w-md bg-white rounded-xl shadow p-6">
+  <h2 class="text-xl font-semibold mb-4">Set a new password</h2>
+
+  <form method="POST" action="{{ route('password.update') }}" class="space-y-3">
     @csrf
     <input type="hidden" name="token" value="{{ $token }}">
-    <div class="mb-3">
-      <label class="form-label">Email</label>
-      <input type="email" name="email" class="form-control" required value="{{ request('email') }}">
-      @error('email') <small class="text-danger">{{ $message }}</small> @enderror
+    <div>
+      <label class="block text-sm mb-1">Email</label>
+      <input name="email" type="email" class="w-full border rounded px-3 py-2" required value="{{ request('email') }}">
+      @error('email') <div class="text-red-600 text-sm mt-1">{{ $message }}</div> @enderror
     </div>
-    <div class="mb-3">
-      <label class="form-label">Password</label>
-      <input type="password" name="password" class="form-control" required>
-      @error('password') <small class="text-danger">{{ $message }}</small> @enderror
+    <div>
+      <label class="block text-sm mb-1">Password</label>
+      <input name="password" type="password" class="w-full border rounded px-3 py-2" required>
+      @error('password') <div class="text-red-600 text-sm mt-1">{{ $message }}</div> @enderror
     </div>
-    <div class="mb-3">
-      <label class="form-label">Confirm Password</label>
-      <input type="password" name="password_confirmation" class="form-control" required>
+    <div>
+      <label class="block text-sm mb-1">Confirm Password</label>
+      <input name="password_confirmation" type="password" class="w-full border rounded px-3 py-2" required>
     </div>
-    <button class="btn btn-success w-100">Reset Password</button>
+    <button class="w-full bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2">
+      Reset Password
+    </button>
   </form>
 </div>
 @endsection

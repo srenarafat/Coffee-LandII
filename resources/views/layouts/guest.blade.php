@@ -1,29 +1,33 @@
-{{-- resources/views/auth/forgot-password.blade.php --}}
-@extends('layouts.guest')
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ __('messages.pos') }} System - {{ optional($setting)->shop_name ?? 'Coffee Land' }}</title>
 
-@section('content')
-<div class="mx-auto w-full max-w-md bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold mb-1">Forgot your password?</h2>
-    <p class="text-sm text-gray-600 mb-4">Enter your email and we’ll send a reset link.</p>
 
-    @if (session('status'))
-        <div class="mb-3 text-green-700 bg-green-100 border border-green-200 rounded p-2">
-            {{ session('status') }}
-        </div>
-    @endif
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <form method="POST" action="{{ route('password.email') }}" class="space-y-3">
-        @csrf
-        <div>
-            <label class="block text-sm mb-1">Email</label>
-            <input type="email" name="email" required autofocus
-                   class="w-full border rounded px-3 py-2"
-                   value="{{ old('email') }}">
-            @error('email') <div class="text-red-600 text-sm mt-1">{{ $message }}</div> @enderror
-        </div>
-        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2">
-            Email Password Reset Link
-        </button>
-    </form>
-</div>
-@endsection
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <!-- Favicon (optional) -->
+    <link rel="icon" href="{{ asset('images/coffeeland-logo.png') }}" type="image/png">
+
+    <!-- Custom Styles (optional) -->
+    <style>
+        body {
+            background-color:rgba(215, 211, 211, 1);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-700">
+
+    {{-- Main Content --}}
+    <main>
+        @yield('content')
+    </main>
+
+</body>
+</html>
