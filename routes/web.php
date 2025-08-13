@@ -9,8 +9,12 @@ use App\Http\Controllers\CashierController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesReportController;
+use App\Http\Controllers\Admin\TopProductsController;
+use App\Http\Controllers\Admin\SlowProductController;
+use App\Http\Controllers\Admin\ZReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Cashier\SaleController as PosController;
 use App\Http\Controllers\Cashier\InvoiceController;
 use App\Http\Controllers\LanguageController;
@@ -109,9 +113,15 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
     
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
+    Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
+    Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
     Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
     Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
+    Route::get('reports/top-products/week', [TopProductsController::class, 'week'])->name('reports.top-products.week');
+    Route::get('reports/z-report', [ZReportController::class, 'index'])->name('reports.zreport');
+    Route::get('reports/slow-products', [SlowProductController::class, 'index'])->name('reports.slow-products');
+    Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
 });
 
 // ✅ Admin Routes
@@ -148,13 +158,25 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
 
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
+    Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
+    Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
+
     
+    Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
+
+    Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
+
     Route::resource('users', UserController::class)->except(['show']);
     Route::get('users/export', [UserController::class, 'exportCsv'])->name('users.export');
 
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
     Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
     Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
+    Route::get('reports/top-products/week', [TopProductsController::class, 'week'])->name('reports.top-products.week');
+    Route::get('reports/z-report', [ZReportController::class, 'index'])->name('reports.zreport');
+    Route::get('reports/slow-products', [SlowProductController::class, 'index'])->name('reports.slow-products');
+    Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
+
     
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');

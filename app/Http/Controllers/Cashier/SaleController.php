@@ -325,7 +325,7 @@ class SaleController extends Controller
 
     public function history(Request $request)
     {
-        $query = Sale::with(['items.product', 'user'])->where('user_id', auth()->id());
+        $query = Sale::with(['items.product.category', 'user'])->where('user_id', auth()->id());
         $categories = Category::all();
 
         if ($request->from) {

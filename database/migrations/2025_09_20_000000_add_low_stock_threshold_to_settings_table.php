@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->decimal('exchange_rate', 8, 2)->default(4100.00);
+            $table->unsignedInteger('low_stock_threshold')->nullable();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            $table->dropColumn('exchange_rate');
+            $table->dropColumn('low_stock_threshold');
         });
     }
 };

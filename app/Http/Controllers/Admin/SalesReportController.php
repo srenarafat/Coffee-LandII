@@ -17,30 +17,19 @@ class SalesReportController extends Controller
 {
     public function index(Request $request)
     {
-        $shopId = auth()->user()->role === 'superadmin'
-            ? $request->input('shop_id')
-            : auth()->user()->shop_id;
-
-        $salesQuery = Sale::with('items.product.category', 'user')
-            ->when($shopId, fn ($q) => $q->where('shop_id', $shopId))
-            ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
-            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->category_id, fn ($q) =>
-                $q->whereHas('items.product.category', fn ($q2) => $q2->where('id', $request->category_id)))
-            ->orderBy('created_at', 'desc');
+        $salesQuery = $this->buildSalesQuery($request);
 
             $totalAmount = (clone $salesQuery)->sum('total');
-
-            $isPrint = $request->boolean('print');
-
-        if ($request->get('export') === 'csv') {
-            return $this->exportCsv($salesQuery->get());
-        }
+        $isPrint = $request->boolean('print');
 
         $sales = $isPrint
             ? $salesQuery->get()
             : $salesQuery->paginate(20)->withQueryString();
+            
+        $shopId = auth()->user()->role === 'superadmin'
+            ? $request->input('shop_id')
+            : auth()->user()->shop_id;
+
         $roles = ['cashier', 'admin', 'superadmin'];
 
         if (auth()->user()->role === 'superadmin') {
@@ -62,8 +51,49 @@ class SalesReportController extends Controller
         return view('admin.sales.report', compact('sales', 'users', 'totalAmount', 'categories'));
     }
 
+    public function export(Request $request)
+    {
+        $sales = $this->buildSalesQuery($request)->get();
+
+        return $this->exportCsv($sales);
+    }
+
+    public function print(Request $request)
+    {
+        $request->merge(['print' => 1]);
+
+        return $this->index($request);
+    }
+
+    protected function buildSalesQuery(Request $request)
+    {
+        $shopId = auth()->user()->role === 'superadmin'
+            ? $request->input('shop_id')
+            : auth()->user()->shop_id;
+
+        return Sale::with('items.product.category', 'user')
+            ->when($shopId, fn ($q) => $q->where('shop_id', $shopId))
+            ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
+            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
+            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
+            ->when($request->category_id, fn ($q) =>
+                $q->whereHas('items.product.category', fn ($q2) => $q2->where('id', $request->category_id)))
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function today(Request $request)
+    {
+        $today = today()->toDateString();
+        $request->merge([
+            'start_date' => $today,
+            'end_date' => $today,
+        ]);
+
+        return $this->index($request);
+    }
+
     protected function exportCsv($sales)
-{
+    {
     $filename = "admin_sales_report_" . now()->format('Ymd_His') . ".csv";
 
     $headers = [
@@ -143,7 +173,7 @@ public function topQuantitySales(Request $request)
             DB::raw('YEAR(sales.created_at)')
         )
         ->orderByDesc('total_quantity')
-        ->with('product');
+        ->with('product.category');
 
     // 🕒 Date filtering
     if ($period === 'today') {

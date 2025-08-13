@@ -20,7 +20,7 @@
                class="btn btn-success btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
                 ⬇️ {{ __('messages.export_csv') }}
             </a>
-            <a href="{{ request()->fullUrlWithQuery(['print' => 1]) }}"
+            <a href="{{ $printRoute }}"
                class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
                 🖨️ {{ __('messages.print') }}
             </a>

@@ -8,11 +8,11 @@
             'sales' => $sales,
             'totalAmount' => $totalAmount,
             'exportRoute' => auth()->user()->role === 'superadmin'
-                ? route('superadmin.sales.report', array_merge(request()->except('page'), ['export' => 'csv']))
-                : route('admin.sales.report', array_merge(request()->except('page'), ['export' => 'csv'])),
+                ? route('superadmin.reports.sales.export', request()->except('page'))
+                : route('admin.reports.sales.export', request()->except('page')),
             'printRoute' => auth()->user()->role === 'superadmin'
-                ? route('superadmin.sales.report', array_merge(request()->all(), ['print' => 1]))
-                : route('admin.sales.report', array_merge(request()->all(), ['print' => 1])),
+                ? route('superadmin.reports.sales.print', request()->all())
+                : route('admin.reports.sales.print', request()->all()),
             'filter' => view('admin.sales.filter', ['users' => $users, 'categories' => $categories])->render(),
         ])
     </div>

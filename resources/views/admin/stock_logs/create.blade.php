@@ -21,7 +21,9 @@
                     <label class="form-label">{{ __('messages.product') }}</label>
                     <select name="product_id" class="form-select shadow-sm" required>
                         @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }} (Stock: {{ $product->stock }})</option>
+                            <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
+                                {{ $product->name }} (Stock: {{ $product->stock }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -29,8 +31,8 @@
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.type') }}</label>
                     <select name="type" class="form-select shadow-sm" required>
-                        <option value="in">{{ __('messages.stock_in') }}</option>
-                        <option value="out">{{ __('messages.stock_out') }}</option>
+                        <option value="in" {{ request('type', 'in') === 'in' ? 'selected' : '' }}>{{ __('messages.stock_in') }}</option>
+                        <option value="out" {{ request('type') === 'out' ? 'selected' : '' }}>{{ __('messages.stock_out') }}</option>
                     </select>
                 </div>
 

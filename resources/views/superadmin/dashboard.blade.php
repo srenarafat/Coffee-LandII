@@ -10,45 +10,6 @@
     </div>
 </div>
 
-
-    <!-- Overview Cards -->
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-3 mb-4">
-    <div class="col">
-        <div style="background-color:rgb(94, 90, 90);" class="text-white rounded p-3 text-center shadow-sm h-100">
-            <div><i class="bi bi-currency-dollar fs-2 mb-2"></i></div>
-            <h6 class="fw-bold">{{ __('messages.total_sales') }}</h6>
-            <h4>{{ optional($setting)->currency ?? '$' }}{{ number_format($salesTotal, 2) }}</h4>
-        </div>
-    </div>
-    <div class="col">
-        <div style="background-color:rgb(69, 161, 184);" class="text-white rounded p-3 text-center shadow-sm h-100">
-            <div><i class="bi bi-box-fill fs-2 mb-2"></i></div>
-            <h6 class="fw-bold">{{ __('messages.total_orders') }}</h6>
-            <h4>{{ $invoiceCount }}</h4>
-        </div>
-    </div>
-    <div class="col">
-        <div style="background-color:rgb(74, 91, 141);" class="text-white rounded p-3 text-center shadow-sm h-100">
-            <div><i class="bi bi-people-fill fs-2 mb-2"></i></div>
-            <h6 class="fw-bold">{{ __('messages.total_users') }}</h6>
-            <h4>{{ $totalUsers }}</h4>
-        </div>
-    </div>
-    <div class="col">
-        <div style="background-color:rgb(158, 74, 81);" class="text-white rounded p-3 text-center shadow-sm h-100">
-            <div><i class="bi bi-card-list fs-2 mb-2"></i></div>
-            <h6 class="fw-bold">{{ __('messages.total_products') }}</h6>
-            <h4>{{ $productCount }}</h4>
-        </div>
-    </div>
-    <div class="col">
-        <div style="background-color:rgb(93, 146, 113);" class="text-white rounded p-3 text-center shadow-sm h-100">
-            <div><i class="bi bi-tags-fill fs-2 mb-2"></i></div>
-            <h6 class="fw-bold">{{ __('messages.total_categories') }}</h6>
-            <h4>{{ $categoryCount }}</h4>
-        </div>
-    </div>
-</div>
     <!-- Charts and Transactions -->
     <div class="row">
         <!-- Chart -->
@@ -120,26 +81,16 @@ const ctx = document.getElementById('barChart').getContext('2d');
 new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        labels: @json($chartLabels),
         datasets: [{
                 label: '{{ __('messages.sales') }}',
-                data: [0, 200, 160, 180, 240, 300, 260],
-                fill: true,
-                backgroundColor: 'rgba(0, 255, 255, 0.4)', // aqua
-                borderColor: 'rgba(0, 255, 255, 1)',
-                tension: 0.5,
-                pointRadius: 0
-            },
-            {
-                label: '{{ __('messages.earnings') }}',
-                data: [0, 260, 210, 230, 300, 400, 320],
-                fill: '-1', // stack on top of previous
-                backgroundColor: 'rgba(255, 221, 128, 0.6)', // light yellow
-                borderColor: 'rgba(255, 221, 128, 1)',
-                tension: 0.5,
-                pointRadius: 0
-            }
-        ]
+            data: @json($chartData),
+            fill: true,
+            backgroundColor: 'rgba(0, 255, 255, 0.4)', // aqua
+            borderColor: 'rgba(0, 255, 255, 1)',
+            tension: 0.5,
+            pointRadius: 0
+        }]
     },
     options: {
         responsive: true,
