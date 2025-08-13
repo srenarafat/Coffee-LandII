@@ -13,7 +13,9 @@ return new class extends Migration
         });
 
         Schema::table('sales', function (Blueprint $table) {
-            $table->index('created_at');
+            if (!Schema::hasIndex('sales', 'sales_created_at_index')) {
+                $table->index('created_at');
+            }
         });
     }
 
@@ -24,7 +26,9 @@ return new class extends Migration
         });
 
         Schema::table('sales', function (Blueprint $table) {
-            $table->dropIndex(['created_at']);
+            if (Schema::hasIndex('sales', 'sales_created_at_index')) {
+                $table->dropIndex(['created_at']);
+            }
         });
     }
 };
