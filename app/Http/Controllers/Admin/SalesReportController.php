@@ -21,7 +21,7 @@ class SalesReportController extends Controller
             ? $request->input('shop_id')
             : auth()->user()->shop_id;
 
-        $salesQuery = Sale::with('items.product.category', 'user')
+        $salesQuery = Sale::with(['items.product.category', 'user'])
             ->when($shopId, fn ($q) => $q->where('shop_id', $shopId))
             ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
             ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))

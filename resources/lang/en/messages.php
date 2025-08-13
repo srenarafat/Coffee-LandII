@@ -17,6 +17,7 @@ return [
     'Sale report' => 'Sale Report',
     'setting' => 'Setting',
     'users' => 'Users',
+    'user' => 'User',
     'ai_chat' => 'AI Chat',
     'top_qty' => 'Top Qty',
     'month' => 'Month',

@@ -40,7 +40,7 @@
         <tr>
             <tr>
                 <th style="white-space: nowrap;">{{ __('messages.invoice') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.role') }}</th>
+                <th style="white-space: nowrap;">{{ __('messages.user') }}</th>
                 <th style="white-space: nowrap;">{{ __('messages.date') }}</th>
                 <th style="white-space: nowrap;">{{ __('messages.category') }}</th>
                 <th style="white-space: nowrap;">{{ __('messages.item_names') }}</th>
@@ -55,7 +55,7 @@
         @forelse ($sales as $sale)
         <tr>
             <td>{{ $sale->invoice_no }}</td>
-            <td>{{ $sale->user->role ?? '-' }}</td>
+            <td>{{ $sale->user->name ?? '-' }}</td>
             <td>{{ $sale->created_at->format('d M Y, H:i') }}</td>
             @php
                 $categoryNames = $sale->items->pluck('product.category.name')->unique();
