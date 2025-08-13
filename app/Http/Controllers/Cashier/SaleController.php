@@ -218,10 +218,9 @@ class SaleController extends Controller
     $discountAmount = $subtotal * ($discountPercent / 100);
     $total = $subtotal - $discountAmount;
 
-    $exchangeRate = 4100;
+    $exchangeRate = Setting::first()->exchange_rate;
     $cashUsd = floatval($request->input('cash_usd', 0));
     $cashRiel = intval(str_replace(',', '', $request->input('cash_riel', 0)));
-    $rate = Setting::first()->exchange_rate;
     $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
     if ($totalPaidUsd < $total) {
         return back()->with('error', __('messages.insufficient_payment'));
@@ -246,7 +245,6 @@ class SaleController extends Controller
         'change_usd'     => $changeUsd,
         'change_riel'    => $changeRiel,
         'exchange_rate'  => $exchangeRate,
-        'exchange_rate'  => $rate,
     ]);
 
     $sale->update([
