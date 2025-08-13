@@ -29,6 +29,11 @@
 
 <body>
 
+    @php
+        $currency = optional($setting)->currency ?? '$';
+        $rate = $sale->exchange_rate;
+    @endphp
+
     @if (!empty($logoBase64))
     <div style="text-align: center; margin-bottom: 5px; padding-top: 20px;">
         <img src="{{ $logoBase64 }}" style="height: 80px;">
@@ -172,7 +177,7 @@
                         <img src="{{ $scanBase64 }}" alt="QR Code" style="width: 90px; margin-bottom: 3px;">
                         <div style="font-size: 10px; font-weight: bold;">SIEK SREYMOM</div>
                         <div style="font-size: 8px; margin-top: 2px;">
-                            ពន្ធអាករ/Tax = 10% <br> អាត្រាប្តូប្រាក់ {{ optional($setting)->currency ?? '$' }}1 = 4100៛
+                            ពន្ធអាករ/Tax = 10% <br> អាត្រាប្តូប្រាក់ {{ $currency }}1 = {{ number_format($rate) }}៛
                         </div>
                     </td>
                     @endif

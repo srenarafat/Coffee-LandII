@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::table('sales', function (Blueprint $table) {
-            $table->decimal('exchange_rate', 8, 2)->default(4100.00);
+            $table->unsignedInteger('exchange_rate')->default(4100)->after('total');
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->dropColumn('exchange_rate');

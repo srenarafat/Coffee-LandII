@@ -218,13 +218,16 @@ class SaleController extends Controller
     $discountAmount = $subtotal * ($discountPercent / 100);
     $total = $subtotal - $discountAmount;
 
+    $exchangeRate = 4100;
     $cashUsd = floatval($request->input('cash_usd', 0));
     $cashRiel = intval(str_replace(',', '', $request->input('cash_riel', 0)));
     $rate = Setting::first()->exchange_rate;
-    $totalPaidUsd = $cashUsd + ($cashRiel / $rate);
+    $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
     if ($totalPaidUsd < $total) {
         return back()->with('error', __('messages.insufficient_payment'));
     }
+    $changeUsd = $totalPaidUsd - $total;
+    $changeRiel = intval(round($changeUsd * $exchangeRate));
 
     $shopId = auth()->user()->role === 'superadmin'
         ? $request->input('shop_id')
@@ -238,10 +241,11 @@ class SaleController extends Controller
         'discount'       => $discountAmount,
         'total'          => $total,
         'payment_method' => $request->input('method', 'cash'),
-        'cash_usd'       => floatval($request->input('cash_usd', 0)),
-        'cash_riel'      => intval(str_replace(',', '', $request->input('cash_riel', 0))),
-        'change_usd'     => floatval($request->input('change_usd', 0)),
-        'change_riel'    => intval(str_replace(',', '', $request->input('change_riel', 0))),
+        'cash_usd'       => $cashUsd,
+        'cash_riel'      => $cashRiel,
+        'change_usd'     => $changeUsd,
+        'change_riel'    => $changeRiel,
+        'exchange_rate'  => $exchangeRate,
         'exchange_rate'  => $rate,
     ]);
 
