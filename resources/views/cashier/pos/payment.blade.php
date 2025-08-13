@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalAmount = document.getElementById('totalAmount');
 
 
-    const exchangeRate = 4100;
+    const exchangeRate = {{ $setting->exchange_rate }};
     const originalTotal = {{ $total ?? 0 }};
     let selectedInput = cashInputUsd;
 

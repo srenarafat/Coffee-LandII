@@ -220,7 +220,8 @@ class SaleController extends Controller
 
     $cashUsd = floatval($request->input('cash_usd', 0));
     $cashRiel = intval(str_replace(',', '', $request->input('cash_riel', 0)));
-    $totalPaidUsd = $cashUsd + ($cashRiel / 4100);
+    $rate = Setting::first()->exchange_rate;
+    $totalPaidUsd = $cashUsd + ($cashRiel / $rate);
     if ($totalPaidUsd < $total) {
         return back()->with('error', __('messages.insufficient_payment'));
     }
@@ -238,9 +239,10 @@ class SaleController extends Controller
         'total'          => $total,
         'payment_method' => $request->input('method', 'cash'),
         'cash_usd'       => floatval($request->input('cash_usd', 0)),
-        'cash_riel'      => intval($request->input('cash_riel', 0)),
+        'cash_riel'      => intval(str_replace(',', '', $request->input('cash_riel', 0))),
         'change_usd'     => floatval($request->input('change_usd', 0)),
         'change_riel'    => intval(str_replace(',', '', $request->input('change_riel', 0))),
+        'exchange_rate'  => $rate,
     ]);
 
     $sale->update([
@@ -312,6 +314,7 @@ class SaleController extends Controller
             'routePrefix' => $role,
             'discountPercent' => $setting->discount_percent ?? 0,
             'shops' => $shops,
+            'setting' => $setting,
         ]);
     }
 

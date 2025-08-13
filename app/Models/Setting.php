@@ -8,8 +8,10 @@ class Setting extends Model
 {
     protected $fillable = [
     'shop_name',
-    'discount_percent',
-    'currency'
-];
+        'discount_percent',
+        'currency',
+        'exchange_rate',
+    ];
+
 
 }

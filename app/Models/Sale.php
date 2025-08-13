@@ -19,6 +19,7 @@ class Sale extends Model
         'cash_riel',
         'change_usd',
         'change_riel',
+        'exchange_rate',
     ];
 
     public function items()

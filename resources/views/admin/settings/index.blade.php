@@ -45,6 +45,15 @@
                         value="{{ old('currency', optional($setting)->currency) }}" required>
                 </div>
 
+                <div class="col-md-6">
+                    <label for="exchange_rate" class="form-label fw-semibold">
+                        💱 {{ __('messages.exchange_rate') }}
+                    </label>
+                    <input type="number" step="0.01" class="form-control" id="exchange_rate"
+                           name="exchange_rate"
+                           value="{{ old('exchange_rate', optional($setting)->exchange_rate) }}" required>
+                </div>
+
                 <!-- Discount -->
                 <div class="col-md-6">
                     <label for="discount_percent" class="form-label fw-semibold">

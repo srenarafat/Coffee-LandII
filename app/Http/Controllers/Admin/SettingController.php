@@ -22,7 +22,8 @@ class SettingController extends Controller
         $validated = $request->validate([
             'shop_name' => 'required|string|max:255',
             'discount_percent' => 'required|numeric|min:0|max:100',
-            'currency' => 'required|string|max:5'
+            'currency' => 'required|string|max:5',
+            'exchange_rate' => 'required|numeric|min:0',
         ]);
 
         // Ensure a settings record exists
