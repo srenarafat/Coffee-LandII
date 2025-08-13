@@ -8,6 +8,39 @@
             {{ optional($setting)->shop_name ?? 'COFFEE LAND' }}
         </h2>
     </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <a href="{{ route('superadmin.reports.sales.today') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-graph-up text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Today's Sales</span>
+        </a>
+        <a href="{{ route('superadmin.reports.zreport') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-file-earmark-text text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Z Report</span>
+        </a>
+        <a href="{{ route('superadmin.stock.low') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-exclamation-triangle text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Low Stock</span>
+        </a>
+        <a href="{{ route('superadmin.reports.top-products.week') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-star text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Top Products Week</span>
+        </a>
+        <a href="{{ route('superadmin.reports.slow-products') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-hourglass-split text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Slow Products</span>
+        </a>
+        <a href="{{ route('superadmin.reports.sales.export') }}"
+           class="flex flex-col items-center justify-center p-6 bg-white text-[#5c4033] rounded-lg shadow hover:bg-[#5c4033] hover:text-white transition">
+            <i class="bi bi-download text-4xl"></i>
+            <span class="mt-2 font-semibold text-center">Export Sales</span>
+        </a>
+    </div>
 </div>
 
     <!-- Charts and Transactions -->

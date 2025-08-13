@@ -115,6 +115,8 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
     Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
+    Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
+    Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
     Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
     Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
