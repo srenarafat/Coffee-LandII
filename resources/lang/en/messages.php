@@ -20,6 +20,7 @@ return [
     'user' => 'User',
     'ai_chat' => 'AI Chat',
     'top_qty' => 'Top Qty',
+    'top_products_week' => 'Top Products Week',
     'month' => 'Month',
     'year' => 'Year',
     'user_profile' => 'User Profile',
