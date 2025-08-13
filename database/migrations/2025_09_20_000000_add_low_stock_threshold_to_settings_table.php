@@ -8,15 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
-            $table->unsignedInteger('low_stock_threshold')->nullable();
-        });
+        // Only add the column if it doesn't exist
+        if (!Schema::hasColumn('settings', 'low_stock_threshold')) {
+            Schema::table('settings', function (Blueprint $table) {
+                $table->unsignedInteger('low_stock_threshold')->nullable();
+                // If you prefer a default instead of NULL, use:
+                // $table->unsignedInteger('low_stock_threshold')->default(5);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
-            $table->dropColumn('low_stock_threshold');
-        });
+        // Only drop the column if it exists
+        if (Schema::hasColumn('settings', 'low_stock_threshold')) {
+            Schema::table('settings', function (Blueprint $table) {
+                $table->dropColumn('low_stock_threshold');
+            });
+        }
     }
 };
