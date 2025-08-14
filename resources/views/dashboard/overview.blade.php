@@ -13,7 +13,7 @@
             <div class="kpi-value">
               {{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}
             </div>
-            <div class="small kpi-cta"></div>
+            <div class="small kpi-cta">Quick Action</div>
           </div>
         </div>
       </a>
@@ -115,11 +115,12 @@
       </div>
     </div>
 
-
     {{-- Transactions --}}
     <div class="col-12 col-lg-6 d-flex">
       <div class="card surface flex-fill h-100">
-        <div class="card-header surface-header equal-header d-flex justify-content-center align-items-center fw-semibold">{{ __('messages.recent_transactions') }}</div>
+        <div class="card-header surface-header equal-header d-flex justify-content-center align-items-center">
+          <span class="fw-semibold">{{ __('messages.recent_transactions') }}</span>
+        </div>
         <div class="card-body p-0">
           <div class="overflow-y-auto" style="max-height: 24rem;">
             <table class="table table-striped mb-0 text-center align-middle">
@@ -154,9 +155,9 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>
-
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
