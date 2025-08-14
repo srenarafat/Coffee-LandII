@@ -15,14 +15,22 @@ class AdminController extends Controller
         // Fetch latest 5 sales with item count
         $recentSales = Sale::with(['user'])
                            ->withCount('items')
+                           ->where('shop_id', auth()->user()->shop_id)
                            ->latest()
                            ->take(9)
                            ->get();
 
-        $today = Carbon::today();
-        $todaySalesTotal = Sale::whereDate('created_at', $today)->sum('total');
-        $todayOrderCount = Sale::whereDate('created_at', $today)->count();
-        $todayItemsSold = SaleItem::whereDate('created_at', $today)->sum('quantity');
+        $startOfDay = Carbon::now()->startOfDay();
+        $endOfDay = Carbon::now()->endOfDay();
+        $todaySalesTotal = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])
+                               ->where('shop_id', auth()->user()->shop_id)
+                               ->sum('total');
+        $todayOrderCount = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])
+                               ->where('shop_id', auth()->user()->shop_id)
+                               ->count();
+        $todayItemsSold = SaleItem::whereBetween('created_at', [$startOfDay, $endOfDay])
+                                   ->whereHas('sale', fn($q) => $q->where('shop_id', auth()->user()->shop_id))
+                                   ->sum('quantity');
         $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
 
         $threshold = Setting::value('low_stock_threshold') ?? 5;
@@ -33,6 +41,7 @@ class AdminController extends Controller
         $endDate = Carbon::now()->endOfDay();
 
         $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
+                      ->where('shop_id', auth()->user()->shop_id)
                       ->selectRaw('DATE(created_at) as date, SUM(total) as total')
                       ->groupBy('date')
                       ->orderBy('date')
@@ -48,10 +57,15 @@ class AdminController extends Controller
         }
 
         // Today's metrics
-        $todayTotalSales = Sale::whereDate('created_at', Carbon::today())->sum('total');
-        $ordersToday = Sale::whereDate('created_at', Carbon::today())->count();
-        $itemsSoldToday = SaleItem::whereHas('sale', fn($q) => $q->whereDate('created_at', Carbon::today()))
-                                    ->sum('quantity');
+        $todayTotalSales = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])
+                               ->where('shop_id', auth()->user()->shop_id)
+                               ->sum('total');
+        $ordersToday = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])
+                               ->where('shop_id', auth()->user()->shop_id)
+                               ->count();
+        $itemsSoldToday = SaleItem::whereHas('sale', fn($q) => $q->whereBetween('created_at', [$startOfDay, $endOfDay])
+                                ->where('shop_id', auth()->user()->shop_id))
+                                ->sum('quantity');
         $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
@@ -133,7 +147,12 @@ class AdminController extends Controller
     
     public function todaySalesTotal()
     {
-        $total = Sale::whereDate('created_at', Carbon::today())->sum('total');
+        $startOfDay = Carbon::now()->startOfDay();
+        $endOfDay = Carbon::now()->endOfDay();
+
+        $total = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])
+                     ->where('shop_id', auth()->user()->shop_id)
+                     ->sum('total');
 
         return response()->json([
             'total' => $total,
