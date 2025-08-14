@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use Carbon\Carbon;
 
 class SuperAdminController extends Controller
 {
@@ -10,8 +11,24 @@ class SuperAdminController extends Controller
     {
         $recentSales = Sale::with(['user'])->withCount('items')
                            ->latest()->take(9)->get();
-        $chartLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        $chartData = [0, 0, 0, 0, 500, 0, 0]; // Placeholder data
+        // Calculate sales for the past 7 days
+        $startDate = Carbon::now()->subDays(6)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
+                      ->selectRaw('DATE(created_at) as date, SUM(total) as total')
+                      ->groupBy('date')
+                      ->orderBy('date')
+                      ->get()
+                      ->pluck('total', 'date');
+
+        $chartLabels = [];
+        $chartData = [];
+
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $chartLabels[] = $date->format('l');
+            $chartData[] = $sales[$date->format('Y-m-d')] ?? 0;
+        }
 
         return view('superadmin.dashboard', compact(
             'recentSales',

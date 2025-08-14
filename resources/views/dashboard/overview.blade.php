@@ -55,8 +55,6 @@
         </div>
     </div>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Transactions -->
     <div class="col-lg-6 mb-3">
         <div class="card shadow-sm h-100">
