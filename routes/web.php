@@ -87,6 +87,7 @@ Route::get('/profile-info', [ProfileController::class, 'info'])
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('dashboard/sales-data/{range}', [SuperAdminController::class, 'salesData'])->name('dashboard.sales-data');
+    Route::get('dashboard/today-sales-total', [SuperAdminController::class, 'todaySalesTotal'])->name('dashboard.today-sales-total');
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class)->except(['show']);
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');

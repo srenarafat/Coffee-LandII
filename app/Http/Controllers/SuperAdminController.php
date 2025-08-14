@@ -15,10 +15,12 @@ class SuperAdminController extends Controller
         $recentSales = Sale::with(['user'])->withCount('items')
                            ->latest()->take(9)->get();
         
-        $today = Carbon::today();
-        $todaySalesTotal = Sale::whereDate('created_at', $today)->sum('total');
-        $todayOrderCount = Sale::whereDate('created_at', $today)->count();
-        $todayItemsSold = SaleItem::whereDate('created_at', $today)->sum('quantity');
+        $startOfDay = Carbon::now()->startOfDay();
+        $endOfDay = Carbon::now()->endOfDay();
+
+        $todaySalesTotal = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])->sum('total');
+        $todayOrderCount = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])->count();
+        $todayItemsSold = SaleItem::whereBetween('created_at', [$startOfDay, $endOfDay])->sum('quantity');
         $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
 
         $threshold = Setting::value('low_stock_threshold') ?? 5;
@@ -44,9 +46,9 @@ class SuperAdminController extends Controller
         }
 
         // Today's metrics
-        $todayTotalSales = Sale::whereDate('created_at', Carbon::today())->sum('total');
-        $ordersToday = Sale::whereDate('created_at', Carbon::today())->count();
-        $itemsSoldToday = SaleItem::whereHas('sale', fn($q) => $q->whereDate('created_at', Carbon::today()))
+        $todayTotalSales = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])->sum('total');
+        $ordersToday = Sale::whereBetween('created_at', [$startOfDay, $endOfDay])->count();
+        $itemsSoldToday = SaleItem::whereHas('sale', fn($q) => $q->whereBetween('created_at', [$startOfDay, $endOfDay]))
                                     ->sum('quantity');
         $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
         $threshold = Setting::value('low_stock_threshold') ?? 5;
@@ -124,5 +126,12 @@ class SuperAdminController extends Controller
             'labels' => $labels,
             'totals' => $totals,
         ]);
+    }
+    
+    public function todaySalesTotal()
+    {
+        $total = Sale::whereBetween('created_at', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()])->sum('total');
+
+        return response()->json(['total' => $total]);
     }
 }

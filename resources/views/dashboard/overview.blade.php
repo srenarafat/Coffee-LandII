@@ -1,16 +1,16 @@
 {{-- resources/views/dashboard/overview.blade.php --}}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-0.50">
 
   {{-- Brand badge --}}
-  <div class="d-flex align-items-start mb-3">
-    <h2 class="fw-bold mb-0 brand-badge">
+  <div class="d-flex align-items-start mb-1">
+    <h1 class="fw-bold mb-0 brand-badge">
       {{ optional($setting)->shop_name ?? 'COFFEE LAND' }}
-    </h2>
+    </h1>
   </div>
 
   {{-- KPIs --}}
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-2">
     <div class="col-6 col-lg-3">
       <div class="card shortcut-card h-100 text-center">
         <div class="card-body">
@@ -46,7 +46,7 @@
   </div>
 
   {{-- Quick Actions (6 tiles) --}}
-  <div class="row g-3 mb-4">
+  <div class="row g-2 mb-2">
     @php
       $tiles = [
         ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',           'title'=>"Today’s Sales",            'desc'=>'Total: <span id="today-sales-total">0</span>'],
@@ -89,7 +89,7 @@
 {{-- Charts & Recent Transactions --}}
 <div class="row">
   {{-- Chart --}}
-  <div class="col-lg-6 mb-3">
+  <div class="col-lg-6 mb-2">
     <div class="card shortcut-card h-100 position-relative">
             @isset($t['badge'])
               <span class="shortcut-badge badge rounded-pill">{{ $t['badge'] }}</span>
