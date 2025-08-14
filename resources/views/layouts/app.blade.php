@@ -209,6 +209,7 @@ html, body {
 </style>
 
 
+    @vite('resources/css/dashboard.css')
     @stack('styles')
 </head>
 <body>
