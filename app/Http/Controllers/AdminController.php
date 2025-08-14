@@ -33,6 +33,10 @@ class AdminController extends Controller
                                    ->sum('quantity');
         $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
 
+        $weekSalesTotal = Sale::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                               ->where('shop_id', auth()->user()->shop_id)
+                               ->sum('total');
+
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
@@ -76,6 +80,7 @@ class AdminController extends Controller
             'recentSales',
             'chartLabels',
             'chartData',
+            'weekSalesTotal',
             'todaySalesTotal',
             'todayOrderCount',
             'todayItemsSold',

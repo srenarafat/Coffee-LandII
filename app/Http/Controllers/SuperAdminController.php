@@ -23,6 +23,8 @@ class SuperAdminController extends Controller
         $todayItemsSold = SaleItem::whereBetween('created_at', [$startOfDay, $endOfDay])->sum('quantity');
         $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
 
+        $weekSalesTotal = Sale::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->sum('total');
+
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
@@ -59,6 +61,7 @@ class SuperAdminController extends Controller
             'recentSales',
             'chartLabels',
             'chartData',
+            'weekSalesTotal',
             'todaySalesTotal',
             'todayOrderCount',
             'todayItemsSold',

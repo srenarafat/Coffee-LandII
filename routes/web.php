@@ -119,6 +119,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
     Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
+    Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
     Route::get('reports/top-quantity-sales/export', [SalesReportController::class, 'exportTopQuantityCsv'])->name('reports.top-quantity-sales.export');
     Route::get('reports/top-quantity-sales/pdf', [SalesReportController::class, 'exportTopQuantityPdf'])->name('reports.top-quantity-sales.pdf');
@@ -171,6 +172,7 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
 
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
+    Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');
 
     Route::resource('users', UserController::class)->except(['show']);
     Route::get('users/export', [UserController::class, 'exportCsv'])->name('users.export');

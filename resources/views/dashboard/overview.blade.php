@@ -11,20 +11,20 @@
 
   {{-- KPIs --}}
 <div class="row g-3 mb-3">
-  {{-- Card 1: Today's Sales (Quick Action in KPI slot) --}}
-  <div class="col-6 col-lg-3">
-    <a href="{{ route($routePrefix . '.reports.sales.today') }}" class="text-decoration-none">
-      <div class="card kpi kpi-teal text-center h-100">
-        <div class="card-body">
-          <div class="kpi-label">Today's Sales</div>
-          <div class="kpi-value">
-            {{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}
-          </div>
-          <div class="small text-muted mt-1">Quick Action</div>
+  {{-- Card 1: Today's Sales (quick-action style) --}}
+<div class="col-6 col-lg-3">
+  <a href="{{ route($routePrefix . '.reports.sales.today') }}" class="kpi-link">
+    <div class="card kpi kpi-teal kpi-action text-center h-100">
+      <div class="card-body">
+        <div class="kpi-label">Today's Sales</div>
+        <div class="kpi-value">
+          {{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}
         </div>
+        <div class="small kpi-cta">Quick Action</div>
       </div>
-    </a>
-  </div>
+    </div>
+  </a>
+</div>
 
   {{-- Card 2: Orders (unchanged) --}}
   <div class="col-6 col-lg-3">
@@ -168,6 +168,23 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <style>
+  /* Make KPI act like a quick-action tile */
+.kpi-link{ display:block; text-decoration:none; }
+.kpi-action{
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.kpi-action:hover{
+  transform:translateY(-2px);
+  box-shadow:0 .8rem 1.6rem rgba(0,0,0,.08);
+}
+.kpi-action:active{ transform:translateY(0); }
+.kpi-action:focus-within{
+  outline:2px solid var(--teal-600);
+  outline-offset:2px;
+}
+.kpi-cta{ color:#6b7280; opacity:.9; }
+
   .dashboard-box {
     border: 2px solid #ccc; /* Thicker border */
     border-radius: 12px; /* Keep rounded corners */
