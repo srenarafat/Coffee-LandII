@@ -86,6 +86,7 @@ Route::get('/profile-info', [ProfileController::class, 'info'])
 // ✅ Super Admin Routes
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('dashboard/sales-data/{range}', [SuperAdminController::class, 'salesData'])->name('dashboard.sales-data');
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class)->except(['show']);
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
@@ -129,6 +130,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
 // ✅ Admin Routes
 Route::middleware(['auth', 'role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('dashboard/sales-data/{range}', [AdminController::class, 'salesData'])->name('dashboard.sales-data');
 
     // ✅ AI Assistant Routes (for Admin)
 Route::get('ai-assistant', function () {

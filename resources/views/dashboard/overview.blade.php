@@ -50,6 +50,14 @@
                 {{ __('messages.sales_earnings') }}
             </div>
             <div class="card-body">
+                <div class="btn-group mb-3" role="group" aria-label="Sales range">
+                    <button type="button" class="btn btn-sm text-white range-btn" data-range="today"
+                            style="background-color: #5c4033;">Today</button>
+                    <button type="button" class="btn btn-sm text-white range-btn" data-range="week"
+                            style="background-color: #5c4033;">Week</button>
+                    <button type="button" class="btn btn-sm text-white range-btn" data-range="month"
+                            style="background-color: #5c4033;">Month</button>
+                </div>
                 <canvas id="barChart" height="170"></canvas>
             </div>
         </div>
@@ -64,34 +72,36 @@
            </div>
 
             <div class="card-body p-0">
-                <table class="table table-striped mb-0 text-center align-middle">
-                    <thead class="custom-blue-header text-black">
-                        <tr>
-                            <th>{{ __('messages.invoice') }}</th>
-                            <th>{{ __('messages.date') }}</th>
-                            <th>{{ __('messages.cashier') }}</th>
-                            <th>{{ __('messages.amount') }}</th>
-                            <th>{{ __('messages.discount') }}</th>
-                            <th>{{ __('messages.total') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($recentSales as $sale)
-                        <tr>
-                            <td>{{ $sale->invoice_no }}</td>
-                            <td>{{ $sale->created_at->format('d/m/Y, H:i') }}</td>
-                            <td>{{ $sale->user->name ?? 'N/A' }}</td>
-                            <td>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->subtotal, 2) }}</td>
-                            <td>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount ?? 0, 2) }}</td>
-                            <td><strong>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}</strong></td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-muted text-center">{{ __('messages.no_transactions_found') }}</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="overflow-y-auto" style="max-height: 20rem;">
+                    <table class="table table-striped mb-0 text-center align-middle">
+                        <thead class="custom-blue-header text-black">
+                            <tr>
+                                <th>{{ __('messages.invoice') }}</th>
+                                <th>{{ __('messages.date') }}</th>
+                                <th>{{ __('messages.cashier') }}</th>
+                                <th class="text-end">{{ __('messages.amount') }}</th>
+                                <th class="text-end">{{ __('messages.discount') }}</th>
+                                <th class="text-end">{{ __('messages.total') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($recentSales as $sale)
+                            <tr>
+                                <td>{{ $sale->invoice_no }}</td>
+                                <td>{{ $sale->created_at->format('d/m/Y, H:i') }}</td>
+                                <td>{{ $sale->user->name ?? 'N/A' }}</td>
+                                <td class="text-end px-3 py-2">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->subtotal, 2) }}</td>
+                                <td class="text-end px-3 py-2">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount ?? 0, 2) }}</td>
+                                <td class="text-end px-3 py-2"><strong>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}</strong></td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-muted text-center">{{ __('messages.no_transactions_found') }}</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -101,7 +111,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('barChart').getContext('2d');
-new Chart(ctx, {
+let chart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: @json($chartLabels),
@@ -156,6 +166,20 @@ new Chart(ctx, {
             intersect: true
         }
     }
+});
+
+const routePrefix = @json($routePrefix);
+document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const range = btn.dataset.range;
+        fetch(`/${routePrefix}/dashboard/sales-data/${range}`)
+            .then(response => response.json())
+            .then(data => {
+                chart.data.labels = data.labels;
+                chart.data.datasets[0].data = data.totals;
+                chart.update();
+            });
+    });
 });
 </script>
 @endpush
