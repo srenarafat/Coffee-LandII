@@ -10,62 +10,100 @@
   </div>
 
   {{-- KPIs --}}
-  <div class="row g-3 mb-3">
-  <div class="col-6 col-lg-3"><div class="card kpi kpi-teal text-center"><div class="card-body">
-    <div class="kpi-label">Today's Sales</div>
-    <div class="kpi-value">{{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal, 2) }}</div>
-  </div></div></div>
-
-  <div class="col-6 col-lg-3"><div class="card kpi kpi-emerald text-center"><div class="card-body">
-    <div class="kpi-label">Orders</div>
-    <div class="kpi-value">{{ $todayOrderCount }}</div>
-  </div></div></div>
-
-  <div class="col-6 col-lg-3"><div class="card kpi kpi-indigo text-center"><div class="card-body">
-    <div class="kpi-label">Items Sold</div>
-    <div class="kpi-value">{{ $todayItemsSold }}</div>
-  </div></div></div>
-
-  <div class="col-6 col-lg-3"><div class="card kpi kpi-rose text-center"><div class="card-body">
-    <div class="kpi-label">Avg Order Value</div>
-    <div class="kpi-value">{{ optional($setting)->currency ?? '$' }}{{ number_format($todayAverageOrderValue, 2) }}</div>
-  </div></div></div>
-</div>
-
-  {{-- Quick Actions (6 tiles) --}}
-  <div class="row g-2 mb-2">
-    @php
-  $tiles = [
-    ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',            'title'=>"Today’s Sales",            'desc'=>'Total: <span id="today-sales-total">'.(optional($setting)->currency ?? '$').number_format($todaySalesTotal, 2).'</span>', 'variant'=>'teal'],
-    ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',             'title'=>'Z Report',                 'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
-    ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle','title'=>'Low Stock',                'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
-    ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',               'title'=>'Top Products (Week)',      'desc'=>'Best sellers',                                                     'variant'=>'indigo'],
-    ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',        'title'=>'Export / Print Sales',     'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
-    ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',     'title'=>'Slow Movers',              'desc'=>'Identify for promotion',                                           'variant'=>'rose'],
-  ];
-@endphp
-
-
-    @foreach($tiles as $t)
-  <div class="col-12 col-sm-6 col-lg-4">
-    <a href="{{ $t['href'] }}" class="text-decoration-none">
-      <div class="card tile tile-{{ $t['variant'] }} h-100">
-        <div class="card-body d-flex align-items-start gap-3">
-          <div class="tile-icon"><i class="bi {{ $t['icon'] }}"></i></div>
-          <div class="flex-grow-1">
-            <div class="fw-semibold text-dark">{{ $t['title'] }}</div>
-            <div class="text-muted small">{!! $t['desc'] !!}</div>
+<div class="row g-3 mb-3">
+  {{-- Card 1: Today's Sales (Quick Action in KPI slot) --}}
+  <div class="col-6 col-lg-3">
+    <a href="{{ route($routePrefix . '.reports.sales.today') }}" class="text-decoration-none">
+      <div class="card kpi kpi-teal text-center h-100">
+        <div class="card-body">
+          <div class="kpi-label">Today's Sales</div>
+          <div class="kpi-value">
+            {{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}
           </div>
-          @isset($t['badge'])
-            <span class="badge tile-badge">{{ $t['badge'] }}</span>
-          @endisset
+          <div class="small text-muted mt-1">Quick Action</div>
         </div>
       </div>
     </a>
   </div>
-@endforeach
 
+  {{-- Card 2: Orders (unchanged) --}}
+  <div class="col-6 col-lg-3">
+    <div class="card kpi kpi-emerald text-center h-100">
+      <div class="card-body">
+        <div class="kpi-label">Orders</div>
+        <div class="kpi-value">{{ $todayOrderCount ?? 0 }}</div>
+      </div>
+    </div>
   </div>
+
+  {{-- Card 3: Items Sold (unchanged) --}}
+  <div class="col-6 col-lg-3">
+    <div class="card kpi kpi-indigo text-center h-100">
+      <div class="card-body">
+        <div class="kpi-label">Items Sold</div>
+        <div class="kpi-value">{{ $todayItemsSold ?? 0 }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Card 4: Avg Order Value (unchanged) --}}
+  <div class="col-6 col-lg-3">
+    <div class="card kpi kpi-rose text-center h-100">
+      <div class="card-body">
+        <div class="kpi-label">Avg Order Value</div>
+        <div class="kpi-value">
+          {{ optional($setting)->currency ?? '$' }}{{ number_format($todayAverageOrderValue ?? 0, 2) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  {{-- Quick Actions (6 tiles) --}}
+<div class="row g-2 mb-2">
+@php
+  $tiles = [
+    // Weekly Sales (Quick Action)
+    ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',       'title'=>"Weekly Sales",             'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
+
+    // Z Report
+    ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',             'title'=>'Z Report',                 'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
+
+    // Export / Print Sales
+    ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',        'title'=>'Export / Print Sales',     'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
+
+    // Low Stock
+    ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle','title'=>'Low Stock',                'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
+
+    // Top Products (Week)
+    ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',               'title'=>'Top Products (Week)',      'desc'=>'Best sellers',                                                     'variant'=>'indigo'],
+
+    // Slow Movers
+    ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',     'title'=>'Slow Movers',              'desc'=>'Identify for promotion',                                           'variant'=>'rose'],
+  ];
+@endphp
+
+  @foreach($tiles as $t)
+    <div class="col-12 col-sm-6 col-lg-4">
+      <a href="{{ $t['href'] }}" class="text-decoration-none">
+        <div class="card tile tile-{{ $t['variant'] }} h-100">
+          <div class="card-body d-flex align-items-start gap-3">
+            <div class="tile-icon"><i class="bi {{ $t['icon'] }}"></i></div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold text-dark">{{ $t['title'] }}</div>
+              <div class="text-muted small">{!! $t['desc'] !!}</div>
+            </div>
+            @isset($t['badge'])
+              <span class="badge tile-badge">{{ $t['badge'] }}</span>
+            @endisset
+          </div>
+        </div>
+      </a>
+    </div>
+  @endforeach
+</div>
+
 </div>
 
 {{-- Charts & Recent Transactions --}}
