@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@100;300;400;700;900&family=Noto+Sans+Khmer:wght@100..900&display=swap" rel="stylesheet">
-    @vite('resources/css/dashboard.css')
 <style>
     body {
         background-color: #f2f2f2;
@@ -205,9 +204,6 @@ html, body {
 }
 </style>
 
-<!-- @push('styles')
-    @vite('resources/css/dashboard.css')
-@endpush -->
 
     @stack('styles')
 </head>

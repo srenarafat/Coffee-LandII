@@ -16,24 +16,3 @@
     background: linear-gradient(90deg, #578ee1 0%, #04fbf7 100%);
     border-bottom: 1px solid #ccc;
 }
-
-/* KPI card colors */
-.kpi-sales {
-    background-color: #198754;
-    color: #ffffff;
-}
-
-.kpi-orders {
-    background-color: #0dcaf0;
-    color: #ffffff;
-}
-
-.kpi-items {
-    background-color: #ffc107;
-    color: #212529;
-}
-
-.kpi-avg {
-    background-color: #6f42c1;
-    color: #ffffff;
-}
