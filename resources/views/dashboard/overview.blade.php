@@ -3,7 +3,7 @@
 <div class="container-fluid mt-1">
 
   {{-- KPIs --}}
-  <div class="row g-3 mb-2">
+  <div class="row g-2 mb-2">
     {{-- Card 1: Today's Sales (quick-action style) --}}
     <div class="col-6 col-lg-3">
       <a href="{{ route($routePrefix . '.reports.sales.today') }}" class="kpi-link">
@@ -13,7 +13,7 @@
             <div class="kpi-value">
               {{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}
             </div>
-            <div class="small kpi-cta">Quick Action</div>
+            <div class="small kpi-cta"></div>
           </div>
         </div>
       </a>
@@ -208,8 +208,8 @@
     padding:.52rem .9rem;
   }
   .card.surface .surface-header{
-    border-top-left-radius:18px;
-    border-top-right-radius:18px;
+    border-top-left-radius:14px;
+    border-top-right-radius:14px;
   }
 
   /* Buttons inside the dark header (Today/Week/Month) */
@@ -257,6 +257,11 @@
   /* Action tiles */
   .tile{ border:0; border-radius:14px; box-shadow:0 .25rem .75rem rgba(0,0,0,.06); transition:transform .15s ease, box-shadow .15s ease; }
   .tile:hover{ transform:translateY(-2px); box-shadow:0 .8rem 1.6rem rgba(0,0,0,.08); }
+  .tile:focus,
+  .tile:focus-visible{
+    outline:3px solid var(--brown);
+    outline-offset:3px;
+  }
   .tile-icon{
     width:42px; height:42px; display:grid; place-items:center;
     border-radius:10px; font-size:20px;
