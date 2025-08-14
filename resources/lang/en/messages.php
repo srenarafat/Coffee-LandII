@@ -92,6 +92,11 @@ return [
     'total_users' => 'Total Users',
     'total_products' => 'Total Products',
     'total_categories' => 'Total Categories',
+    'today_total_sales' => "Today's Total Sales",
+    'orders_today' => 'Orders Today',
+    'items_sold_today' => 'Items Sold Today',
+    'avg_order_value' => 'Avg Order Value',
+    'low_stock_count' => 'Low Stock Count',
     'sales_earnings' => 'Sales & Earnings',
     'recent_transactions' => 'Recent Transactions',
     'date' => 'Date',
@@ -205,4 +210,10 @@ return [
     'order_number' => 'Order Number',
 
     'insufficient_payment' => 'Insufficient payment.',
+    
+    'todays_sales' => "Today's Sales",
+    'orders' => 'Orders',
+    'items_sold' => 'Items Sold',
+    'average_order_value' => 'Average Order Value',
+    'low_stock' => 'Low Stock',
 ];

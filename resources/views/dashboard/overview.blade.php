@@ -9,17 +9,58 @@
     </h2>
   </div>
 
+  {{-- KPIs --}}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card shortcut-card h-100 text-center">
+        <div class="card-body">
+          <div class="text-muted small">Today's Sales</div>
+          <div class="fs-5 fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal, 2) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shortcut-card h-100 text-center">
+        <div class="card-body">
+          <div class="text-muted small">Orders</div>
+          <div class="fs-5 fw-bold">{{ $todayOrderCount }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shortcut-card h-100 text-center">
+        <div class="card-body">
+          <div class="text-muted small">Items Sold</div>
+          <div class="fs-5 fw-bold">{{ $todayItemsSold }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shortcut-card h-100 text-center">
+        <div class="card-body">
+          <div class="text-muted small">Avg Order Value</div>
+          <div class="fs-5 fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($todayAverageOrderValue, 2) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- Quick Actions (6 tiles) --}}
   <div class="row g-3 mb-4">
     @php
       $tiles = [
-        ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',           'title'=>"Today’s Sales",            'desc'=>'Report for today'],
-        ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',            'title'=>'Z Report',                 'desc'=>'Printable cash summary'],
-        ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle','title'=>'Low Stock',               'desc'=>'Below threshold'],
-        ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',              'title'=>'Top Products (Week)',      'desc'=>'Best sellers'],
-        ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',       'title'=>'Export / Print Sales',     'desc'=>'CSV & print with filters'],
-        ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',    'title'=>'Slow Movers',              'desc'=>'Identify for promotion'],
-      ];
+        ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',           'title'=>"Today’s Sales",            'desc'=>'Total: <span id="today-sales-total">0</span>'],
+        ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',            'title'=>'Z Report',
+         'desc'=>'Printable cash summary'],
+        ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle','title'=>'Low Stock',
+         'desc'=>'Below threshold', 'badge'=>$lowStockCount],
+        ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',              'title'=>'Top Products (Week)',
+         'desc'=>'Best sellers'],
+        ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',       'title'=>'Export / Print Sales',
+         'desc'=>'CSV & print with filters'],
+        ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',    'title'=>'Slow Movers',
+         'desc'=>'Identify for promotion'],
+      ]
     @endphp
 
     @foreach($tiles as $t)
@@ -32,7 +73,10 @@
               </div>
               <div>
                 <div class="fw-semibold text-dark">{{ $t['title'] }}</div>
-                <div class="text-muted small">{{ $t['desc'] }}</div>
+                <div class="text-muted small">{!! $t['desc'] !!}</div>
+                @isset($t['value'])
+                  <div class="fw-bold mt-1">{{ $t['value'] }}</div>
+                @endisset
               </div>
             </div>
           </div>
@@ -46,7 +90,10 @@
 <div class="row">
   {{-- Chart --}}
   <div class="col-lg-6 mb-3">
-    <div class="card shadow-sm h-100">
+    <div class="card shortcut-card h-100 position-relative">
+            @isset($t['badge'])
+              <span class="shortcut-badge badge rounded-pill">{{ $t['badge'] }}</span>
+            @endisset
       <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">{{ __('messages.sales_earnings') }}</span>
         <div class="btn-group btn-group-sm" role="group" aria-label="Sales range">
@@ -119,6 +166,7 @@
   }
   .custom-blue-header th{ background:#d8eaff!important; color:#000!important; font-weight:700 }
   .table-sticky{ position:sticky; top:0; z-index:2 }
+  .shortcut-badge{ position:absolute; top:.5rem; right:.5rem; background:var(--brown); color:#fff; }
 </style>
 @endpush
 
@@ -160,6 +208,21 @@
   });
 
   const routePrefix = @json($routePrefix);
+  const currency = @json(optional($setting)->currency ?? '$');
+
+  function updateTodaySales(){
+    fetch(`/${routePrefix}/dashboard/today-sales-total`)
+      .then(r=>r.json())
+      .then(data=>{
+        const el = document.getElementById('today-sales-total');
+        if (el) {
+          el.textContent = currency + parseFloat(data.total).toFixed(2);
+        }
+      });
+  }
+  updateTodaySales();
+  setInterval(updateTodaySales, 60000);
+
   document.querySelectorAll('.range-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const range = btn.dataset.range;

@@ -92,6 +92,11 @@ return [
     'total_users' => 'អ្នកប្រើសរុប',
     'total_products' => 'ផលិតផលសរុប',
     'total_categories' => 'ចំនួនប្រភេទសរុប',
+    'today_total_sales' => 'ការលក់សរុបថ្ងៃនេះ',
+    'orders_today' => 'ការបញ្ជាទិញថ្ងៃនេះ',
+    'items_sold_today' => 'ចំនួនទំនិញលក់ថ្ងៃនេះ',
+    'avg_order_value' => 'តម្លៃមធ្យមនៃការបញ្ជាទិញ',
+    'low_stock_count' => 'ចំនួនស្តុកទាប',
     'sales_earnings' => 'ការលក់ និងចំណូល',
     'recent_transactions' => 'ប្រតិបត្តិការថ្មីៗ',
     'date' => 'ថ្ងៃ',
@@ -205,4 +210,10 @@ return [
     'order_number' => 'ល.រ',
 
     'insufficient_payment' => 'ប្រាក់មិនគ្រប់គ្រាន់សម្រាប់ការទូទាត់។',
+    
+    'todays_sales' => 'ការលក់ថ្ងៃនេះ',
+    'orders' => 'ការបញ្ជាទិញ',
+    'items_sold' => 'ចំនួនទំនិញលក់',
+    'average_order_value' => 'តម្លៃបញ្ជាទិញមធ្យម',
+    'low_stock' => 'ស្តុកទាប',
 ];

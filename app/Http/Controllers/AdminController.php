@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Models\Product;
+use App\Models\Setting;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -15,6 +18,15 @@ class AdminController extends Controller
                            ->latest()
                            ->take(9)
                            ->get();
+
+        $today = Carbon::today();
+        $todaySalesTotal = Sale::whereDate('created_at', $today)->sum('total');
+        $todayOrderCount = Sale::whereDate('created_at', $today)->count();
+        $todayItemsSold = SaleItem::whereDate('created_at', $today)->sum('quantity');
+        $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
+
+        $threshold = Setting::value('low_stock_threshold') ?? 5;
+        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
         // Calculate sales for the past 7 days
         $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -35,11 +47,26 @@ class AdminController extends Controller
             $chartData[] = $sales[$date->format('Y-m-d')] ?? 0;
         }
 
+        // Today's metrics
+        $todayTotalSales = Sale::whereDate('created_at', Carbon::today())->sum('total');
+        $ordersToday = Sale::whereDate('created_at', Carbon::today())->count();
+        $itemsSoldToday = SaleItem::whereHas('sale', fn($q) => $q->whereDate('created_at', Carbon::today()))
+                                    ->sum('quantity');
+        $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
+        $threshold = Setting::value('low_stock_threshold') ?? 5;
+        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
+
+
         // Send data to the dashboard view
         return view('admin.dashboard', compact(
             'recentSales',
             'chartLabels',
-            'chartData'
+            'chartData',
+            'todaySalesTotal',
+            'todayOrderCount',
+            'todayItemsSold',
+            'todayAverageOrderValue',
+            'lowStockCount'
         ));
     }
     
@@ -101,6 +128,15 @@ class AdminController extends Controller
         return response()->json([
             'labels' => $labels,
             'totals' => $totals,
+        ]);
+    }
+    
+    public function todaySalesTotal()
+    {
+        $total = Sale::whereDate('created_at', Carbon::today())->sum('total');
+
+        return response()->json([
+            'total' => $total,
         ]);
     }
 }

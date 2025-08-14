@@ -131,6 +131,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
 Route::middleware(['auth', 'role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('dashboard/sales-data/{range}', [AdminController::class, 'salesData'])->name('dashboard.sales-data');
+    Route::get('dashboard/today-sales-total', [AdminController::class, 'todaySalesTotal'])->name('dashboard.today-sales-total');
 
     // ✅ AI Assistant Routes (for Admin)
 Route::get('ai-assistant', function () {
@@ -191,6 +192,7 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
 // ✅ Cashier Routes
 Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')->group(function () {
     Route::get('dashboard', [CashierController::class, 'dashboard'])->name('dashboard');
+    Route::get('dashboard/today-sales-total', [CashierController::class, 'todaySalesTotal'])->name('dashboard.today-sales-total');
 
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
