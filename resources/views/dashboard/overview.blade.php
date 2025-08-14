@@ -12,7 +12,7 @@
   {{-- KPIs --}}
   <div class="row g-3 mb-2">
     <div class="col-6 col-lg-3">
-      <div class="card shortcut-card h-100 text-center">
+      <div class="card shortcut-card h-100 text-center kpi-sales">
         <div class="card-body">
           <div class="text-muted small">Today's Sales</div>
           <div class="fs-5 fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal, 2) }}</div>
@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="col-6 col-lg-3">
-      <div class="card shortcut-card h-100 text-center">
+      <div class="card shortcut-card h-100 text-center kpi-orders">
         <div class="card-body">
           <div class="text-muted small">Orders</div>
           <div class="fs-5 fw-bold">{{ $todayOrderCount }}</div>
@@ -28,7 +28,7 @@
       </div>
     </div>
     <div class="col-6 col-lg-3">
-      <div class="card shortcut-card h-100 text-center">
+      <div class="card shortcut-card h-100 text-center kpi-items">
         <div class="card-body">
           <div class="text-muted small">Items Sold</div>
           <div class="fs-5 fw-bold">{{ $todayItemsSold }}</div>
@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="col-6 col-lg-3">
-      <div class="card shortcut-card h-100 text-center">
+      <div class="card shortcut-card h-100 text-center kpi-avg">
         <div class="card-body">
           <div class="text-muted small">Avg Order Value</div>
           <div class="fs-5 fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($todayAverageOrderValue, 2) }}</div>
@@ -49,24 +49,24 @@
   <div class="row g-2 mb-2">
     @php
       $tiles = [
-        ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',           'title'=>"Today’s Sales",            'desc'=>'Total: <span id="today-sales-total">0</span>'],
+        ['href'=>route($routePrefix.'.reports.sales.today'),       'icon'=>'bi-graph-up',           'title'=>"Today’s Sales",            'desc'=>'Total: <span id="today-sales-total">0</span>', 'class'=>'bg-primary-subtle'],
         ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',            'title'=>'Z Report',
-         'desc'=>'Printable cash summary'],
+        'desc'=>'Printable cash summary', 'class'=>'bg-info-subtle'],
         ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle','title'=>'Low Stock',
-         'desc'=>'Below threshold', 'badge'=>$lowStockCount],
+        'desc'=>'Below threshold', 'badge'=>$lowStockCount, 'class'=>'bg-warning-subtle'],
         ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',              'title'=>'Top Products (Week)',
-         'desc'=>'Best sellers'],
+       'desc'=>'Best sellers', 'class'=>'bg-success-subtle'],
         ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',       'title'=>'Export / Print Sales',
-         'desc'=>'CSV & print with filters'],
+        'desc'=>'CSV & print with filters', 'class'=>'bg-secondary-subtle'],
         ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',    'title'=>'Slow Movers',
-         'desc'=>'Identify for promotion'],
+        'desc'=>'Identify for promotion', 'class'=>'bg-danger-subtle'],
       ]
     @endphp
 
     @foreach($tiles as $t)
       <div class="col-12 col-sm-6 col-lg-4">
         <a href="{{ $t['href'] }}" class="text-decoration-none">
-          <div class="card shortcut-card h-100">
+          <div class="card shortcut-card h-100 {{ $t['class'] ?? '' }}">
             <div class="card-body d-flex align-items-start gap-3">
               <div class="shortcut-icon">
                 <i class="bi {{ $t['icon'] }} fs-4"></i>
