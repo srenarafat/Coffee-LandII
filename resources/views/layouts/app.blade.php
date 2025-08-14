@@ -162,6 +162,10 @@
         visibility: hidden !important;
     }
 
+    /* Ensure report content is visible when printing */
+    .main-content, .main-content * {
+        visibility: visible !important;
+    }
 
         .main-content {
         margin-left: 0 !important;

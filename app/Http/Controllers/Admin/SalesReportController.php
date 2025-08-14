@@ -11,7 +11,8 @@ use App\Models\Product;
 use App\Models\Category;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\Snappy\Facades\SnappyPdf;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SalesReportController extends Controller
 {
@@ -87,6 +88,16 @@ class SalesReportController extends Controller
         $request->merge([
             'start_date' => $today,
             'end_date' => $today,
+        ]);
+
+        return $this->index($request);
+    }
+
+    public function week(Request $request)
+    {
+        $request->merge([
+            'start_date' => now()->startOfWeek()->toDateString(),
+            'end_date' => now()->endOfWeek()->toDateString(),
         ]);
 
         return $this->index($request);
