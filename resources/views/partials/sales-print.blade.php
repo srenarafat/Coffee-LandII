@@ -38,17 +38,15 @@
 <table class="table table-bordered table-hover align-middle text-center mb-0">
     <thead class="table-primary">
         <tr>
-            <tr>
-                <th style="white-space: nowrap;">{{ __('messages.invoice') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.user') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.date') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.category') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.item_names') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.items') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.price_unit') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.discount') }}</th>
-                <th style="white-space: nowrap;">{{ __('messages.total') }}</th>
-            </tr>
+            <th style="white-space: nowrap;">{{ __('messages.invoice') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.user') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.date') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.category') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.item_names') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.items') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.price_unit') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.discount') }}</th>
+            <th style="white-space: nowrap;">{{ __('messages.total') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -166,9 +164,17 @@
 
 
     window.addEventListener('afterprint', function () {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('print');
-        window.location.href = url.pathname + url.search;
+        const params = new URLSearchParams(window.location.search);
+        params.delete('print');
+
+        const baseUrl = "{{ auth()->user()->role === 'superadmin'
+            ? route('superadmin.sales.report')
+            : (auth()->user()->role === 'admin'
+                ? route('admin.sales.report')
+                : route('cashier.sales.history')) }}";
+
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? `?${queryString}` : '');
     });
 </script>
 @endpush
