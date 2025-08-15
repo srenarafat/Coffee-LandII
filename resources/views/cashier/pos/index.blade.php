@@ -168,7 +168,6 @@ input::placeholder {
 </div>
 
 <!-- 🔍 Live Search -->
-@include('partials.pos-cart-scripts', ['routePrefix' => 'cashier'])
 @include('partials.toast')
 @endsection
 

@@ -60,8 +60,18 @@
         ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
         ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',         'title'=>'Export / Print Sales',  'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
         ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle', 'title'=>'Low Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
-        ['href'=>route($routePrefix.'.reports.top-products.week'), 'icon'=>'bi-stars',                'title'=>'Top Products (Week)',   'desc'=>'Best sellers',                                                     'variant'=>'indigo'],
-        ['href'=>route($routePrefix.'.reports.slow-products'),     'icon'=>'bi-hourglass-split',      'title'=>'Slow Movers',           'desc'=>'Identify for promotion',                                           'variant'=>'rose'],
+        ['href'=>route($routePrefix.'.reports.top-products.week'),
+ 'icon'=>'bi-stars',
+ 'title'=>'Top Products (Week)',
+ 'desc'=>'Best sellers',
+ 'badge'=> ($topProductsWeekCount ?? 0) ?: null,   // <— show only when > 0
+ 'variant'=>'indigo'],
+        ['href'=>route($routePrefix.'.reports.slow-products'),
+ 'icon'=>'bi-hourglass-split',
+ 'title'=>'Slow Movers',
+ 'desc'=>'Identify for promotion',
+ 'badge'=> ($slowMoversCount ?? 0) ?: null,        // <— show only when > 0
+ 'variant'=>'rose'],
       ];
     @endphp
 
