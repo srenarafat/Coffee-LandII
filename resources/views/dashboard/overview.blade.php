@@ -53,27 +53,32 @@
   </div>
 
   {{-- Quick Actions (6 tiles) --}}
-  <div class="row g-2 mb-2">
-    @php
-      $tiles = [
-        ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
-        ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
-        ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',         'title'=>'Export / Print Sales',  'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
-        ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle', 'title'=>'Low Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
-        ['href'=>route($routePrefix.'.reports.top-products.week'),
- 'icon'=>'bi-stars',
- 'title'=>'Top Products (Week)',
- 'desc'=>'Best sellers',
- 'badge'=> ($topProductsWeekCount ?? 0) ?: null,   // <— show only when > 0
- 'variant'=>'indigo'],
-        ['href'=>route($routePrefix.'.reports.slow-products'),
- 'icon'=>'bi-hourglass-split',
- 'title'=>'Slow Movers',
- 'desc'=>'Identify for promotion',
- 'badge'=> ($slowMoversCount ?? 0) ?: null,        // <— show only when > 0
- 'variant'=>'rose'],
-      ];
-    @endphp
+<div class="row g-2 mb-2">
+  @php
+    $tiles = [
+      ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
+      ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
+      ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',         'title'=>'Export / Print Sales',  'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
+      ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle', 'title'=>'Low Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
+
+      // ✅ Top Products (Week) now shows a badge count (only if > 0)
+      ['href'=>route($routePrefix.'.reports.top-products.week'),
+       'icon'=>'bi-stars',
+       'title'=>'Top Products (Week)',
+       'desc'=>'Best sellers',
+       'badge'=> (($topProductsWeekCount ?? 0) > 0 ? $topProductsWeekCount : null),
+       'variant'=>'indigo'],
+
+      // ✅ Slow Movers now shows a badge count (only if > 0)
+      ['href'=>route($routePrefix.'.reports.slow-products'),
+       'icon'=>'bi-hourglass-split',
+       'title'=>'Slow Movers',
+       'desc'=>'Identify for promotion',
+       'badge'=> (($slowMoversCount ?? 0) > 0 ? $slowMoversCount : null),
+       'variant'=>'rose'],
+    ];
+  @endphp
+
 
     @foreach($tiles as $t)
       <div class="col-12 col-sm-6 col-lg-4">
