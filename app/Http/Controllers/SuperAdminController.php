@@ -7,6 +7,7 @@ use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Setting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SuperAdminController extends Controller
 {
@@ -27,7 +28,6 @@ class SuperAdminController extends Controller
 
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
-
         // Calculate sales for the past 7 days
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
@@ -57,6 +57,32 @@ class SuperAdminController extends Controller
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
 
+        $weekAgo = Carbon::now()->subDays(7);
+        $topProductsWeekCount = SaleItem::where('created_at', '>=', $weekAgo)
+            ->select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_quantity')
+            ->limit(10)
+            ->count();
+
+        $cutoff = Carbon::now()->subDays(30);
+
+        $noRecentSales = Product::leftJoin('sale_items', function ($join) use ($cutoff) {
+                $join->on('products.id', '=', 'sale_items.product_id')
+                    ->where('sale_items.created_at', '>=', $cutoff);
+            })
+            ->whereNull('sale_items.id')
+            ->pluck('products.id');
+
+        $bottom10 = SaleItem::leftJoin('products', 'sale_items.product_id', '=', 'products.id')
+            ->select('products.id', DB::raw('SUM(sale_items.quantity) as total_quantity'))
+            ->groupBy('products.id')
+            ->orderBy('total_quantity')
+            ->limit(10)
+            ->pluck('products.id');
+
+        $slowMoversCount = $noRecentSales->merge($bottom10)->unique()->count();
+
         return view('superadmin.dashboard', compact(
             'recentSales',
             'chartLabels',
@@ -66,7 +92,9 @@ class SuperAdminController extends Controller
             'todayOrderCount',
             'todayItemsSold',
             'todayAverageOrderValue',
-            'lowStockCount'
+            'lowStockCount',
+            'topProductsWeekCount',
+            'slowMoversCount'
         ));
     }
     

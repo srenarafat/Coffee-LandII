@@ -11,5 +11,7 @@
     'todayItemsSold' => $todayItemsSold,
     'todayAverageOrderValue' => $todayAverageOrderValue,
     'lowStockCount' => $lowStockCount,
+    'topProductsWeekCount' => $topProductsWeekCount,
+    'slowMoversCount' => $slowMoversCount,
 ])
 @endsection

@@ -10,8 +10,10 @@
         'todayOrderCount' => $todayOrderCount,
         'todayItemsSold' => $todayItemsSold,
         'todayAverageOrderValue' => $todayAverageOrderValue,
-        'lowStockCount' => $lowStockCount, 
-    ]) 
+        'lowStockCount' => $lowStockCount,
+        'topProductsWeekCount' => $topProductsWeekCount,
+        'slowMoversCount' => $slowMoversCount,
+    ])
 @endsection
 
 
