@@ -273,7 +273,7 @@
 
     let json = null;
     try{
-      const res = await fetch(url, { method:'POST', body:fd, signal:controller.signal });
+      const res = await fetch(url, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, body:fd, signal:controller.signal });
       json = await res.json().catch(()=>null);
       if(!res.ok){
         setQty(row, confirmedQty, true);
