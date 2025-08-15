@@ -169,4 +169,7 @@ input::placeholder {
 
 <!-- 🔍 Live Search -->
 @include('partials.toast')
+
+@include('partials.pos-cart-scripts', ['routePrefix' => 'admin'])
+
 @endsection

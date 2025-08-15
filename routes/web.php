@@ -196,6 +196,7 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
 Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')->group(function () {
     Route::get('dashboard', [CashierController::class, 'dashboard'])->name('dashboard');
     Route::get('dashboard/today-sales-total', [CashierController::class, 'todaySalesTotal'])->name('dashboard.today-sales-total');
+    
 
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
