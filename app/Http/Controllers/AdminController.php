@@ -41,9 +41,9 @@ class AdminController extends Controller
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
-        // Calculate sales stats for the past 7 days
-        $startDate = Carbon::now()->subDays(6)->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
+        // Calculate sales stats for the current week
+        $startDate = Carbon::now()->startOfWeek();
+        $endDate = Carbon::now()->endOfWeek();
 
         $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
                       ->where('shop_id', auth()->user()->shop_id)
@@ -200,8 +200,8 @@ class AdminController extends Controller
                 break;
 
             default: // week
-                $start = Carbon::now()->subDays(6)->startOfDay();
-                $end = Carbon::now()->endOfDay();
+                $start = Carbon::now()->startOfWeek();
+                $end = Carbon::now()->endOfWeek();
                 $sales = Sale::where('shop_id', $shopId)
                     ->whereBetween('created_at', [$start, $end])
                     ->selectRaw('DATE(created_at) as date, SUM(total) as total, COUNT(*) as orders')
