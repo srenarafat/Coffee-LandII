@@ -118,27 +118,25 @@ class SaleController extends Controller
 
         $cart = session()->get('cart', []);
 
-         // if ($request->ajax()) {
-        //     $html = view('partials.cart', ['routePrefix' => auth()->user()->role])->render();
-        //     return response()->json(['cart' => $html]);
-        // }
+        $error = null;
         if (isset($cart[$id])) {
-            if ($action === 'increase') {
-                $product = Product::find($id);
+            $product = Product::find($id);
+            if ($action === 'set_quantity') {
+                $qty = max(0, (int) $request->input('quantity', 0));
+                if ($qty === 0) {
+                    unset($cart[$id]);
+                } else {
+                    if ($product && $qty > $product->stock) {
+                        $qty = $product->stock;
+                        $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
+                    }
+                    $cart[$id]['quantity'] = $qty;
+                }
+            } elseif ($action === 'increase') {
                 if ($product && $cart[$id]['quantity'] < $product->stock) {
                     $cart[$id]['quantity']++;
                     } elseif ($product && $cart[$id]['quantity'] >= $product->stock) {
-                    $message = '❌ Out of Stock: Only ' . $product->stock . ' left';
-                    $prefix = auth()->user()->role === 'superadmin'
-                        ? 'superadmin'
-                        : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-                    $html = view('partials.cart', ['routePrefix' => $prefix])->render();
-                    session()->put('cart', $cart);
-                    if ($request->ajax()) {
-                        return response()->json(['cart' => $html, 'error' => $message], 400);
-                    }
-
-                    return back()->with('error', $message);
+                    $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
                 }
             } elseif ($action === 'decrease') {
                 $cart[$id]['quantity']--;
@@ -149,14 +147,39 @@ class SaleController extends Controller
         }
 
         session()->put('cart', $cart);
-
         
+        $item = null;
+        if (isset($cart[$id])) {
+            $item = [
+                'quantity'   => $cart[$id]['quantity'],
+                'line_total' => $cart[$id]['price'] * $cart[$id]['quantity'],
+            ];
+        }
+        $totals = [
+            'grand_total' => collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']),
+            'total_items' => collect($cart)->sum('quantity'),
+        ];
+
         if ($request->ajax()) {
             $prefix = auth()->user()->role === 'superadmin'
                 ? 'superadmin'
                 : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
             $html = view('partials.cart', ['routePrefix' => $prefix])->render();
-            return response()->json(['cart' => $html]);
+            $status = $error ? 400 : 200;
+            $response = [
+                'cart'   => $html,
+                'item'   => $item,
+                'totals' => $totals,
+                'ok'     => !$error,
+            ];
+            if ($error) {
+                $response['error'] = $error;
+            }
+            return response()->json($response, $status);
+        }
+
+        if ($error) {
+            return back()->with('error', $error);
         }
 
         return back()->with('success');

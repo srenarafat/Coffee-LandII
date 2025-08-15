@@ -150,6 +150,6 @@ html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 }
 
 /* Optional: slightly tighter card padding for denser look */
-.kpi .card-body{ padding:22px 18px; }
+.kpi .card-body{ padding:24px 18px; }
 .tile .card-body{ padding:14px 16px; }
 

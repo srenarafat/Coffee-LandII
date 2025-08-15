@@ -38,7 +38,8 @@
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
                             @endphp
-                            <tr data-row-id="{{ $id }}">
+                            @php $itemStock = optional(\App\Models\Product::find($id))->stock ?? 0; @endphp
+                            <tr data-row-id="{{ $id }}" data-stock="{{ $itemStock }}">
                                 <td style="min-width: 140px;">
                                     <div class="fw-semibold">{{ $item['name'] }}</div>
                                     @if(!empty($item['notes']))
@@ -60,7 +61,7 @@
                                         <div class="d-flex align-items-center justify-content-center gap-1">
                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle decrease-btn"
                                                     style="width: 28px; height: 28px;">−</button>
-                                            <span class="px-2 qty" data-qty="{{ $item['quantity'] }}">{{ $item['quantity'] }}</span>
+                                            <span class="px-2 qty" data-qty="{{ $item['quantity'] }}" data-confirmed="{{ $item['quantity'] }}">{{ $item['quantity'] }}</span>
                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle increase-btn"
                                                     style="width: 28px; height: 28px;">+</button>
                                         </div>
@@ -151,10 +152,11 @@
   function rowOf(el){ return el.closest('tr[data-row-id]'); }
   function unitOf(row){ return Number($('.row-price', row)?.dataset.unit || 0); }
   function qtyEl(row){ return $('.qty', row); }
-  function setQty(row, q){
+  function setQty(row, q, confirmed=false){
     const qEl = qtyEl(row);
     qEl.dataset.qty = q;
     qEl.textContent = q;
+    if(confirmed) qEl.dataset.confirmed = q;
   }
   function lineTotal(row){
     const line = unitOf(row) * Number(qtyEl(row).dataset.qty || 0);
@@ -190,6 +192,8 @@
     const { productId, url, token } = getIds(row);
     if(!productId || !url || !token) return;
 
+    const confirmedQty = Number(qtyEl(row).dataset.confirmed || 0);
+
     // cancel any in-flight request for this row
     if (pending.get(productId)?.controller) {
       pending.get(productId).controller.abort();
@@ -208,9 +212,20 @@
     try{
       const res = await fetch(url, { method:'POST', body:fd, signal:controller.signal });
       json = await res.json().catch(()=>null);
+      if(!res.ok){
+        setQty(row, confirmedQty, true);
+        lineTotal(row);
+        recalcTotals();
+        if(json?.error) showToast(json.error);
+        return;
+      }
     }catch(e){
-      // If aborted, just exit silently.
       if (controller.signal.aborted) return;
+      setQty(row, confirmedQty, true);
+      lineTotal(row);
+      recalcTotals();
+      showToast('Error updating quantity');
+      return;
     }
 
     // If server accepted set_quantity we should have numbers back
@@ -218,7 +233,7 @@
       // server authoritative values
       if (json.item) {
         const q = Number(json.item.quantity ?? targetQty);
-        setQty(row, q);
+        setQty(row, q, true);
         $('.row-price', row).textContent = fmt(json.item.line_total ?? unitOf(row)*q);
       } else {
         // compute locally if server didn’t send item
@@ -236,8 +251,8 @@
 
     // Fallback path: backend doesn't support set_quantity -> send delta
     // We compute current qty and send required +/- count as a loop.
-    const current = Number(qtyEl(row).dataset.qty || 0);
-    let delta = targetQty - current;
+    let delta = targetQty - confirmedQty;
+    let workingQty = confirmedQty;
     while (delta !== 0) {
       const step = delta > 0 ? 'increase' : 'decrease';
       const body2 = new FormData();
@@ -247,10 +262,18 @@
       try{
         const res2 = await fetch(url, { method:'POST', body:body2, signal:controller.signal });
         const j2 = await res2.json().catch(()=>null);
+        if(!res2.ok){
+          setQty(row, confirmedQty, true);
+          lineTotal(row);
+          recalcTotals();
+          if(j2?.error) showToast(j2.error);
+          return;
+        }
         // update UI from server when available; else update locally
-        const newQty = Number(j2?.item?.quantity ?? (step==='increase'? (Number(qtyEl(row).dataset.qty||0)+1) : Math.max(0, Number(qtyEl(row).dataset.qty||0)-1)));
+        const newQty = Number(j2?.item?.quantity ?? (step==='increase'? workingQty+1 : Math.max(0, workingQty-1)));
         if (newQty <= 0){ row.remove(); recalcTotals(); return; }
-        setQty(row, newQty);
+        workingQty = newQty;
+        setQty(row, newQty, true);
         if (j2?.item?.line_total != null) $('.row-price', row).textContent = fmt(j2.item.line_total);
         else lineTotal(row);
         if (j2?.totals){
@@ -260,7 +283,11 @@
         delta += (step==='increase' ? -1 : 1);
       }catch(e){
         if (controller.signal.aborted) return;
-        break; // stop trying on network error
+        setQty(row, confirmedQty, true);
+        lineTotal(row);
+        recalcTotals();
+        showToast('Error updating quantity');
+        return;
       }
     }
   }
@@ -296,6 +323,11 @@
 
     const row = rowOf(plus || minus);
     const qNow = Number(qtyEl(row).dataset.qty || 0);
+    const stock = Number(row?.dataset.stock ?? Infinity);
+    if (plus && qNow >= stock) {
+      showToast(`❌ Out of Stock: Only ${stock} left`);
+      return;
+    }
     const qNew = Math.max(0, qNow + (plus ? 1 : -1));
 
     // optimistic UI
