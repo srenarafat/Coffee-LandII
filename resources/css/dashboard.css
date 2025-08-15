@@ -68,7 +68,7 @@ body{
 
 /* KPI cards */
 .kpi{
-  border:0; border-radius:16px;
+  border:1px solid var(--slate-200); border-radius:16px;
   box-shadow:0 .35rem .9rem rgba(0,0,0,.07);
   background:#fff;
   transition:transform .15s ease, box-shadow .15s ease;
@@ -94,7 +94,7 @@ body{
 .kpi-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
 
 /* Filled KPI toggle */
-.kpi-filled{ color:#fff; border:none; box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
+.kpi-filled{ color:#fff; border:1px solid rgba(255,255,255,.25); box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
 .kpi-filled .kpi-label{ color:rgba(255,255,255,.9); }
 .kpi-filled.kpi-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
 .kpi-filled.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
@@ -111,7 +111,7 @@ body{
 
 /* ---------- Action tiles ---------- */
 .tile{
-  border:0; border-radius:14px;
+  border:1px solid var(--slate-200); border-radius:14px;
   box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
   transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   background:#fff;
@@ -147,7 +147,7 @@ body{
 .tile-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
 
 /* Filled tile toggle */
-.tile-filled{ color:#fff; border:none; box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
+.tile-filled{ color:#fff; border:1px solid rgba(255,255,255,.25); box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
 .tile-filled .tile-icon{ background:rgba(255,255,255,.2); color:#fff; }
 .tile-filled.tile-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
 .tile-filled.tile-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
