@@ -220,9 +220,10 @@ class SaleController extends Controller
 
     public function setTable(Request $request)
     {
+        $maxTable = config('app.table_limit');
         $data = $request->validate([
-            // allow table numbers up to 20
-            'table_number' => 'required|integer|min:1|max:20',
+            // allow table numbers up to configured limit
+            'table_number' => 'required|integer|min:1|max:' . $maxTable,
         ]);
 
         session(['table_number' => $data['table_number']]);

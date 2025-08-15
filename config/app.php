@@ -12,6 +12,9 @@ return [
 
     'timezone' => 'Asia/Phnom_Penh', // ✅ Correct for Cambodia
 
+    // Maximum table number available for selection
+    'table_limit' => env('TABLE_LIMIT', 20),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

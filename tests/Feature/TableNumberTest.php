@@ -84,4 +84,20 @@ class TableNumberTest extends TestCase
         $response->assertOk();
         $this->assertNull(session('table_number'));
     }
+    
+    public function test_table_number_validation_respects_config_limit()
+    {
+        $limit = config('app.table_limit');
+        $shop = Shop::create(['name' => 'S1']);
+        $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
+
+        // within limit should succeed
+        $response = $this->actingAs($user)->post(route('cashier.pos.table'), ['table_number' => $limit]);
+        $response->assertJson(['table_number' => $limit]);
+
+        // exceeding limit should trigger validation error
+        $response = $this->actingAs($user)->post(route('cashier.pos.table'), ['table_number' => $limit + 1]);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors('table_number');
+    }
 }

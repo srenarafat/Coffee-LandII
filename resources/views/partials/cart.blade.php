@@ -143,11 +143,37 @@
 <script>
 (function(){
   const currency = @json(optional($setting)->currency ?? '$');
+  const cartContainer = document.getElementById('cart-container');
+  const noteUrl = @json(route($routePrefix . '.pos.note'));
+  const removeLabel = @json(__('messages.remove_command'));
 
   // ---- helpers -------------------------------------------------------------
   const $ = (sel, ctx=document) => ctx.querySelector(sel);
   const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
   const fmt = n => Number(n||0).toFixed(2);
+
+  function getCsrf(){
+    return document.querySelector('meta[name="csrf-token"]')?.content
+      || document.querySelector('#commentForm input[name=_token]')?.value
+      || '';
+  }
+
+  function renderNotes(notes){
+    const list = $('#currentNotes');
+    if(!list) return;
+    list.innerHTML='';
+    notes.forEach(n=>{
+      const li=document.createElement('li');
+      li.className='list-group-item d-flex justify-content-between align-items-center';
+      li.textContent=n;
+      const btn=document.createElement('button');
+      btn.className='btn btn-sm btn-danger remove-note';
+      btn.textContent=removeLabel;
+      btn.dataset.note=n;
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  }
 
   function rowOf(el){ return el.closest('tr[data-row-id]'); }
   function unitOf(row){ return Number($('.row-price', row)?.dataset.unit || 0); }
@@ -303,10 +329,49 @@
   }
 
   // ---- event handlers ------------------------------------------------------
-  document.addEventListener('click', (e)=>{
+  document.addEventListener('click', async (e)=>{
+    const noteBtn = e.target.closest('.note-btn');
+    const removeNoteBtn = e.target.closest('.remove-note');
     const plus = e.target.closest('.increase-btn');
     const minus = e.target.closest('.decrease-btn');
     const remove = e.target.closest('.remove-item');
+
+     if (noteBtn){
+      const productId = noteBtn.dataset.productId;
+      const notes = JSON.parse(noteBtn.dataset.notes || '[]');
+      $('#commentProductId').value = productId;
+      $('#commentInput').value = '';
+      renderNotes(notes);
+      bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
+      return;
+    }
+
+    if (removeNoteBtn){
+      const productId = $('#commentProductId').value;
+      const fd = new FormData();
+      fd.append('_token', getCsrf());
+      fd.append('product_id', productId);
+      fd.append('remove_note', removeNoteBtn.dataset.note || '');
+      try{
+        const res = await fetch(noteUrl, {
+          method:'POST',
+          headers:{'X-Requested-With':'XMLHttpRequest'},
+          body:fd
+        });
+        const json = await res.json().catch(()=>null);
+        if(res.ok && json?.cart){
+          const modal = bootstrap.Modal.getInstance($('#commentModal'));
+          if(modal) modal.hide();
+          cartContainer.innerHTML = json.cart;
+          const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
+          const newNotes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
+          $('#commentProductId').value = productId;
+          renderNotes(newNotes);
+          bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
+        }
+      }catch(err){ showToast('Error updating note'); }
+      return;
+    }
 
     if (remove){
       e.preventDefault();
@@ -339,6 +404,34 @@
       lineTotal(row);
       recalcTotals();
       scheduleSync(row);
+    }
+  });
+  
+  document.addEventListener('submit', async (e)=>{
+    if(e.target.matches('#commentForm')){
+      e.preventDefault();
+      const form = e.target;
+      const productId = $('#commentProductId').value;
+      const fd = new FormData(form);
+      try{
+        const res = await fetch(noteUrl, {
+          method:'POST',
+          headers:{'X-Requested-With':'XMLHttpRequest'},
+          body:fd
+        });
+        const json = await res.json().catch(()=>null);
+        if(res.ok && json?.cart){
+          const modal = bootstrap.Modal.getInstance($('#commentModal'));
+          if(modal) modal.hide();
+          cartContainer.innerHTML = json.cart;
+          const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
+          const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
+          $('#commentProductId').value = productId;
+          renderNotes(notes);
+          $('#commentInput').value = '';
+          bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
+        }
+      }catch(err){ showToast('Error updating note'); }
     }
   });
 })();

@@ -106,62 +106,91 @@
   <div class="row g-2 align-items-stretch mb-2">
 
     {{-- Chart --}}
-    <div class="col-12 col-lg-6 d-flex">
-      <div class="card surface flex-fill h-100">
-        <div class="card-header surface-header equal-header d-flex justify-content-between align-items-center position-relative">
-          <span class="header-title-center fw-semibold">{{ __('messages.sales_earnings') }}</span>
-          <div class="btn-group btn-group-sm mb-0" role="group" aria-label="Sales range">
-            <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="today">Today</button>
-            <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="week">Week</button>
-            <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="month">Month</button>
-          </div>
+<div class="col-12 col-lg-6 d-flex">
+  <div class="card surface sales-card flex-fill h-100">
+    <div class="card-header surface-header equal-header d-flex align-items-center justify-content-between">
+      <div class="d-flex sales-tools">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Sales range">
+          <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="today">Today</button>
+          <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="week">Week</button>
+          <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="month">Month</button>
         </div>
-        <div class="card-body">
-          <canvas id="barChart" height="170" aria-label="Sales chart" role="img"></canvas>
+        {{-- Optional dataset toggle (Revenue / Orders / Items) --}}
+        <div class="btn-group btn-group-sm dataset-toggle" id="datasetToggle" role="group" aria-label="Dataset">
+          <button type="button" class="btn active" data-dataset="revenue">Revenue</button>
+          <button type="button" class="btn" data-dataset="orders">Orders</button>
+          <button type="button" class="btn" data-dataset="items">Items</button>
         </div>
       </div>
+
+      <span class="header-title-center fw-semibold">{{ __('messages.sales_earnings') }}</span>
+
+      <button type="button" id="downloadChart" class="btn btn-sm btn-outline-brown">Download</button>
     </div>
+
+    <div class="card-body">
+      {{-- mini stats row (auto-updates) --}}
+      <div class="row g-2 stat-row">
+        <div class="col-6 col-md-auto"><div class="stat-chip"><span class="label">Revenue</span><span id="statRevenue" class="value">{{ optional($setting)->currency ?? '$' }}{{ number_format($todaySalesTotal ?? 0, 2) }}</span></div></div>
+        <div class="col-6 col-md-auto"><div class="stat-chip"><span class="label">Orders</span><span id="statOrders" class="value">{{ $todayOrderCount ?? 0 }}</span></div></div>
+        <div class="col-6 col-md-auto"><div class="stat-chip"><span class="label">Items</span><span id="statItems" class="value">{{ $todayItemsSold ?? 0 }}</span></div></div>
+        <div class="col-6 col-md-auto"><div class="stat-chip"><span class="label">AOV</span><span id="statAov" class="value">{{ optional($setting)->currency ?? '$' }}{{ number_format($todayAverageOrderValue ?? 0, 2) }}</span></div></div>
+      </div>
+
+      <canvas id="barChart" height="170" aria-label="Sales chart" role="img"></canvas>
+    </div>
+  </div>
+</div>
+
 
     {{-- Transactions --}}
     <div class="col-12 col-lg-6 d-flex">
-      <div class="card surface flex-fill h-100">
-        <div class="card-header surface-header equal-header d-flex justify-content-center align-items-center">
-          <span class="fw-semibold">{{ __('messages.recent_transactions') }}</span>
-        </div>
-        <div class="card-body p-0">
-          <div class="overflow-y-auto" style="max-height: 24rem;">
-            <table class="table table-striped mb-0 text-center align-middle">
-              <thead class="table-sticky custom-blue-header">
-                <tr>
-                  <th>{{ __('messages.invoice') }}</th>
-                  <th>{{ __('messages.date') }}</th>
-                  <th>{{ __('messages.cashier') }}</th>
-                  <th class="text-end">{{ __('messages.amount') }}</th>
-                  <th class="text-end">{{ __('messages.discount') }}</th>
-                  <th class="text-end">{{ __('messages.total') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @forelse ($recentSales as $sale)
-                  <tr>
-                    <td>{{ $sale->invoice_no }}</td>
-                    <td>{{ $sale->created_at->format('d/m/Y, H:i') }}</td>
-                    <td>{{ $sale->user->name ?? 'N/A' }}</td>
-                    <td class="text-end px-3 py-2">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->subtotal, 2) }}</td>
-                    <td class="text-end px-3 py-2">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount ?? 0, 2) }}</td>
-                    <td class="text-end px-3 py-2 fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}</td>
-                  </tr>
-                @empty
-                  <tr>
-                    <td colspan="6" class="text-muted text-center">{{ __('messages.no_transactions_found') }}</td>
-                  </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <div class="card surface flex-fill h-100">
+    <div class="card-header surface-header equal-header d-flex justify-content-center align-items-center">
+      <span class="fw-semibold">{{ __('messages.recent_transactions') }}</span>
+    </div>
+    <div class="card-body p-0 table-wrap">
+      <div class="overflow-y-auto" style="max-height: 24rem;">
+        <table class="table table-striped table-modern mb-0 text-center align-middle">
+          <thead class="table-sticky custom-blue-header">
+            <tr>
+              <th>{{ __('messages.invoice') }}</th>
+              <th>{{ __('messages.date') }}</th>
+              <th>{{ __('messages.cashier') }}</th>
+              <th class="text-end">{{ __('messages.amount') }}</th>
+              <th class="text-end">{{ __('messages.discount') }}</th>
+              <th class="text-end">{{ __('messages.total') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @forelse ($recentSales as $sale)
+              @php $hasDiscount = ($sale->discount ?? 0) > 0; @endphp
+              <tr>
+                <td>{{ $sale->invoice_no }}</td>
+                <td>{{ $sale->created_at->format('d/m/Y, H:i') }}</td>
+                <td>{{ $sale->user->name ?? 'N/A' }}</td>
+                <td class="num">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->subtotal, 2) }}</td>
+                <td class="num">
+                  @if($hasDiscount)
+                    <span class="disc-pill">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount, 2) }}</span>
+                  @else
+                    {{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount ?? 0, 2) }}
+                  @endif
+                </td>
+                <td class="num fw-bold">{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}</td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="6" class="text-muted text-center">{{ __('messages.no_transactions_found') }}</td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
+</div>
+
 
   </div>
 </div>
@@ -213,4 +242,124 @@
     });
   });
 </script>
+<script>
+  const currency = @json(optional($setting)->currency ?? '$');
+  const routePrefix = @json($routePrefix);
+
+  // initial payload (server)
+  const initial = {
+    labels: @json($chartLabels),
+    revenue: @json($chartData), // keep your "totals" as revenue
+    // if you already have these arrays available, pass them; otherwise they’ll be undefined and buttons will hide:
+    orders: window.initialOrders, 
+    items: window.initialItems
+  };
+
+  // Build gradient fill
+  const ctx = document.getElementById('barChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+  gradient.addColorStop(0, 'rgba(16, 185, 129, .25)');
+  gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+  // Dataset factory
+  function makeDataset(label, data, color) {
+    return {
+      label, data, tension:.45, pointRadius:0, borderWidth:2,
+      backgroundColor: gradient, borderColor: color, fill:true
+    };
+  }
+
+  let currentDataset = 'revenue';
+  const datasetsMap = {
+    revenue: () => makeDataset('Revenue', initial.revenue, 'rgba(13,148,136,1)'),
+    orders:  () => makeDataset('Orders',  initial.orders,  'rgba(59,130,246,1)'),
+    items:   () => makeDataset('Items',   initial.items,   'rgba(99,102,241,1)')
+  };
+
+  // Hide dataset buttons that have no data
+  document.querySelectorAll('#datasetToggle [data-dataset]').forEach(btn => {
+    const key = btn.dataset.dataset;
+    if(!Array.isArray(initial[key])) btn.style.display = 'none';
+  });
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: initial.labels, datasets: [datasetsMap[currentDataset]()] },
+    options: {
+      responsive:true,
+      interaction:{ mode:'index', intersect:false },
+      scales:{
+        y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.06)' } },
+        x:{ grid:{ display:false } }
+      },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          callbacks:{
+            label: function(context){
+              const v = context.parsed.y ?? 0;
+              return currentDataset === 'revenue'
+                ? `${currency}${v.toFixed(2)}`
+                : v.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Range buttons -> fetch
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const range = btn.dataset.range;
+      fetch(`/${routePrefix}/dashboard/sales-data/${range}`)
+        .then(r => r.json())
+        .then(payload => {
+          // Expected: {labels, totals, orders?, items?}
+          initial.labels  = payload.labels;
+          initial.revenue = payload.totals;
+          if (payload.orders) initial.orders = payload.orders;
+          if (payload.items)  initial.items  = payload.items;
+
+          // Update stats (fallbacks if arrays absent)
+          const sum = arr => (Array.isArray(arr) ? arr.reduce((a,b)=>a+(+b||0),0) : 0);
+          const revenue = sum(initial.revenue);
+          const orders  = Array.isArray(initial.orders) ? sum(initial.orders) : undefined;
+          const items   = Array.isArray(initial.items)  ? sum(initial.items)  : undefined;
+          const aov     = orders && orders>0 ? (revenue/orders) : 0;
+
+          document.getElementById('statRevenue').textContent = currency + revenue.toFixed(2);
+          if (orders !== undefined) document.getElementById('statOrders').textContent = orders.toLocaleString();
+          if (items  !== undefined) document.getElementById('statItems').textContent  = items.toLocaleString();
+          document.getElementById('statAov').textContent = currency + aov.toFixed(2);
+
+          // Refresh chart
+          chart.data.labels = initial.labels;
+          chart.data.datasets = [datasetsMap[currentDataset]()];
+          chart.update();
+        })
+        .catch(()=>{});
+    });
+  });
+
+  // Dataset toggle
+  document.querySelectorAll('#datasetToggle [data-dataset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#datasetToggle .btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDataset = btn.dataset.dataset;
+      chart.data.datasets = [datasetsMap[currentDataset]()];
+      chart.update();
+    });
+  });
+
+  // Download chart as PNG
+  document.getElementById('downloadChart').addEventListener('click', ()=>{
+    const a = document.createElement('a');
+    a.href = chart.toBase64Image('image/png', 1);
+    a.download = `sales_chart_${currentDataset}.png`;
+    a.click();
+  });
+</script>
+
 @endpush

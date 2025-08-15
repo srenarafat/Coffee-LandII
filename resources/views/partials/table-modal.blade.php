@@ -6,7 +6,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                @for ($i = 1; $i <= 17; $i++)
+                @for ($i = 1; $i <= config('app.table_limit'); $i++)
                     @php $selected = session('table_number') == $i; @endphp
                     <button type="button" class="btn m-1 table-btn {{ $selected ? 'btn-primary active' : 'btn-outline-primary' }}" data-number="{{ $i }}">{{ $i }}</button>
                 @endfor
