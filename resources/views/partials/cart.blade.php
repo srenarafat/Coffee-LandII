@@ -460,8 +460,11 @@
 
     // optimistic UI
     if (qNew === 0){
+      setQty(row, 0);
+      scheduleSync(row);
       row.remove();
       recalcTotals();
+      checkEmptyCart();
     } else {
       setQty(row, qNew);
       lineTotal(row);
