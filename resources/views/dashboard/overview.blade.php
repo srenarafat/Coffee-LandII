@@ -232,9 +232,9 @@
   .stat-chip .value{ font-variant-numeric:tabular-nums; color:#0f172a; }
   @media (max-width:576px){ .stat-row .stat-chip{ width:100%; justify-content:space-between; } }
 
-  /* ---- Dataset toggle look on dark header ---- */
-  .dataset-toggle .btn{ --bs-btn-padding-y:.2rem; --bs-btn-padding-x:.55rem; --bs-btn-font-size:.8rem; border-color:rgba(255,255,255,.55); color:#fff; }
-  .dataset-toggle .btn.active{ background:#fff; color:var(--brown); border-color:#fff; }
+  /* ---- Dataset toggle look ---- */
+  .dataset-toggle .btn{ --bs-btn-padding-y:.2rem; --bs-btn-padding-x:.55rem; --bs-btn-font-size:.8rem; border-color:var(--brown); color:var(--brown); }
+  .dataset-toggle .btn.active{ background:var(--brown); color:#fff; border-color:var(--brown); }
 
   /* ---- Table polish ---- */
   .table-modern tbody tr:hover{ background:#f7fbff; }
