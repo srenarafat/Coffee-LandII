@@ -1,5 +1,11 @@
 {{-- resources/views/dashboard/overview.blade.php --}}
 
+<script>
+  window.initialOrders = @json($chartOrders ?? []);
+  window.initialItems  = @json($chartItems ?? []);
+  window.initialAov    = @json($chartAov ?? []);
+</script>
+
 <div class="container-fluid mt-1">
 
   {{-- KPIs --}}
@@ -112,13 +118,14 @@
             <div class="btn-group btn-group-sm" role="group" aria-label="Sales range">
               <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="today">Today</button>
               <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="week">Week</button>
-              <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="month">Month</button>
+              <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="month">{{ __('messages.this_month') }}</button>
             </div>
-            {{-- Optional dataset toggle (Revenue / Orders / Items) --}}
+            {{-- Optional dataset toggle (Revenue / Orders / Items / AOV) --}}
             <div class="btn-group btn-group-sm dataset-toggle" id="datasetToggle" role="group" aria-label="Dataset">
               <button type="button" class="btn active" data-dataset="revenue">Revenue</button>
               <button type="button" class="btn" data-dataset="orders">Orders</button>
               <button type="button" class="btn" data-dataset="items">Items</button>
+              <button type="button" class="btn" data-dataset="aov">AOV</button>
             </div>
           </div>
 
@@ -259,7 +266,8 @@
     labels : @json($chartLabels),
     revenue: @json($chartData),     // your totals as revenue
     orders : window.initialOrders,  // optional arrays, hide buttons if missing
-    items  : window.initialItems
+    items  : window.initialItems,
+    aov    : window.initialAov
   };
 
   // Chart gradient
@@ -276,7 +284,8 @@
   const datasetsMap = {
     revenue: () => makeDataset('Revenue', initial.revenue, 'rgba(13,148,136,1)'),
     orders : () => makeDataset('Orders',  initial.orders,  'rgba(59,130,246,1)'),
-    items  : () => makeDataset('Items',   initial.items,   'rgba(99,102,241,1)')
+    items  : () => makeDataset('Items',   initial.items,   'rgba(99,102,241,1)'),
+    aov    : () => makeDataset('AOV',     initial.aov,     'rgba(244,63,94,1)')
   };
 
   // Hide dataset buttons with no data
@@ -299,7 +308,7 @@
         tooltip:{ callbacks:{
           label:(c)=>{
             const v=c.parsed.y??0;
-            return currentDataset==='revenue' ? `${currency}${v.toFixed(2)}` : v.toLocaleString();
+            return ['revenue','aov'].includes(currentDataset) ? `${currency}${v.toFixed(2)}` : v.toLocaleString();
           }
         }}
       }
@@ -318,6 +327,12 @@
           initial.revenue = payload.totals;
           if(payload.orders) initial.orders = payload.orders;
           if(payload.items)  initial.items  = payload.items;
+          initial.aov = Array.isArray(initial.orders)
+            ? initial.revenue.map((t,i)=>{
+                const o = initial.orders[i] || 0;
+                return o ? t/o : 0;
+              })
+            : [];
 
           const sum = a => Array.isArray(a) ? a.reduce((x,y)=>x+(+y||0),0) : 0;
           const revenue = sum(initial.revenue);

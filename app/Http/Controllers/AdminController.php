@@ -41,24 +41,38 @@ class AdminController extends Controller
         $threshold = Setting::value('low_stock_threshold') ?? 5;
         $lowStockCount = Product::where('stock', '<=', $threshold)->count();
 
-        // Calculate sales for the past 7 days
+        // Calculate sales stats for the past 7 days
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
         $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
                       ->where('shop_id', auth()->user()->shop_id)
-                      ->selectRaw('DATE(created_at) as date, SUM(total) as total')
+                      ->selectRaw('DATE(created_at) as date, SUM(total) as total, COUNT(*) as orders')
                       ->groupBy('date')
                       ->orderBy('date')
                       ->get()
-                      ->pluck('total', 'date');
+                      ->keyBy('date');
 
-        $chartLabels = [];
-        $chartData = [];
+        $itemsQuery = SaleItem::whereBetween('created_at', [$startDate, $endDate])
+            ->whereHas('sale', fn($q) => $q->where('shop_id', auth()->user()->shop_id))
+            ->selectRaw('DATE(created_at) as date, SUM(quantity) as qty')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('qty', 'date');
+
+        $chartLabels = $chartData = $chartOrders = $chartItems = $chartAov = [];
 
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $key = $date->format('Y-m-d');
+            $total  = $sales[$key]->total   ?? 0;
+            $orders = $sales[$key]->orders  ?? 0;
+            $items  = $itemsQuery[$key]     ?? 0;
+
             $chartLabels[] = $date->format('l');
-            $chartData[] = $sales[$date->format('Y-m-d')] ?? 0;
+            $chartData[]   = $total;
+            $chartOrders[] = $orders;
+            $chartItems[]  = $items;
+            $chartAov[]    = $orders ? $total / $orders : 0;
         }
 
         // Today's metrics
@@ -112,6 +126,9 @@ class AdminController extends Controller
             'recentSales',
             'chartLabels',
             'chartData',
+            'chartOrders',
+            'chartItems',
+            'chartAov',
             'weekSalesTotal',
             'todaySalesTotal',
             'todayOrderCount',
@@ -155,8 +172,8 @@ class AdminController extends Controller
                 break;
 
             case 'month':
-                $start = Carbon::now()->subDays(29)->startOfDay();
-                $end = Carbon::now()->endOfDay();
+                $start = Carbon::now()->startOfMonth();
+                $end   = Carbon::now()->endOfMonth();
                 $sales = Sale::where('shop_id', $shopId)
                     ->whereBetween('created_at', [$start, $end])
                     ->selectRaw('DATE(created_at) as date, SUM(total) as total, COUNT(*) as orders')
@@ -174,6 +191,7 @@ class AdminController extends Controller
 
                 $labels = $totals = $orders = $items = [];
                 for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                    $key = $date->format('Y-m-d');
                     $labels[] = $date->format('M d');
                     $totals[] = $sales[$key]->total ?? 0;
                     $orders[] = $sales[$key]->orders ?? 0;

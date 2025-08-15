@@ -26,8 +26,9 @@ body{
 /* Surfaces */
 .surface{ border:0; border-radius:14px; box-shadow:0 .25rem .9rem rgba(0,0,0,.06); background:#fff; }
 .surface-header{
-  background:linear-gradient(180deg,#eaf4ff 0%, #d8eaff 100%);
-  color:#0b1a2b; border-bottom:none; padding:.52rem .9rem;
+  /* Intensify background for better contrast */
+  background:linear-gradient(180deg,#d1e6ff 0%, #a9cfff 100%);
+  color:#05264d; border-bottom:none; padding:.52rem .9rem;
 }
 .card.surface .surface-header{ border-top-left-radius:14px; border-top-right-radius:14px; }
 
