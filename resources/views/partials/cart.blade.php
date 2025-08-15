@@ -146,6 +146,10 @@
   const cartContainer = document.getElementById('cart-container');
   const noteUrl = @json(route($routePrefix . '.pos.note'));
   const removeLabel = @json(__('messages.remove_command'));
+  const tableUrl = @json(route($routePrefix . '.pos.table'));
+  const tableLabel = @json(__('messages.table'));
+  let selectedTable = @json(session('table_number'));
+
 
   // ---- helpers -------------------------------------------------------------
   const $ = (sel, ctx=document) => ctx.querySelector(sel);
@@ -174,6 +178,18 @@
       list.appendChild(li);
     });
   }
+  function highlightTableButtons(number){
+    $$('.table-btn').forEach(btn=>{
+      if(btn.dataset.number == number){
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-primary','active');
+      }else{
+        btn.classList.remove('btn-primary','active');
+        btn.classList.add('btn-outline-primary');
+      }
+    });
+  }
+
 
   function rowOf(el){ return el.closest('tr[data-row-id]'); }
   function unitOf(row){ return Number($('.row-price', row)?.dataset.unit || 0); }
@@ -330,11 +346,40 @@
 
   // ---- event handlers ------------------------------------------------------
   document.addEventListener('click', async (e)=>{
+    const openTable = e.target.closest('#openTableModal');
+    const tableBtn = e.target.closest('.table-btn');
     const noteBtn = e.target.closest('.note-btn');
     const removeNoteBtn = e.target.closest('.remove-note');
     const plus = e.target.closest('.increase-btn');
     const minus = e.target.closest('.decrease-btn');
     const remove = e.target.closest('.remove-item');
+
+    if(openTable){
+      bootstrap.Modal.getOrCreateInstance($('#tableModal')).show();
+      highlightTableButtons(selectedTable);
+      return;
+    }
+
+    if(tableBtn){
+      e.preventDefault();
+      const number = tableBtn.dataset.number;
+      const fd = new FormData();
+      fd.append('_token', getCsrf());
+      fd.append('table_number', number);
+      try{
+        const res = await fetch(tableUrl,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
+        const json = await res.json().catch(()=>null);
+        if(res.ok){
+          selectedTable = json?.table_number ?? number;
+          const current = $('#currentTable');
+          if(current) current.textContent = `${tableLabel}: ${selectedTable}`;
+          highlightTableButtons(selectedTable);
+          const modal = bootstrap.Modal.getInstance($('#tableModal'));
+          if(modal) modal.hide();
+        }
+      }catch(err){ showToast('Error setting table'); }
+      return;
+    }
 
      if (noteBtn){
       const productId = noteBtn.dataset.productId;
@@ -364,10 +409,11 @@
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
           const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
-          const newNotes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
-          $('#commentProductId').value = productId;
-          renderNotes(newNotes);
-          bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
+          if(btn){
+            const newNotes = JSON.parse(btn.dataset.notes || '[]');
+            btn.dataset.notes = JSON.stringify(newNotes);
+          }
+          showToast('Note removed');
         }
       }catch(err){ showToast('Error updating note'); }
       return;
@@ -425,11 +471,12 @@
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
           const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
-          const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
-          $('#commentProductId').value = productId;
-          renderNotes(notes);
-          $('#commentInput').value = '';
-          bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
+          if(btn){
+            const notes = JSON.parse(btn.dataset.notes || '[]');
+            btn.dataset.notes = JSON.stringify(notes);
+          }
+          form.reset();
+          showToast('Note saved');
         }
       }catch(err){ showToast('Error updating note'); }
     }
