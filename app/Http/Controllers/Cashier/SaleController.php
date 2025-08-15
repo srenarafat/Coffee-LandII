@@ -13,6 +13,7 @@ use App\Models\Shop;
 use App\Models\StockLog;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SaleController extends Controller
@@ -212,6 +213,14 @@ class SaleController extends Controller
     if (!$cart || count($cart) === 0) {
         return back()->with('error', __('messages.cart_empty'));
     }
+    // Ensure stock is sufficient before proceeding
+    foreach ($cart as $productId => $item) {
+        $product = Product::find($productId);
+        if (!$product || $product->stock < $item['quantity']) {
+            return back()->with('error', __('messages.stock_not_enough'));
+        }
+    }
+
 
     $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
     $discountPercent = floatval($request->input('discount', 0));
@@ -232,57 +241,80 @@ class SaleController extends Controller
         ? $request->input('shop_id')
         : auth()->user()->shop_id;
 
-       $sale = Sale::create([
-        'user_id'        => auth()->id(),
-        'shop_id'        => $shopId,
-        'table_number'   => session('table_number'),
-        'subtotal'       => $subtotal,
-        'discount'       => $discountAmount,
-        'total'          => $total,
-        'payment_method' => $request->input('method', 'cash'),
-        'cash_usd'       => $cashUsd,
-        'cash_riel'      => $cashRiel,
-        'change_usd'     => $changeUsd,
-        'change_riel'    => $changeRiel,
-        'exchange_rate'  => $exchangeRate,
-    ]);
-
-    $sale->update([
-        'invoice_no' => 'INV-' . str_pad($sale->id, 5, '0', STR_PAD_LEFT),
-    ]);
-
-    foreach ($cart as $productId => $item) {
-        // Save sale item with optional note
-        SaleItem::create([
-            'sale_id'    => $sale->id,
-            'product_id' => $productId,
-            'quantity'   => $item['quantity'],
-            'price'      => $item['price'],
-            'total'      => $item['price'] * $item['quantity'],
-            'notes'      => $item['notes'] ?? [],
-        ]);
-
-        // ↓ Decrease product stock
-        $product = Product::find($productId);
-        if ($product) {
-            $product->stock -= $item['quantity'];
-            $product->save();
+       // Validate stock with fresh queries/locking
+    DB::beginTransaction();
+    try {
+        $insufficient = [];
+        $products = [];
+        foreach ($cart as $productId => $item) {
+            $product = Product::where('id', $productId)->lockForUpdate()->first();
+            if (!$product || $product->stock < $item['quantity']) {
+                $insufficient[] = $product ? $product->name : $productId;
+            } else {
+                $products[$productId] = $product;
+            }
         }
 
-        // ↓ Log stock out
-        StockLog::create([
-            'product_id' => $productId,
-            'type'       => 'out',
-            'quantity'   => $item['quantity'],
-            'note'       => 'Sold via POS',
-            'user_id'    => auth()->id(),
-        ]);
-    }
+        if (!empty($insufficient)) {
+            DB::rollBack();
+            return back()->with('error', 'Insufficient stock for: ' . implode(', ', $insufficient));
+        }
 
-    SystemLog::create([
-        'user_id' => auth()->id(),
-        'action'  => 'sale_created'
-    ]);
+        $sale = Sale::create([
+            'user_id'        => auth()->id(),
+            'shop_id'        => $shopId,
+            'table_number'   => session('table_number'),
+            'subtotal'       => $subtotal,
+            'discount'       => $discountAmount,
+            'total'          => $total,
+            'payment_method' => $request->input('method', 'cash'),
+            'cash_usd'       => $cashUsd,
+            'cash_riel'      => $cashRiel,
+            'change_usd'     => $changeUsd,
+            'change_riel'    => $changeRiel,
+            'exchange_rate'  => $exchangeRate,
+        ]);
+
+        $sale->update([
+            'invoice_no' => 'INV-' . str_pad($sale->id, 5, '0', STR_PAD_LEFT),
+        ]);
+
+        foreach ($cart as $productId => $item) {
+            // Save sale item with optional note
+            SaleItem::create([
+                'sale_id'    => $sale->id,
+                'product_id' => $productId,
+                'quantity'   => $item['quantity'],
+                'price'      => $item['price'],
+                'total'      => $item['price'] * $item['quantity'],
+                'notes'      => $item['notes'] ?? [],
+            ]);
+
+            // Decrease product stock using locked product
+            $product = $products[$productId];
+            $product->stock -= $item['quantity'];
+            $product->save();
+            
+            // Log stock out
+            StockLog::create([
+                'product_id' => $productId,
+                'type'       => 'out',
+                'quantity'   => $item['quantity'],
+                'note'       => 'Sold via POS',
+                'user_id'    => auth()->id(),
+            ]);
+        }
+
+        SystemLog::create([
+            'user_id' => auth()->id(),
+            'action'  => 'sale_created'
+        ]);
+
+    DB::commit();
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return back()->with('error', 'An error occurred.');
+    }
 
     session()->forget('cart');
 

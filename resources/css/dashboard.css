@@ -1,51 +1,37 @@
-:root {
-  --header-h: 42px;
+:root{
+  --header-h:42px;
 
   /* Brand + neutrals */
   --brown:#5c4033; --brown-100:#fff3ec;
-  --slate-50:#f8fafc; --slate-200:#e2e8f0; --slate-600:#475569;
+  --slate-50:#f8fafc; --slate-200:#e2e8f0; --slate-600:#475569; --slate-700:#334155;
 
-  /* Existing variants */
-  --teal-50:#f0fdfa; --teal-100:#ccfbf1; --teal-600:#0d9488;
-  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-600:#d97706;
-  --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-600:#4f46e5;
-  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-600:#059669;
-  --rose-50:#fff1f2; --rose-100:#ffe4e6; --rose-600:#e11d48;
-  --teal-700:#0f766e; --amber-700:#b45309; --indigo-700:#4338ca;
-  --emerald-700:#047857; --rose-700:#be123c; --slate-700:#334155;
-
-  /* Extra pops (optional) */
-  --sky-50:#f0f9ff; --sky-100:#e0f2fe; --sky-600:#0284c7;
-  --violet-50:#f5f3ff; --violet-100:#ede9fe; --violet-600:#7c3aed;
-  --orange-50:#fff7ed; --orange-100:#ffedd5; --orange-600:#ea580c;
-  --lime-50:#f7fee7; --lime-100:#ecfccb; --lime-600:#65a30d;
+  /* Variants */
+  --teal-50:#f0fdfa; --teal-100:#ccfbf1; --teal-600:#0ea5b7; --teal-700:#0f766e;
+  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-600:#10b981; --emerald-700:#047857;
+  --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-600:#6366f1; --indigo-700:#4338ca;
+  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-600:#f59e0b; --amber-700:#b45309;
+  --rose-50:#fff1f2; --rose-100:#ffe4e6; --rose-600:#ef4444; --rose-700:#be123c;
 }
 
 body{
-  /* Soft, lively canvas */
-  background:
-    radial-gradient(1100px 700px at 10% -10%, #fff7ed 0%, #faf7f5 45%, #ffffff 100%);
+  background: linear-gradient(180deg,#ffffff 0%, #faf7f5 60%, #ffffff 100%);
 }
 
-/* ---------- Equal height headers + centered title ---------- */
+/* Equal headers + centered title */
 .equal-header{ min-height:var(--header-h); display:flex; align-items:center; padding:.40rem .9rem; }
 .header-title-center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); white-space:nowrap; pointer-events:none; }
 .surface-header .btn-group{ margin:0; }
 .surface-header .btn-group .btn{ padding:.25rem .5rem; line-height:1.1; }
 
-/* ---------- Surfaces (cards & tables) ---------- */
-.surface{
-  border:0; border-radius:14px;
-  box-shadow:0 .25rem .9rem rgba(0,0,0,.06);
-  background:#fff;
-}
+/* Surfaces */
+.surface{ border:0; border-radius:14px; box-shadow:0 .25rem .9rem rgba(0,0,0,.06); background:#fff; }
 .surface-header{
-  background:linear-gradient(180deg, rgba(180,127,75,.98) 0%, rgba(190,126,83,.9) 100%);
+  background:linear-gradient(180deg, rgba(180,127,75,.98) 0%, rgba(190,126,83,.90) 100%);
   color:#fff; border-bottom:none; padding:.52rem .9rem;
 }
 .card.surface .surface-header{ border-top-left-radius:14px; border-top-right-radius:14px; }
 
-/* Buttons (brand + on dark header) */
+/* Buttons */
 .btn-outline-brown{
   --bs-btn-color:var(--brown); --bs-btn-border-color:var(--brown);
   --bs-btn-hover-bg:var(--brown); --bs-btn-hover-border-color:var(--brown);
@@ -58,115 +44,112 @@ body{
 }
 .surface-header .range-btn.active{ background:#fff; color:var(--brown); border-color:#fff; }
 
-/* ---------- KPI quick actions ---------- */
+/* KPI quick-action */
 .kpi-link{ display:block; text-decoration:none; }
 .kpi-action{ cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; }
 .kpi-action:hover{ transform:translateY(-2px); box-shadow:0 .9rem 1.6rem rgba(0,0,0,.08); }
-.kpi-action:active{ transform:translateY(0); }
 .kpi-action:focus-within{ outline:3px solid var(--brown); outline-offset:3px; }
-.kpi-cta{ color:#6b7280; opacity:.95; }
+.kpi-cta{ color:#f8fafc; opacity:.9; }
 
 /* KPI cards */
 .kpi{
-  border:1px solid var(--slate-200); border-radius:16px;
-  box-shadow:0 .35rem .9rem rgba(0,0,0,.07);
-  background:#fff;
+  border:0; border-radius:16px; box-shadow:0 .35rem .9rem rgba(0,0,0,.07); background:#fff;
   transition:transform .15s ease, box-shadow .15s ease;
 }
-.kpi:hover{ transform:translateY(-2px); }
-.kpi:focus, .kpi:focus-visible{ outline:3px solid var(--brown); outline-offset:3px; }
 .kpi .card-body{ padding:18px 16px; }
-.kpi-label{ font-size:.82rem; color:#6b7280; }
+.kpi-label{ font-size:.82rem; color:#334155; }
 .kpi-value{ font-weight:800; font-size:1.35rem; color:#0f172a; letter-spacing:.2px; }
 
-/* Variant gradients */
-.kpi-teal{ background:linear-gradient(135deg,var(--teal-50), var(--teal-100)); border:1px solid var(--teal-100); }
-.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-50), var(--emerald-100)); border:1px solid var(--emerald-100); }
-.kpi-indigo{ background:linear-gradient(135deg,var(--indigo-50), var(--indigo-100)); border:1px solid var(--indigo-100); }
-.kpi-amber{ background:linear-gradient(135deg,var(--amber-50), var(--amber-100)); border:1px solid var(--amber-100); }
-.kpi-rose{ background:linear-gradient(135deg,var(--rose-50), var(--rose-100)); border:1px solid var(--rose-100); }
-.kpi-slate{ background:linear-gradient(135deg,var(--slate-50), var(--slate-200)); border:1px solid var(--slate-200); }
-.kpi-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.18); }
-.kpi-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.18); }
-.kpi-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.18); }
-.kpi-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.18); }
-.kpi-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.18); }
-.kpi-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
+/* Pastel (unfilled) */
+.kpi-teal{    background:linear-gradient(135deg,var(--teal-50), var(--teal-100)); }
+.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-50), var(--emerald-100)); }
+.kpi-indigo{  background:linear-gradient(135deg,var(--indigo-50), var(--indigo-100)); }
+.kpi-amber{   background:linear-gradient(135deg,var(--amber-50), var(--amber-100)); }
+.kpi-rose{    background:linear-gradient(135deg,var(--rose-50), var(--rose-100)); }
 
-/* Filled KPI toggle */
-.kpi-filled{ color:#fff; border:1px solid rgba(255,255,255,.25); box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
-.kpi-filled .kpi-label{ color:rgba(255,255,255,.9); }
-.kpi-filled.kpi-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
-.kpi-filled.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
-.kpi-filled.kpi-indigo{ background:linear-gradient(135deg,var(--indigo-600), var(--indigo-700)); }
-.kpi-filled.kpi-amber{ background:linear-gradient(135deg,var(--amber-600), var(--amber-700)); }
-.kpi-filled.kpi-rose{ background:linear-gradient(135deg,var(--rose-600), var(--rose-700)); }
-.kpi-filled.kpi-slate{ background:linear-gradient(135deg,var(--slate-600), var(--slate-700)); }
-.kpi-filled.kpi-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.35); }
-.kpi-filled.kpi-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.35); }
-.kpi-filled.kpi-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.35); }
-.kpi-filled.kpi-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.35); }
-.kpi-filled.kpi-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.35); }
-.kpi-filled.kpi-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.35); }
+/* Filled mode (clear & colorful) */
+.kpi-filled{ color:#fff; border:0; box-shadow:0 .55rem 1.25rem rgba(0,0,0,.12); }
+.kpi-filled .kpi-label{ color:rgba(255,255,255,.92); }
+.kpi-filled .kpi-value{ color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.06); }
+.kpi-filled.kpi-teal{    background:linear-gradient(135deg,#22d3ee 0%, #06b6d4 100%); }
+.kpi-filled.kpi-emerald{ background:linear-gradient(135deg,#34d399 0%, #10b981 100%); }
+.kpi-filled.kpi-indigo{  background:linear-gradient(135deg,#a78bfa 0%, #6366f1 100%); }
+.kpi-filled.kpi-amber{   background:linear-gradient(135deg,#fbbf24 0%, #f59e0b 100%); }
+.kpi-filled.kpi-rose{    background:linear-gradient(135deg,#fda4af 0%, #ef4444 100%); }
 
-/* ---------- Action tiles ---------- */
+/* Tiles */
 .tile{
-  border:1px solid var(--slate-200); border-radius:14px;
-  box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
-  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  background:#fff;
+  border:0; border-radius:14px; box-shadow:0 .25rem .75rem rgba(0,0,0,.06);
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; background:#fff;
 }
 .tile:hover{ transform:translateY(-2px); box-shadow:0 1rem 1.6rem rgba(0,0,0,.09); }
-.tile:focus, .tile:focus-visible{ outline:3px solid var(--brown); outline-offset:3px; }
 .tile-icon{ width:42px; height:42px; display:grid; place-items:center; border-radius:10px; font-size:20px; }
-.tile-badge{ background:#0f172a; color:#fff; border-radius:999px; padding:.2rem .5rem; font-weight:700; }
+.tile-badge{ background:rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.35); }
 
-/* Variant gradients */
-.tile-teal{ background:linear-gradient(135deg,var(--teal-50), var(--teal-100)); border:1px solid var(--teal-100); }
-.tile-emerald{ background:linear-gradient(135deg,var(--emerald-50), var(--emerald-100)); border:1px solid var(--emerald-100); }
-.tile-indigo{ background:linear-gradient(135deg,var(--indigo-50), var(--indigo-100)); border:1px solid var(--indigo-100); }
-.tile-amber{ background:linear-gradient(135deg,var(--amber-50), var(--amber-100)); border:1px solid var(--amber-100); }
-.tile-rose{ background:linear-gradient(135deg,var(--rose-50), var(--rose-100)); border:1px solid var(--rose-100); }
-.tile-slate{ background:linear-gradient(135deg,var(--slate-50), var(--slate-200)); border:1px solid var(--slate-200); }
-.tile-teal .tile-icon{ background:var(--teal-50); color:var(--teal-600); }
+/* Filled tiles */
+.tile-filled{ color:#fff; border:0; box-shadow:0 .5rem 1.2rem rgba(0,0,0,.12); }
+.tile-filled .fw-semibold, .tile-filled .small{ color:#fff !important; }
+.tile-filled .tile-icon{ background:rgba(255,255,255,.22); color:#fff; }
+.tile-filled.tile-teal{    background:linear-gradient(135deg,#22d3ee 0%, #06b6d4 100%); }
+.tile-filled.tile-emerald{ background:linear-gradient(135deg,#34d399 0%, #10b981 100%); }
+.tile-filled.tile-indigo{  background:linear-gradient(135deg,#a78bfa 0%, #6366f1 100%); }
+.tile-filled.tile-amber{   background:linear-gradient(135deg,#fbbf24 0%, #f59e0b 100%); }
+.tile-filled.tile-rose{    background:linear-gradient(135deg,#fda4af 0%, #ef4444 100%); }
+.tile-filled.tile-slate{   background:linear-gradient(135deg,#94a3b8 0%, #334155 100%); }
 
-.tile-emerald .tile-icon{ background:var(--emerald-50); color:var(--emerald-600); }
-
-.tile-indigo .tile-icon{ background:var(--indigo-50); color:var(--indigo-600); }
-
-.tile-amber .tile-icon{ background:var(--amber-50); color:var(--amber-600); }
-
-.tile-rose .tile-icon{ background:var(--rose-50); color:var(--rose-600); }
-
-.tile-slate .tile-icon{ background:#eef2f7; color:var(--slate-600); }
-.tile-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.18); }
-.tile-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.18); }
-.tile-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.18); }
-.tile-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.18); }
-.tile-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.18); }
-.tile-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
-
-/* Filled tile toggle */
-.tile-filled{ color:#fff; border:1px solid rgba(255,255,255,.25); box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
-.tile-filled .tile-icon{ background:rgba(255,255,255,.2); color:#fff; }
-.tile-filled.tile-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
-.tile-filled.tile-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
-.tile-filled.tile-indigo{ background:linear-gradient(135deg,var(--indigo-600), var(--indigo-700)); }
-.tile-filled.tile-amber{ background:linear-gradient(135deg,var(--amber-600), var(--amber-700)); }
-.tile-filled.tile-rose{ background:linear-gradient(135deg,var(--rose-600), var(--rose-700)); }
-.tile-filled.tile-slate{ background:linear-gradient(135deg,var(--slate-600), var(--slate-700)); }
-.tile-filled.tile-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.35); }
-.tile-filled.tile-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.35); }
-.tile-filled.tile-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.35); }
-.tile-filled.tile-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.35); }
-.tile-filled.tile-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.35); }
-.tile-filled.tile-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.35); }
-
-/* ---------- Tables ---------- */
+/* Table */
 .custom-blue-header th{
   background:linear-gradient(180deg,#eaf4ff 0%, #d8eaff 100%) !important;
-  color:#0b1a2b !important; font-weight:700;
-  border-top:0; border-bottom:1px solid #c3dbfb;
+  color:#0b1a2b !important; font-weight:700; border-top:0; border-bottom:1px solid #c3dbfb;
 }
 .table-striped>tbody>tr:hover{ background-color:#f7fbff; }
 .table-sticky{ position:sticky; top:0; z-index:2; }
+
+/* ===== Text & Icon Clean-up for KPIs and Tiles ===== */
+
+/* Global crispness */
+html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+/* --- KPI typography --- */
+.kpi .kpi-label{ font-weight:600; letter-spacing:.2px; opacity:.95; }
+.kpi .kpi-value{ font-weight:800; font-size:1.45rem; line-height:1.1; }
+.kpi-cta{ font-weight:600; letter-spacing:.15px; }
+
+/* Ensure white text inside filled KPIs */
+.kpi-filled,
+.kpi-filled .kpi-value,
+.kpi-filled .kpi-label,
+.kpi-filled .kpi-cta{ color:#000000 !important; }
+.kpi-filled .kpi-label{ opacity:.92; }
+.kpi-filled .kpi-value{ text-shadow:0 1px 0 rgba(255, 243, 243, 0.12); }
+
+/* --- Tile title/desc colors & hierarchy --- */
+.tile .fw-semibold{ font-weight:700; letter-spacing:.2px; }
+.tile .small{ opacity:.9; }
+
+/* Force white text in filled tiles (even if markup has text-dark / text-muted) */
+.tile-filled,
+.tile-filled .fw-semibold,
+.tile-filled .text-muted,
+.tile-filled .small,
+.tile-filled .text-dark{ color:#000000 !important; opacity:.95; }
+
+/* --- Icon treatment (consistent, clean) --- */
+.tile .tile-icon{
+  width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+  background:rgba(232, 232, 232, 0.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 1px 0 rgba(255,255,255,.18);
+}
+.tile .tile-icon i{ font-size:18px; line-height:1; }
+.tile-filled .tile-icon{ background:rgba(255,255,255,.22); color:#000000; }
+
+/* --- Badge contrast on colorful tiles --- */
+.tile-badge{
+  background:rgba(255,255,255,.22);
+  color:#fff; border:1px solid rgba(255,255,255,.35);
+}
+
+/* Optional: slightly tighter card padding for denser look */
+.kpi .card-body{ padding:22px 18px; }
+.tile .card-body{ padding:14px 16px; }
+
