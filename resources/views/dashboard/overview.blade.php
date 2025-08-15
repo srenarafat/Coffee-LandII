@@ -120,13 +120,13 @@
               <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="week">Week</button>
               <button type="button" class="btn btn-outline-brown range-btn fw-semibold" data-range="month">{{ __('messages.this_month') }}</button>
             </div>
-            {{-- Optional dataset toggle (Revenue / Orders / Items / AOV) --}}
+            <!-- {{-- Optional dataset toggle (Revenue / Orders / Items / AOV) --}}
             <div class="btn-group btn-group-sm dataset-toggle" id="datasetToggle" role="group" aria-label="Dataset">
               <button type="button" class="btn active" data-dataset="revenue">Revenue</button>
               <button type="button" class="btn" data-dataset="orders">Orders</button>
               <button type="button" class="btn" data-dataset="items">Items</button>
               <button type="button" class="btn" data-dataset="aov">AOV</button>
-            </div>
+            </div> -->
           </div>
 
           <span class="header-title-center fw-semibold">{{ __('messages.sales_earnings') }}</span>

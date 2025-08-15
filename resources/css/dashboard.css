@@ -174,26 +174,6 @@ html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 .sales-card .surface-header { position: relative; }
 .sales-tools { gap:.5rem; }
 
-/* Small stat chips under the header */
-.stat-row { margin-top:.25rem; margin-bottom:.5rem; }
-.stat-chip{
-  display:flex; align-items:center; gap:.5rem;
-  background:rgba(255,255,255,.7);
-  border:1px solid rgba(0,0,0,.06);
-  border-radius:999px; padding:.25rem .6rem;
-  box-shadow:0 2px 6px rgba(0,0,0,.04);
-  font-weight:600; white-space:nowrap;
-}
-.stat-chip .label{ color:#475569; font-size:.78rem; }
-.stat-chip .value{ font-variant-numeric: tabular-nums; color:#0f172a; }
-
-/* Dataset toggle group style */
-.dataset-toggle .btn{
-  --bs-btn-padding-y:.2rem; --bs-btn-padding-x:.55rem; --bs-btn-font-size:.8rem;
-  border-color:var(--brown); color:var(--brown);
-}
-.dataset-toggle .btn.active{ background:var(--brown); color:#fff; border-color:var(--brown); }
-
 /* Chart canvas spacing */
 #barChart{ max-height:260px; }
 
