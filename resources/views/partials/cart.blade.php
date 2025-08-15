@@ -98,7 +98,7 @@
     </div>
 
     <!-- Summary + Checkout -->
-    <div class="px-3 pb-3">
+    <div class="px-3 pb-3" id="checkoutSection">
         <div class="mb-2 text-end">
             <div class="fw-semibold">
                 {{ __('messages.total_items') }}:
@@ -216,6 +216,23 @@
     $('#totalItems').textContent = items;
   }
 
+  function checkEmptyCart(){
+    if ($$('#cartBody tr[data-row-id]').length === 0){
+      const wrapper = $('.cart-wrapper');
+      if(!wrapper) return;
+      const panel = $('.cart-panel', wrapper);
+      if(panel) panel.remove();
+      const checkout = $('#checkoutSection', wrapper);
+      if(checkout) checkout.remove();
+      if(!$('.cart-empty', wrapper)){
+        const body = document.createElement('div');
+        body.className = 'card-body cart-empty';
+        body.innerHTML = `<p class="text-muted text-center">{{ __('messages.cart_empty') }}</p>`;
+        wrapper.appendChild(body);
+      }
+    }
+  }
+
   // ---- optimistic update core ---------------------------------------------
   // Per-row state: debounce timer + abort controller
   const pending = new Map(); // productId -> {timer, controller}
@@ -313,7 +330,7 @@
         }
         // update UI from server when available; else update locally
         const newQty = Number(j2?.item?.quantity ?? (step==='increase'? workingQty+1 : Math.max(0, workingQty-1)));
-        if (newQty <= 0){ row.remove(); recalcTotals(); return; }
+        if (newQty <= 0){ row.remove(); recalcTotals(); checkEmptyCart(); return; }
         workingQty = newQty;
         setQty(row, newQty, true);
         if (j2?.item?.line_total != null) $('.row-price', row).textContent = fmt(j2.item.line_total);
@@ -413,7 +430,6 @@
             const newNotes = JSON.parse(btn.dataset.notes || '[]');
             btn.dataset.notes = JSON.stringify(newNotes);
           }
-          showToast('Note removed');
         }
       }catch(err){ showToast('Error updating note'); }
       return;
@@ -426,6 +442,7 @@
       const href = remove.getAttribute('href');
       row.remove();
       recalcTotals();
+      checkEmptyCart();
       fetch(href, { method:'GET' }).catch(()=>{}); // fire-and-forget
       return;
     }
@@ -449,6 +466,7 @@
       setQty(row, qNew);
       lineTotal(row);
       recalcTotals();
+      checkEmptyCart();
       scheduleSync(row);
     }
   });
@@ -476,7 +494,6 @@
             btn.dataset.notes = JSON.stringify(notes);
           }
           form.reset();
-          showToast('Note saved');
         }
       }catch(err){ showToast('Error updating note'); }
     }
