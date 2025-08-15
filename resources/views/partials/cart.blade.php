@@ -8,6 +8,10 @@
                     {{ __('messages.table') }}: {{ session('table_number') }}
                 @endif
             </span>
+            <button type="button" id="clearTable"
+                    class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center {{ session('table_number') ? '' : 'd-none' }}">
+                <i class="bi bi-x-lg"></i>
+            </button>
             <button type="button" id="openTableModal"
                     class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center">
                 <i class="bi bi-person-lines-fill"></i>
@@ -364,6 +368,7 @@
   // ---- event handlers ------------------------------------------------------
   document.addEventListener('click', async (e)=>{
     const openTable = e.target.closest('#openTableModal');
+    const clearTable = e.target.closest('#clearTable');
     const tableBtn = e.target.closest('.table-btn');
     const noteBtn = e.target.closest('.note-btn');
     const removeNoteBtn = e.target.closest('.remove-note');
@@ -374,6 +379,26 @@
     if(openTable){
       bootstrap.Modal.getOrCreateInstance($('#tableModal')).show();
       highlightTableButtons(selectedTable);
+      return;
+    }
+
+    if(clearTable){
+      e.preventDefault();
+      const fd = new FormData();
+      fd.append('_token', getCsrf());
+      fd.append('clear', '1');
+      try{
+        const res = await fetch(tableUrl,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
+        const json = await res.json().catch(()=>null);
+        if(res.ok){
+          selectedTable = null;
+          const current = $('#currentTable');
+          if(current) current.textContent = '';
+          const btn = $('#clearTable');
+          if(btn) btn.classList.add('d-none');
+          highlightTableButtons(null);
+        }
+      }catch(err){ showToast('Error clearing table'); }
       return;
     }
 
@@ -391,6 +416,8 @@
           const current = $('#currentTable');
           if(current) current.textContent = `${tableLabel}: ${selectedTable}`;
           highlightTableButtons(selectedTable);
+          const clearBtn = $('#clearTable');
+          if(clearBtn) clearBtn.classList.remove('d-none');
           const modal = bootstrap.Modal.getInstance($('#tableModal'));
           if(modal) modal.hide();
         }

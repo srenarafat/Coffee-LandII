@@ -220,6 +220,11 @@ class SaleController extends Controller
 
     public function setTable(Request $request)
     {
+        if ($request->boolean('clear')) {
+            session()->forget('table_number');
+            return response()->json(['table_number' => null]);
+        }
+
         $maxTable = config('app.table_limit');
         $data = $request->validate([
             // allow table numbers up to configured limit

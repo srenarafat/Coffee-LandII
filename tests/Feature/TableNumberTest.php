@@ -85,6 +85,19 @@ class TableNumberTest extends TestCase
         $this->assertNull(session('table_number'));
     }
     
+    public function test_post_clear_removes_table_number()
+    {
+        $shop = Shop::create(['name' => 'S1']);
+        $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['table_number' => 5])
+            ->post(route('cashier.pos.table'), ['clear' => 1]);
+
+        $response->assertJson(['table_number' => null]);
+        $this->assertNull(session('table_number'));
+    }
+    
     public function test_table_number_validation_respects_config_limit()
     {
         $limit = config('app.table_limit');
