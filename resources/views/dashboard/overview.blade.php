@@ -59,7 +59,7 @@
   </div>
 
   {{-- Quick Actions (6 tiles) --}}
-  <div class="row g-2 mb-2">
+  <div class="row g-2 mb-3">
     @php
       $tiles = [
         ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],

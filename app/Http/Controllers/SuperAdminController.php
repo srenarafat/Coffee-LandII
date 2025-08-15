@@ -186,6 +186,7 @@ class SuperAdminController extends Controller
 
                 $labels = $totals = $orders = $items = [];
                 for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                    $key = $date->format('Y-m-d');
                     $labels[] = $date->format('l');
                     $totals[] = $sales[$key]->total ?? 0;
                     $orders[] = $sales[$key]->orders ?? 0;
