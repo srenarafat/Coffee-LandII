@@ -13,6 +13,9 @@
         'lowStockCount' => $lowStockCount,
         'topProductsWeekCount' => $topProductsWeekCount,
         'slowMoversCount' => $slowMoversCount,
+        'newCustomers' => $newCustomers,
+        'returningCustomers' => $returningCustomers,
+        'atRiskCustomers' => $atRiskCustomers,
     ])
 @endsection
 

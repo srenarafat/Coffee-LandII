@@ -58,13 +58,45 @@
     </div>
   </div>
 
+  {{-- Customer Metrics --}}
+  <div class="row g-2 mb-2">
+    <div class="col-6 col-lg-4">
+      <div class="card kpi kpi-teal kpi-filled text-center h-100">
+        <div class="card-body">
+          <div class="kpi-label">New Customers</div>
+          <div class="kpi-value">{{ $newCustomers ?? 0 }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-4">
+      <div class="card kpi kpi-emerald kpi-filled text-center h-100">
+        <div class="card-body">
+          <div class="kpi-label">Returning Customers</div>
+          <div class="kpi-value">{{ $returningCustomers ?? 0 }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-4">
+      <div class="card kpi kpi-amber kpi-filled text-center h-100">
+        <div class="card-body">
+          <div class="kpi-label">At-Risk Customers</div>
+          <div class="kpi-value">{{ $atRiskCustomers ?? 0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- Quick Actions (6 tiles) --}}
   <div class="row g-2 mb-3">
     @php
       $tiles = [
         ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
         ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
-        ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',         'title'=>'Export / Print Sales',  'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
+        ['href'=>route($routePrefix.'.customers.new'),             'icon'=>'bi-people-fill',          'title'=>'Customer Tracking',
+         'desc'=>'New: '.$newCustomers.' | Returning: '.$returningCustomers,
+         'badge'=> (($atRiskCustomers ?? 0) > 0 ? $atRiskCustomers : null),
+         'badgeClass'=> (($atRiskCustomers ?? 0) > 0 ? 'bg-dark' : null),
+         'variant'=>'emerald'],
         ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle', 'title'=>'Low Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
 
         // Top Products (Week) with count badge (only if > 0)
@@ -96,7 +128,7 @@
                 <div class="small">{!! $t['desc'] !!}</div>
               </div>
               @isset($t['badge'])
-                <span class="badge tile-badge">{{ $t['badge'] }}</span>
+                <span class="badge {{ $t['badgeClass'] ?? '' }} tile-badge">{{ $t['badge'] }}</span>
               @endisset
             </div>
           </div>

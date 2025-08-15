@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -100,6 +101,35 @@ class CashierController extends Controller
             ->pluck('products.id');
 
         $slowMoversCount = $noRecentSales->merge($bottom10)->unique()->count();
+        
+        // Customer metrics
+        $shopId = auth()->user()->shop_id;
+        $today = Carbon::today();
+
+        $customers = Customer::where('shop_id', $shopId)
+            ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
+            ->with(['sales' => fn($q) => $q->where('shop_id', $shopId)->orderBy('created_at')])
+            ->get();
+
+        $newCustomers = $returningCustomers = $atRiskCustomers = 0;
+
+        foreach ($customers as $customer) {
+            $firstSale = $customer->sales->first()->created_at;
+            $lastSale = $customer->sales->last()->created_at;
+
+            if ($lastSale->isToday()) {
+                if ($firstSale->isToday()) {
+                    $newCustomers++;
+                } elseif ($firstSale->lt($today)) {
+                    $returningCustomers++;
+                }
+            } else {
+                $days = $lastSale->diffInDays($today);
+                if ($days >= 31 && $days <= 365) {
+                    $atRiskCustomers++;
+                }
+            }
+        }
 
 
 
@@ -114,7 +144,10 @@ class CashierController extends Controller
             'todayAverageOrderValue',
             'lowStockCount',
             'topProductsWeekCount',
-            'slowMoversCount'
+            'slowMoversCount',
+            'newCustomers',
+            'returningCustomers',
+            'atRiskCustomers'
         ));
     }
     

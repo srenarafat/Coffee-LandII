@@ -9,6 +9,7 @@ class Sale extends Model
     protected $fillable = [
         'user_id',
         'shop_id',
+        'customer_id',
         'subtotal',
         'discount',
         'total',
@@ -35,5 +36,10 @@ class Sale extends Model
     public function shop()
     {
         return $this->belongsTo(Shop::class);
+    }
+    
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 }
