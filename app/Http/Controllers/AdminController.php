@@ -83,6 +83,7 @@ class AdminController extends Controller
             ->groupBy('product_id')
             ->orderByDesc('total_quantity')
             ->limit(10)
+            ->get()
             ->count();
 
         $cutoff = Carbon::now()->subDays(30);
