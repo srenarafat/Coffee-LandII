@@ -11,6 +11,8 @@
   --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-600:#4f46e5;
   --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-600:#059669;
   --rose-50:#fff1f2; --rose-100:#ffe4e6; --rose-600:#e11d48;
+  --teal-700:#0f766e; --amber-700:#b45309; --indigo-700:#4338ca;
+  --emerald-700:#047857; --rose-700:#be123c; --slate-700:#334155;
 
   /* Extra pops (optional) */
   --sky-50:#f0f9ff; --sky-100:#e0f2fe; --sky-600:#0284c7;
@@ -61,40 +63,51 @@ body{
 .kpi-action{ cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; }
 .kpi-action:hover{ transform:translateY(-2px); box-shadow:0 .9rem 1.6rem rgba(0,0,0,.08); }
 .kpi-action:active{ transform:translateY(0); }
-.kpi-action:focus-within{ outline:2px solid var(--teal-600); outline-offset:2px; }
+.kpi-action:focus-within{ outline:3px solid var(--brown); outline-offset:3px; }
 .kpi-cta{ color:#6b7280; opacity:.95; }
 
 /* KPI cards */
-.kpi{ border:0; border-radius:16px; box-shadow:0 .35rem .9rem rgba(0,0,0,.07); background:#fff; }
+.kpi{
+  border:0; border-radius:16px;
+  box-shadow:0 .35rem .9rem rgba(0,0,0,.07);
+  background:#fff;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.kpi:hover{ transform:translateY(-2px); }
+.kpi:focus, .kpi:focus-visible{ outline:3px solid var(--brown); outline-offset:3px; }
 .kpi .card-body{ padding:18px 16px; }
 .kpi-label{ font-size:.82rem; color:#6b7280; }
 .kpi-value{ font-weight:800; font-size:1.35rem; color:#0f172a; letter-spacing:.2px; }
 
-/* Richer gradients + subtle border tints */
-.kpi-teal{
-  background:
-    radial-gradient(800px 400px at -10% -10%, rgba(13,148,136,.08) 0%, transparent 60%),
-    linear-gradient(180deg, var(--teal-50), #fff);
-  border:1px solid var(--teal-100);
-}
-.kpi-emerald{
-  background:
-    radial-gradient(800px 400px at 110% -10%, rgba(5,150,105,.08) 0%, transparent 60%),
-    linear-gradient(180deg, var(--emerald-50), #fff);
-  border:1px solid var(--emerald-100);
-}
-.kpi-indigo{
-  background:
-    radial-gradient(800px 400px at -10% 120%, rgba(79,70,229,.08) 0%, transparent 60%),
-    linear-gradient(180deg, var(--indigo-50), #fff);
-  border:1px solid var(--indigo-100);
-}
-.kpi-rose{
-  background:
-    radial-gradient(800px 400px at 110% 120%, rgba(225,29,72,.08) 0%, transparent 60%),
-    linear-gradient(180deg, var(--rose-50), #fff);
-  border:1px solid var(--rose-100);
-}
+/* Variant gradients */
+.kpi-teal{ background:linear-gradient(135deg,var(--teal-50), var(--teal-100)); border:1px solid var(--teal-100); }
+.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-50), var(--emerald-100)); border:1px solid var(--emerald-100); }
+.kpi-indigo{ background:linear-gradient(135deg,var(--indigo-50), var(--indigo-100)); border:1px solid var(--indigo-100); }
+.kpi-amber{ background:linear-gradient(135deg,var(--amber-50), var(--amber-100)); border:1px solid var(--amber-100); }
+.kpi-rose{ background:linear-gradient(135deg,var(--rose-50), var(--rose-100)); border:1px solid var(--rose-100); }
+.kpi-slate{ background:linear-gradient(135deg,var(--slate-50), var(--slate-200)); border:1px solid var(--slate-200); }
+.kpi-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.18); }
+.kpi-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.18); }
+.kpi-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.18); }
+.kpi-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.18); }
+.kpi-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.18); }
+.kpi-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
+
+/* Filled KPI toggle */
+.kpi-filled{ color:#fff; border:none; box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
+.kpi-filled .kpi-label{ color:rgba(255,255,255,.9); }
+.kpi-filled.kpi-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
+.kpi-filled.kpi-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
+.kpi-filled.kpi-indigo{ background:linear-gradient(135deg,var(--indigo-600), var(--indigo-700)); }
+.kpi-filled.kpi-amber{ background:linear-gradient(135deg,var(--amber-600), var(--amber-700)); }
+.kpi-filled.kpi-rose{ background:linear-gradient(135deg,var(--rose-600), var(--rose-700)); }
+.kpi-filled.kpi-slate{ background:linear-gradient(135deg,var(--slate-600), var(--slate-700)); }
+.kpi-filled.kpi-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.35); }
+.kpi-filled.kpi-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.35); }
+.kpi-filled.kpi-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.35); }
+.kpi-filled.kpi-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.35); }
+.kpi-filled.kpi-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.35); }
+.kpi-filled.kpi-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.35); }
 
 /* ---------- Action tiles ---------- */
 .tile{
@@ -108,23 +121,46 @@ body{
 .tile-icon{ width:42px; height:42px; display:grid; place-items:center; border-radius:10px; font-size:20px; }
 .tile-badge{ background:#0f172a; color:#fff; border-radius:999px; padding:.2rem .5rem; font-weight:700; }
 
-/* Variant color pops on hover */
+/* Variant gradients */
+.tile-teal{ background:linear-gradient(135deg,var(--teal-50), var(--teal-100)); border:1px solid var(--teal-100); }
+.tile-emerald{ background:linear-gradient(135deg,var(--emerald-50), var(--emerald-100)); border:1px solid var(--emerald-100); }
+.tile-indigo{ background:linear-gradient(135deg,var(--indigo-50), var(--indigo-100)); border:1px solid var(--indigo-100); }
+.tile-amber{ background:linear-gradient(135deg,var(--amber-50), var(--amber-100)); border:1px solid var(--amber-100); }
+.tile-rose{ background:linear-gradient(135deg,var(--rose-50), var(--rose-100)); border:1px solid var(--rose-100); }
+.tile-slate{ background:linear-gradient(135deg,var(--slate-50), var(--slate-200)); border:1px solid var(--slate-200); }
 .tile-teal .tile-icon{ background:var(--teal-50); color:var(--teal-600); }
-.tile-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.18); }
 
 .tile-emerald .tile-icon{ background:var(--emerald-50); color:var(--emerald-600); }
-.tile-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.18); }
 
 .tile-indigo .tile-icon{ background:var(--indigo-50); color:var(--indigo-600); }
-.tile-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.18); }
 
 .tile-amber .tile-icon{ background:var(--amber-50); color:var(--amber-600); }
-.tile-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.18); }
 
 .tile-rose .tile-icon{ background:var(--rose-50); color:var(--rose-600); }
-.tile-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.18); }
 
 .tile-slate .tile-icon{ background:#eef2f7; color:var(--slate-600); }
+.tile-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.18); }
+.tile-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.18); }
+.tile-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.18); }
+.tile-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.18); }
+.tile-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.18); }
+.tile-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.18); }
+
+/* Filled tile toggle */
+.tile-filled{ color:#fff; border:none; box-shadow:0 .45rem 1.2rem rgba(0,0,0,.12); }
+.tile-filled .tile-icon{ background:rgba(255,255,255,.2); color:#fff; }
+.tile-filled.tile-teal{ background:linear-gradient(135deg,var(--teal-600), var(--teal-700)); }
+.tile-filled.tile-emerald{ background:linear-gradient(135deg,var(--emerald-600), var(--emerald-700)); }
+.tile-filled.tile-indigo{ background:linear-gradient(135deg,var(--indigo-600), var(--indigo-700)); }
+.tile-filled.tile-amber{ background:linear-gradient(135deg,var(--amber-600), var(--amber-700)); }
+.tile-filled.tile-rose{ background:linear-gradient(135deg,var(--rose-600), var(--rose-700)); }
+.tile-filled.tile-slate{ background:linear-gradient(135deg,var(--slate-600), var(--slate-700)); }
+.tile-filled.tile-teal:hover{ box-shadow:0 .9rem 1.6rem rgba(13,148,136,.35); }
+.tile-filled.tile-emerald:hover{ box-shadow:0 .9rem 1.6rem rgba(5,150,105,.35); }
+.tile-filled.tile-indigo:hover{ box-shadow:0 .9rem 1.6rem rgba(79,70,229,.35); }
+.tile-filled.tile-amber:hover{ box-shadow:0 .9rem 1.6rem rgba(217,119,6,.35); }
+.tile-filled.tile-rose:hover{ box-shadow:0 .9rem 1.6rem rgba(225,29,72,.35); }
+.tile-filled.tile-slate:hover{ box-shadow:0 .9rem 1.6rem rgba(51,65,85,.35); }
 
 /* ---------- Tables ---------- */
 .custom-blue-header th{
