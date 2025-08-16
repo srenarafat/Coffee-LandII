@@ -51,6 +51,12 @@ body {
 .special-button:active {
     background-color: #ccc;
 }
+
+/* Ensure card fits viewport without forcing page scroll */
+.payment-card {
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
 </style>
 
 
