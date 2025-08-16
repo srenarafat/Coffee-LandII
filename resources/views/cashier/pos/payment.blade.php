@@ -4,7 +4,6 @@
 html,
 body {
     min-height: 100vh;
-    overflow-x: hidden;
 }
 
 
@@ -58,9 +57,9 @@ body {
 
 
 <div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 50px);">
-    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" style="width: 100%; max-width: 1000px;" target="invoicePopup" onsubmit="return openInvoiceWindow();">
+    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" target="invoicePopup" onsubmit="return openInvoiceWindow();">
         @csrf
-        <div class="card p-4 shadow">
+        <div class="card p-4 shadow d-flex flex-column min-vh-100">
            <h3 class="fw-bold text-center mb-4 py-2 px-3 text-white bg-primary rounded" style="display:inline-block; border: 5px solid #1654ff;">
     {{ __('messages.payment_method') }}
 </h3>
@@ -162,11 +161,13 @@ body {
 
 
             {{-- Submit --}}
-            <div class="d-flex justify-content-between">
-                <a href="{{ route($routePrefix . '.pos.index') }}" class="btn btn-danger">{{ __('messages.cancel') }}</a>
-                <button type="submit" class="btn btn-primary">{{ __('messages.print_invoice') }}</button>
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route($routePrefix . '.pos.index') }}" class="btn btn-danger">{{ __('messages.cancel') }}</a>
+                    <button type="submit" class="btn btn-primary">{{ __('messages.print_invoice') }}</button>
+                </div>
             </div>
-</div>
+        </div>
     </form>
 </div>
 @include('partials.toast')
@@ -250,6 +251,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalPaidUsd = usd + (riel / exchangeRate);
         if (totalPaidUsd < discountedTotal) {
             showToast("{{ __('messages.insufficient_payment') }}");
+            if (window.invoiceWindow && !window.invoiceWindow.closed) {
+                window.invoiceWindow.close();
+            }
+            return false;
+        }
+        if (customerSelect.value === 'add_new' && !newCustomerBox.querySelector('input').value.trim()) {
+            showToast("{{ __('messages.customer_name_required') }}");
+            if (window.invoiceWindow && !window.invoiceWindow.closed) {
+                window.invoiceWindow.close();
+            }
             return false;
         }
         window.invoiceWindow = window.open('about:blank', 'invoicePopup', 'width=800,height=600');

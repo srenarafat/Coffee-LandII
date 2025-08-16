@@ -210,6 +210,7 @@ return [
     'order_number' => 'ល.រ',
 
     'insufficient_payment' => 'ប្រាក់មិនគ្រប់គ្រាន់សម្រាប់ការទូទាត់។',
+    'customer_name_required' => 'សូមបញ្ចូលឈ្មោះអតិថិជន។',
     
     'todays_sales' => 'ការលក់ថ្ងៃនេះ',
     'orders' => 'ការបញ្ជាទិញ',
@@ -230,4 +231,5 @@ return [
     'no_at_risk_customers' => 'គ្មានអតិថិជនមានហានិភ័យ',
     'contact' => 'ទំនាក់ទំនង',
     'notes' => 'កំណត់សម្គាល់',
+    
 ];

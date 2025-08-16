@@ -210,6 +210,7 @@ return [
     'order_number' => 'Order Number',
 
     'insufficient_payment' => 'Insufficient payment.',
+    'customer_name_required' => 'Customer name is required.',
     
     'todays_sales' => "Today's Sales",
     'orders' => 'Orders',
@@ -230,4 +231,5 @@ return [
     'no_at_risk_customers' => 'No at-risk customers',
     'contact' => 'Contact',
     'notes' => 'Notes',
+    
 ];

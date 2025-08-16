@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
@@ -32,9 +33,7 @@ class CustomerController extends Controller
         $returningCustomers = collect();
         $atRiskCustomers = collect();
 
-        foreach ($customers as $customer) {     
-            $firstSale = Carbon::parse($customer->first_sale_at);
-            $lastSale = Carbon::parse($customer->last_sale_at);
+        foreach ($customers as $customer) {
             $classification = $customer->classifyByRecency();
             switch ($classification['category']) {
                 case 'new':
