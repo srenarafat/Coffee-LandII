@@ -58,34 +58,6 @@
     </div>
   </div>
 
-  {{-- Customer Metrics --}}
-  <div class="row g-2 mb-2">
-    <div class="col-6 col-lg-4">
-      <div class="card kpi kpi-teal kpi-filled text-center h-100">
-        <div class="card-body">
-          <div class="kpi-label">New Customers</div>
-          <div class="kpi-value">{{ $newCustomers ?? 0 }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-4">
-      <div class="card kpi kpi-emerald kpi-filled text-center h-100">
-        <div class="card-body">
-          <div class="kpi-label">Returning Customers</div>
-          <div class="kpi-value">{{ $returningCustomers ?? 0 }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-4">
-      <div class="card kpi kpi-amber kpi-filled text-center h-100">
-        <div class="card-body">
-          <div class="kpi-label">At-Risk Customers</div>
-          <div class="kpi-value">{{ $atRiskCustomers ?? 0 }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   {{-- Quick Actions (6 tiles) --}}
   <div class="row g-2 mb-3">
     @php
