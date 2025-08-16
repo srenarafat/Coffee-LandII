@@ -57,15 +57,15 @@ body {
 
 
 <div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 50px);">
-    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" target="invoicePopup" onsubmit="return openInvoiceWindow();">
+    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" id="paymentForm">
         @csrf
         <div class="card p-4 shadow d-flex flex-column min-vh-100">
            <h3 class="fw-bold text-center mb-4 py-2 px-3 text-white bg-primary rounded" style="display:inline-block; border: 5px solid #1654ff;">
     {{ __('messages.payment_method') }}
 </h3>
-            <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+            <div class="row g-4 mb-4">
                 {{-- Left Inputs --}}
-                <div style="flex: 1 1 55%;">
+                <div class="col-12 col-lg-6 d-flex flex-column flex-wrap" style="max-width:100%;">
                     <div class="mb-3">
                         <label class="fw-bold mb-0">Customer</label>
                         <select name="customer_id" id="customerSelect" class="form-select">
@@ -108,8 +108,8 @@ body {
 
 
                 {{-- Right Number Pad --}}
-                <div style="flex: 1 1 40%; margin-left:15px;" class="text-center">
-                    <div class="d-grid" style="grid-template-columns: repeat(3, 1fr); gap: 15px; min-height: 300px;">
+                <div class="col-12 col-lg-6 text-center d-flex flex-column align-items-center flex-wrap" style="max-width:100%;">
+                    <div class="d-grid w-100" style="grid-template-columns: repeat(3, 1fr); gap: 15px; min-height: 300px;">
                         @foreach ([7,8,9,4,5,6,1,2,3,0] as $num)
                         <button type="button" class="btn number-button"
                             onclick="appendNumber({{ $num }})">{{ $num }}</button>
@@ -129,7 +129,7 @@ body {
 
 
                     {{-- Total --}}
-                    <div class="mt-4 text-end pe-3">
+                    <div class="mt-4 text-end pe-3 w-100 d-flex flex-column flex-wrap" style="max-width:100%;">
                         <label class="fw-bold" style="font-size: 1.2rem;">
                             {{ __('messages.total') }} ({{ optional($setting)->currency ?? '$' }}):
                             <span id="totalAmount">{{ number_format($total, 2) }}</span>
@@ -183,6 +183,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalAmount = document.getElementById('totalAmount');
     const customerSelect = document.getElementById('customerSelect');
     const newCustomerBox = document.getElementById('newCustomerBox');
+    const paymentForm = document.getElementById('paymentForm');
+    const newCustomerInput = newCustomerBox.querySelector('input');
+    const routePrefix = "{{ $routePrefix }}";
 
 
     const exchangeRate = {{ $setting->exchange_rate }};
@@ -203,11 +206,52 @@ document.addEventListener('DOMContentLoaded', function() {
         customerSelect.addEventListener('change', function () {
             if (this.value === 'add_new') {
                 newCustomerBox.classList.remove('d-none');
+                newCustomerInput.focus();
             } else {
                 newCustomerBox.classList.add('d-none');
             }
         });
     }
+
+    newCustomerInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const name = newCustomerInput.value.trim();
+            if (!name) {
+                showToast("{{ __('messages.customer_name_required') }}");
+                return;
+            }
+            fetch(`/${routePrefix}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ name })
+            })
+                .then(r => r.ok ? r.json() : Promise.reject())
+                .then(data => {
+                    if (data && data.id) {
+                        const option = document.createElement('option');
+                        option.value = data.id;
+                        option.textContent = data.name;
+                        customerSelect.insertBefore(option, customerSelect.querySelector('option[value="add_new"]'));
+                        customerSelect.value = data.id;
+                        newCustomerInput.value = '';
+                        newCustomerBox.classList.add('d-none');
+                    }
+                })
+                .catch(() => showToast('Failed to add customer'));
+        }
+    });
+
+    paymentForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (openInvoiceWindow()) {
+            paymentForm.target = 'invoicePopup';
+            paymentForm.submit();
+        }
+    }, { once: true });
 
     cashInputUsd.focus();
 
