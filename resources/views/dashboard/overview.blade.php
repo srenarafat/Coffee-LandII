@@ -93,7 +93,7 @@
         ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
         ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
         ['href'=>route($routePrefix.'.customers.index'),             'icon'=>'bi-people-fill',          'title'=>'Customer Tracking',
-         'desc'=>'New: '.$newCustomers.' | Returning: '.$returningCustomers,
+         'desc'=>'New '.$newCustomers.' • Returning '.$returningCustomers,
          'badge'=> (($atRiskCustomers ?? 0) > 0 ? $atRiskCustomers : null),
          'badgeClass'=> (($atRiskCustomers ?? 0) > 0 ? 'bg-dark' : null),
          'variant'=>'emerald'],

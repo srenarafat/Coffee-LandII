@@ -125,7 +125,7 @@ class CashierController extends Controller
                 }
             } else {
                 $days = $lastSale->diffInDays($today);
-                if ($days >= 31 && $days <= 365) {
+                if ($days > 30) {
                     $atRiskCustomers++;
                 }
             }
