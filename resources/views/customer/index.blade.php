@@ -2,7 +2,8 @@
 
 @section('content')
 @php
-    $routePrefix = auth()->user()->role === 'superadmin' ? 'superadmin' : 'admin';
+    $role = auth()->user()->role;
+    $routePrefix = in_array($role, ['superadmin', 'cashier']) ? $role : 'admin';
 @endphp
 <div class="container my-4">
     <h1 class="mb-4">{{ __('messages.customers') }}</h1>

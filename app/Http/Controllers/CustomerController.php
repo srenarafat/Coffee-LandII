@@ -97,6 +97,7 @@ class CustomerController extends Controller
             'name'    => $request->name,
             'phone'   => $request->phone,
             'email'   => $request->email,
+            'notes'   => $request->notes,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -119,5 +120,16 @@ class CustomerController extends Controller
     public function notes(Customer $customer)
     {
         return view('customer.notes', compact('customer'));
+    }
+    
+    public function updateNotes(Request $request, Customer $customer)
+    {
+        $request->validate([
+            'notes' => 'nullable|string',
+        ]);
+
+        $customer->update(['notes' => $request->notes]);
+
+        return back()->with('success', 'Notes updated.');
     }
 }
