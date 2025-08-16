@@ -3,8 +3,8 @@
 <style>
 html,
 body {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 
@@ -149,7 +149,7 @@ body {
                     $label)
                     <div class="text-center">
                         <input type="radio" class="btn-check" name="method" id="method-{{ $value }}"
-                            value="{{ $value }}" {{ $value == 'cash' ? 'checked' : '' }}>
+                            value="{{ $value }}" {{ strtolower($value) === 'cash' ? 'checked' : '' }}>
                         <label class="btn btn-light" for="method-{{ $value }}">
                             <img src="{{ asset("storage/payment_logos/{$value}.png") }}" width="80"
                                 alt="{{ $label }}"><br>
@@ -251,7 +251,11 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast("{{ __('messages.insufficient_payment') }}");
             return false;
         }
-        window.open('', 'invoicePopup', 'width=800,height=600');
+        window.invoiceWindow = window.open('about:blank', 'invoicePopup', 'width=800,height=600');
+        if (window.invoiceWindow) {
+            window.invoiceWindow.document.write('<p>Loading invoice…</p>');
+            window.invoiceWindow.document.close();
+        }
         return true;
     };
 

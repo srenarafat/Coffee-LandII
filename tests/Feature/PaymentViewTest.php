@@ -31,4 +31,34 @@ class PaymentViewTest extends TestCase
         $response->assertDontSee('Cash Received /');
         $response->assertDontSee('Change /');
     }
+
+    public function test_cash_is_selected_by_default_for_cashier(): void
+    {
+        $user = User::factory()->create(['role' => 'cashier']);
+        Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0]);
+
+        $cart = [1 => ['price' => 10, 'quantity' => 1]];
+
+        $response = $this->actingAs($user)
+            ->withSession(['cart' => $cart])
+            ->get('/cashier/pos/payment');
+
+        $response->assertOk();
+        $response->assertSee('value="Cash" checked', false);
+    }
+
+    public function test_cash_is_selected_by_default_for_admin(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0]);
+
+        $cart = [1 => ['price' => 10, 'quantity' => 1]];
+
+        $response = $this->actingAs($user)
+            ->withSession(['cart' => $cart])
+            ->get('/admin/pos/payment');
+
+        $response->assertOk();
+        $response->assertSee('value="Cash" checked', false);
+    }
 }

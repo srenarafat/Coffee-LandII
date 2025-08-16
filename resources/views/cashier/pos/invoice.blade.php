@@ -198,16 +198,18 @@
     </div>
 </body>
 
-@if(request('auto'))
 <script>
-window.onload = function(){ window.print(); };
-window.onafterprint = function(){
-  if (window.opener) {
-    window.opener.location.href = "{{ in_array(auth()->user()->role, ['admin', 'superadmin']) ? route('admin.pos.index') : route('cashier.pos.index') }}";
-  }
-  window.close();
-};
+window.addEventListener('load', function () {
+        window.print();
+    });
+    @if(request('auto'))
+    window.onafterprint = function(){
+      if (window.opener) {
+        window.opener.location.href = "{{ in_array(auth()->user()->role, ['admin', 'superadmin']) ? route('admin.pos.index') : route('cashier.pos.index') }}";
+      }
+      window.close();
+    };
+    @endif
 </script>
-@endif
 
 </html>
