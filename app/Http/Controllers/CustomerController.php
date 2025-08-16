@@ -61,54 +61,30 @@ class CustomerController extends Controller
      * - Returns JSON when called via AJAX / Accept: application/json
      * - Scopes to current user's shop
      * - Idempotent: if same name already exists in this shop, reuse it
-     */
+    */
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required|string|max:120',
-            'phone' => 'nullable|string|max:30',
-            'email' => 'nullable|email|max:120',
-            'notes' => 'nullable|string|max:1000',
+            'name'    => 'required|string|max:120',
+            'phone'   => 'nullable|string|max:30',
+            'email'   => 'nullable|email|max:120',
+            'address' => 'nullable|string|max:255',
         ]);
 
-        $user   = auth()->user();
-        $shopId = $user->shop_id;
-
-        // Reuse if an entry with same name already exists in this shop
-        $existing = Customer::where('shop_id', $shopId)
-            ->where('name', $request->name)
-            ->first();
-
-        if ($existing) {
-            if ($request->wantsJson() || $request->ajax()) {
-                return response()->json([
-                    'id'       => $existing->id,
-                    'name'     => $existing->name,
-                    'existing' => true,
-                ], 200);
-            }
-            return back()
-                ->with('success', 'Customer found')
-                ->with('customer_id', $existing->id);
-        }
-
-        $customer = Customer::create([
-            'shop_id' => $shopId,
-            'name'    => $request->name,
-            'phone'   => $request->phone,
-            'email'   => $request->email,
-            'notes'   => $request->notes,
-        ]);
+        $customer = Customer::firstOrCreate(
+            ['shop_id' => auth()->user()->shop_id, 'name' => $request->name],
+            ['phone' => $request->phone, 'email' => $request->email, 'address' => $request->address]
+        );
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'id'   => $customer->id,
                 'name' => $customer->name,
-            ], 201);
+            ]);
         }
 
         return back()
-            ->with('success', 'Customer created')
+            ->with('success', $customer->wasRecentlyCreated ? 'Customer created' : 'Customer found')
             ->with('customer_id', $customer->id);
     }
 

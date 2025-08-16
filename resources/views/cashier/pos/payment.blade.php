@@ -96,7 +96,10 @@ body {
                     </div>
                     <div class="mb-3 d-none" id="newCustomerBox">
                         <label class="fw-bold mb-0">Customer Name</label>
-                        <input type="text" name="customer_name" id="newCustomerInput" class="form-control" autocomplete="off">
+                        <input type="text" name="customer_name" id="newCustomerInput" class="form-control mb-2" autocomplete="off">
+                        <input type="text" id="newCustomerPhone" class="form-control mb-2" placeholder="Phone" autocomplete="off">
+                        <input type="email" id="newCustomerEmail" class="form-control mb-2" placeholder="Email" autocomplete="off">
+                        <input type="text" id="newCustomerAddress" class="form-control mb-2" placeholder="Address" autocomplete="off">
                     </div>
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
@@ -202,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const customerSelect = document.getElementById('customerSelect');
     const newCustomerBox = document.getElementById('newCustomerBox');
     const newCustomerInput = document.getElementById('newCustomerInput');
+    const newCustomerPhone = document.getElementById('newCustomerPhone');
+    const newCustomerEmail = document.getElementById('newCustomerEmail');
+    const newCustomerAddress = document.getElementById('newCustomerAddress');
     const form = document.getElementById('paymentForm');
     const createCustomerUrl = @json(route($routePrefix.'.customers.store'));
 
@@ -224,12 +230,16 @@ document.addEventListener('DOMContentLoaded', function() {
         customerSelect.addEventListener('change', function () {
             if (this.value === 'add_new') {
                 newCustomerBox.classList.remove('d-none');
-                newCustomerInput.removeAttribute('disabled');
+                [newCustomerInput, newCustomerPhone, newCustomerEmail, newCustomerAddress].forEach(el => el && el.removeAttribute('disabled'));
                 newCustomerInput.focus();
             } else {
                 newCustomerBox.classList.add('d-none');
-                newCustomerInput.value = '';
-                newCustomerInput.setAttribute('disabled', 'disabled');
+                [newCustomerInput, newCustomerPhone, newCustomerEmail, newCustomerAddress].forEach(el => {
+                    if (el) {
+                        el.value = '';
+                        el.setAttribute('disabled', 'disabled');
+                    }
+                });
             }
         });
     }
@@ -239,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (customerSelect.value !== 'add_new') {
-        newCustomerInput.setAttribute('disabled', 'disabled');
+        [newCustomerInput, newCustomerPhone, newCustomerEmail, newCustomerAddress].forEach(el => el && el.setAttribute('disabled', 'disabled'));
     }
 
     cashInputUsd.focus();
@@ -305,11 +315,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function createCustomer(){
         const name = (newCustomerInput.value || '').trim();
+        const phone = newCustomerPhone ? newCustomerPhone.value.trim() : undefined;
+        const email = newCustomerEmail ? newCustomerEmail.value.trim() : undefined;
+        const address = newCustomerAddress ? newCustomerAddress.value.trim() : undefined;
         if (!name) {
             showToast("{{ __('messages.customer_name_required') }}");
             return false;
         }
         try {
+            const payload = { name };
+            if (phone) payload.phone = phone;
+            if (email) payload.email = email;
+            if (address) payload.address = address;
             const res = await fetch(createCustomerUrl, {
                 method: 'POST',
                 headers: {
@@ -318,9 +335,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ name })
+                body: JSON.stringify(payload)
             });
-            if (!res.ok) throw 0;
+            if (!res.ok) {
+                showToast(`Failed to add customer (${res.status})`);
+                return false;
+            }
             const data = await res.json();
             const opt = document.createElement('option');
             opt.value = data.id;
@@ -329,7 +349,10 @@ document.addEventListener('DOMContentLoaded', function() {
             customerSelect.insertBefore(opt, addOpt);
             customerSelect.value = data.id;
             newCustomerInput.value = '';
-            newCustomerInput.setAttribute('disabled', 'disabled');
+            if (newCustomerPhone) newCustomerPhone.value = '';
+            if (newCustomerEmail) newCustomerEmail.value = '';
+            if (newCustomerAddress) newCustomerAddress.value = '';
+            [newCustomerInput, newCustomerPhone, newCustomerEmail, newCustomerAddress].forEach(el => el && el.setAttribute('disabled','disabled'));
             newCustomerBox.classList.add('d-none');
             return true;
         } catch (err) {
@@ -348,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!openInvoiceWindow()) return;
 
-        newCustomerInput.setAttribute('disabled', 'disabled');
+        [newCustomerInput, newCustomerPhone, newCustomerEmail, newCustomerAddress].forEach(el => el && el.setAttribute('disabled','disabled'));
         form.target = 'invoicePopup';
         form.submit();
     });

@@ -58,7 +58,10 @@
 
           <div class="mb-3 d-none" id="newCustomerBox">
             <label class="fw-bold mb-1">Customer Name</label>
-            <input type="text" id="newCustomerInput" class="form-control" autocomplete="off">
+            <input type="text" id="newCustomerInput" class="form-control mb-2" autocomplete="off">
+            <input type="text" id="newCustomerPhone" class="form-control mb-2" placeholder="Phone" autocomplete="off">
+            <input type="email" id="newCustomerEmail" class="form-control mb-2" placeholder="Email" autocomplete="off">
+            <input type="text" id="newCustomerAddress" class="form-control mb-2" placeholder="Address" autocomplete="off">
             <small class="text-muted">Press Enter to create, or it will create automatically on Print.</small>
           </div>
 
@@ -151,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const customerSelect = document.getElementById('customerSelect');
   const newCustomerBox = document.getElementById('newCustomerBox');
   const newCustomerInput = document.getElementById('newCustomerInput');
+  const newCustomerPhone = document.getElementById('newCustomerPhone');
+  const newCustomerEmail = document.getElementById('newCustomerEmail');
+  const newCustomerAddress = document.getElementById('newCustomerAddress');
 
   const form = document.getElementById('paymentForm');
   const createCustomerUrl = @json(route($routePrefix.'.customers.store'));
@@ -170,6 +176,10 @@ document.addEventListener('DOMContentLoaded', () => {
       newCustomerInput.focus();
     } else {
       newCustomerBox.classList.add('d-none');
+      newCustomerInput.value = '';
+      if (newCustomerPhone) newCustomerPhone.value = '';
+      if (newCustomerEmail) newCustomerEmail.value = '';
+      if (newCustomerAddress) newCustomerAddress.value = '';
     }
   });
 
@@ -180,8 +190,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function createCustomer(){
     const name = (newCustomerInput.value || '').trim();
+    const phone = newCustomerPhone ? newCustomerPhone.value.trim() : undefined;
+    const email = newCustomerEmail ? newCustomerEmail.value.trim() : undefined;
+    const address = newCustomerAddress ? newCustomerAddress.value.trim() : undefined;
     if (!name) { showToast("{{ __('messages.customer_name_required') }}"); return false; }
     try{
+      const payload = { name };
+      if (phone) payload.phone = phone;
+      if (email) payload.email = email;
+      if (address) payload.address = address;
       const res = await fetch(createCustomerUrl, {
   method: 'POST',
   headers: {
@@ -190,10 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
     'X-Requested-With': 'XMLHttpRequest',
     'X-CSRF-TOKEN': '{{ csrf_token() }}'
   },
-  body: JSON.stringify({ name }) // add phone/email/address if you collect them
+  body: JSON.stringify(payload)
 });
 
-      if(!res.ok) throw 0;
+      if (!res.ok) {
+        showToast(`Failed to add customer (${res.status})`);
+        return false;
+      }
       const data = await res.json();
       // insert new option and select it
       const opt = document.createElement('option');
@@ -201,6 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
       customerSelect.insertBefore(opt, customerSelect.querySelector('option[value="add_new"]'));
       customerSelect.value = data.id;
       newCustomerInput.value = '';
+      if (newCustomerPhone) newCustomerPhone.value = '';
+      if (newCustomerEmail) newCustomerEmail.value = '';
+      if (newCustomerAddress) newCustomerAddress.value = '';
       newCustomerBox.classList.add('d-none');
       return true;
     }catch{
@@ -272,8 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = window.open('about:blank','invoicePopup','width=900,height=700');
     if(!w){ showToast('Popup blocked. Please allow popups.'); return; }
 
-    // make sure the temp input (new name) never submits
+    // make sure the temp inputs never submit
     newCustomerInput.setAttribute('disabled','disabled');
+    if (newCustomerPhone) newCustomerPhone.setAttribute('disabled','disabled');
+    if (newCustomerEmail) newCustomerEmail.setAttribute('disabled','disabled');
+    if (newCustomerAddress) newCustomerAddress.setAttribute('disabled','disabled');
 
     form.target = 'invoicePopup';
     form.submit();
