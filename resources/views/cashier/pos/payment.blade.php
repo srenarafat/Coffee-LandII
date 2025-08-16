@@ -57,6 +57,18 @@ body {
     max-height: calc(100vh - 2rem);
     overflow-y: auto;
 }
+
+.payment-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 768px) {
+    .payment-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 

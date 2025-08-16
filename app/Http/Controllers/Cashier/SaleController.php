@@ -15,6 +15,7 @@ use App\Models\Comment;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SaleController extends Controller
@@ -32,12 +33,13 @@ class SaleController extends Controller
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $products = $query->get();
+        $products   = $query->get();
         $categories = Category::all();
-        $cart = session()->get('cart', []);
-        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        $itemCount = collect($cart)->sum('quantity');
-        $comments = Comment::orderBy('text')->get();
+        $cart       = session()->get('cart', []);
+        $total      = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $itemCount  = collect($cart)->sum('quantity');
+        $comments   = Comment::orderBy('text')->get();
+
         $view = in_array(auth()->user()->role, ['admin', 'superadmin'])
             ? 'admin.pos.index'
             : 'cashier.pos.index';
@@ -47,53 +49,52 @@ class SaleController extends Controller
 
     // Add item to cart
     public function addToCart(Request $request)
-{
-    $product = Product::findOrFail($request->product_id);
-    $quantity = (int) ($request->quantity ?? 1);
-    $note = trim($request->note ?? '');
+    {
+        $product  = Product::findOrFail($request->product_id);
+        $quantity = (int) ($request->quantity ?? 1);
+        $note     = trim($request->note ?? '');
 
-    $cart = session()->get('cart', []);
+        $cart = session()->get('cart', []);
 
-    // Existing quantity in cart
-    $currentQtyInCart = $cart[$product->id]['quantity'] ?? 0;
-    $totalAfterAdd = $currentQtyInCart + $quantity;
+        // Existing quantity in cart
+        $currentQtyInCart = $cart[$product->id]['quantity'] ?? 0;
+        $totalAfterAdd    = $currentQtyInCart + $quantity;
 
-    // Check stock
-    if ($product->stock < $totalAfterAdd) {
-        $message = '❌ Out of Stock: Only ' . $product->stock . ' left';
-        return $request->ajax()
-            ? response()->json(['error' => $message], 400)
-            : back()->with('error', $message);
+        // Check stock
+        if ($product->stock < $totalAfterAdd) {
+            $message = '❌ Out of Stock: Only ' . $product->stock . ' left';
+            return $request->ajax()
+                ? response()->json(['error' => $message], 400)
+                : back()->with('error', $message);
+        }
+
+        // Update cart item
+        $notes = $cart[$product->id]['notes'] ?? [];
+        if ($note !== '' && !in_array($note, $notes)) {
+            $notes[] = $note;
+        }
+
+        $cart[$product->id] = [
+            'name'     => $product->name,
+            'price'    => $product->price,
+            'quantity' => $totalAfterAdd,
+            'image'    => $product->image,
+            'notes'    => $notes,
+        ];
+
+        session()->put('cart', $cart);
+
+        // Handle AJAX request
+        if ($request->ajax()) {
+            $prefix = auth()->user()->role === 'superadmin'
+                ? 'superadmin'
+                : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
+            $html = view('partials.cart', ['routePrefix' => $prefix])->render();
+            return response()->json(['cart' => $html]);
+        }
+
+        return back()->with('success', $product->name . ' added to cart.');
     }
-
-    // Update cart item
-    $notes = $cart[$product->id]['notes'] ?? [];
-    if ($note !== '' && !in_array($note, $notes)) {
-        $notes[] = $note;
-    }
-
-    $cart[$product->id] = [
-        'name'     => $product->name,
-        'price'    => $product->price,
-        'quantity' => $totalAfterAdd,
-        'image'    => $product->image, // ✅ this line is required
-        'notes'    => $notes,
-    ];
-
-    session()->put('cart', $cart);
-
-    // Handle AJAX request
-    if ($request->ajax()) {
-        $prefix = auth()->user()->role === 'superadmin'
-            ? 'superadmin'
-            : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-        $html = view('partials.cart', ['routePrefix' => $prefix])->render();
-        return response()->json(['cart' => $html]);
-    }
-
-    return back()->with('success', $product->name . ' added to cart.');
-}
-
 
     public function removeItem($id)
     {
@@ -117,18 +118,19 @@ class SaleController extends Controller
         $id     = $request->input('product_id');
         $action = $request->input('action');
 
-        $cart = session()->get('cart', []);
-
+        $cart  = session()->get('cart', []);
         $error = null;
+
         if (isset($cart[$id])) {
             $product = Product::find($id);
+
             if ($action === 'set_quantity') {
                 $qty = max(0, (int) $request->input('quantity', 0));
                 if ($qty === 0) {
                     unset($cart[$id]);
                 } else {
                     if ($product && $qty > $product->stock) {
-                        $qty = $product->stock;
+                        $qty   = $product->stock;
                         $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
                     }
                     $cart[$id]['quantity'] = $qty;
@@ -136,7 +138,7 @@ class SaleController extends Controller
             } elseif ($action === 'increase') {
                 if ($product && $cart[$id]['quantity'] < $product->stock) {
                     $cart[$id]['quantity']++;
-                    } elseif ($product && $cart[$id]['quantity'] >= $product->stock) {
+                } elseif ($product && $cart[$id]['quantity'] >= $product->stock) {
                     $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
                 }
             } elseif ($action === 'decrease') {
@@ -148,7 +150,7 @@ class SaleController extends Controller
         }
 
         session()->put('cart', $cart);
-        
+
         $item = null;
         if (isset($cart[$id])) {
             $item = [
@@ -156,6 +158,7 @@ class SaleController extends Controller
                 'line_total' => $cart[$id]['price'] * $cart[$id]['quantity'],
             ];
         }
+
         $totals = [
             'grand_total' => collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']),
             'total_items' => collect($cart)->sum('quantity'),
@@ -165,8 +168,9 @@ class SaleController extends Controller
             $prefix = auth()->user()->role === 'superadmin'
                 ? 'superadmin'
                 : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-            $html = view('partials.cart', ['routePrefix' => $prefix])->render();
+            $html   = view('partials.cart', ['routePrefix' => $prefix])->render();
             $status = $error ? 400 : 200;
+
             $response = [
                 'cart'   => $html,
                 'item'   => $item,
@@ -188,8 +192,8 @@ class SaleController extends Controller
 
     public function updateNote(Request $request)
     {
-        $id   = $request->input('product_id');
-        $note = trim($request->input('note', ''));
+        $id     = $request->input('product_id');
+        $note   = trim($request->input('note', ''));
         $remove = trim($request->input('remove_note', ''));
 
         $cart = session()->get('cart', []);
@@ -228,7 +232,6 @@ class SaleController extends Controller
 
         $maxTable = config('app.table_limit');
         $data = $request->validate([
-            // allow table numbers up to configured limit
             'table_number' => 'required|integer|min:1|max:' . $maxTable,
         ]);
 
@@ -237,152 +240,162 @@ class SaleController extends Controller
         return response()->json(['table_number' => $data['table_number']]);
     }
 
-        public function checkout(Request $request)
-{
-    $cart = session('cart');
-    if (!$cart || count($cart) === 0) {
-        return back()->with('error', __('messages.cart_empty'));
-    }
-    // Ensure stock is sufficient before proceeding
-    foreach ($cart as $productId => $item) {
-        $product = Product::find($productId);
-        if (!$product || $product->stock < $item['quantity']) {
-            return back()->with('error', __('messages.stock_not_enough'));
+    public function checkout(Request $request)
+    {
+        $cart = session('cart');
+        if (!$cart || count($cart) === 0) {
+            return back()->with('error', __('messages.cart_empty'));
         }
-    }
 
-
-    $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-    $discountPercent = floatval($request->input('discount', 0));
-    $discountAmount = $subtotal * ($discountPercent / 100);
-    $total = $subtotal - $discountAmount;
-
-    $exchangeRate = Setting::first()->exchange_rate;
-    $cashUsd = floatval($request->input('cash_usd', 0));
-    $cashRiel = intval(str_replace(',', '', $request->input('cash_riel', 0)));
-    $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
-    if ($totalPaidUsd < $total) {
-        return back()->with('error', __('messages.insufficient_payment'));
-    }
-    $changeUsd = $totalPaidUsd - $total;
-    $changeRiel = intval(round($changeUsd * $exchangeRate));
-
-    $shopId = auth()->user()->role === 'superadmin'
-        ? $request->input('shop_id')
-        : auth()->user()->shop_id;
-
-       // Validate stock with fresh queries/locking
-    DB::beginTransaction();
-    try {
-        $insufficient = [];
-        $products = [];
+        // Ensure stock is sufficient before proceeding
         foreach ($cart as $productId => $item) {
-            $product = Product::where('id', $productId)->lockForUpdate()->first();
+            $product = Product::find($productId);
             if (!$product || $product->stock < $item['quantity']) {
-                $insufficient[] = $product ? $product->name : $productId;
-            } else {
-                $products[$productId] = $product;
+                return back()->with('error', __('messages.stock_not_enough'));
             }
         }
 
-        if (!empty($insufficient)) {
-            DB::rollBack();
-            return back()->with('error', 'Insufficient stock for: ' . implode(', ', $insufficient));
+        $subtotal         = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $discountPercent  = (float) $request->input('discount', 0);
+        $discountAmount   = $subtotal * ($discountPercent / 100);
+        $total            = $subtotal - $discountAmount;
+
+        // Safe settings (avoid null->exchange_rate crash)
+        $setting      = Setting::first() ?? Setting::firstOrCreate(['exchange_rate' => 4100]);
+        $exchangeRate = (float) ($setting->exchange_rate ?? 4100);
+
+        $cashUsd       = (float) $request->input('cash_usd', 0);
+        $cashRielInput = $request->input('cash_riel', 0);
+        $cashRiel      = (int) str_replace(',', '', $cashRielInput);
+
+        $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
+        if ($totalPaidUsd < $total) {
+            return back()->with('error', __('messages.insufficient_payment'));
         }
 
-        // Handle customer selection or creation
-        $customerId = null;
-        $customerInput = $request->input('customer_id');
-        if ($customerInput) {
-            if ($customerInput === 'add_new') {
-                $name = trim($request->input('customer_name', ''));
-                if ($name === '') {
-                    DB::rollBack();
-                    return back()->with('error', 'Customer name required');
+        $changeUsd  = $totalPaidUsd - $total;
+        $changeRiel = (int) round($changeUsd * $exchangeRate);
+
+        $shopId = auth()->user()->role === 'superadmin'
+            ? $request->input('shop_id')
+            : auth()->user()->shop_id;
+
+        // Validate stock with fresh queries/locking
+        DB::beginTransaction();
+        try {
+            $insufficient = [];
+            $products     = [];
+
+            foreach ($cart as $productId => $item) {
+                $product = Product::where('id', $productId)->lockForUpdate()->first();
+                if (!$product || $product->stock < $item['quantity']) {
+                    $insufficient[] = $product ? $product->name : $productId;
+                } else {
+                    $products[$productId] = $product;
                 }
-                $customer = Customer::create([
-                    'shop_id' => $shopId,
-                    'name'    => $name,
+            }
+
+            if (!empty($insufficient)) {
+                DB::rollBack();
+                return back()->with('error', 'Insufficient stock for: ' . implode(', ', $insufficient));
+            }
+
+            // Handle customer selection or creation (idempotent)
+            $customerId    = null;
+            $customerInput = $request->input('customer_id');
+
+            if ($customerInput) {
+                if ($customerInput === 'add_new') {
+                    $name = trim($request->input('customer_name', ''));
+                    if ($name === '') {
+                        DB::rollBack();
+                        return back()->with('error', 'Customer name required');
+                    }
+                    $customer   = Customer::firstOrCreate(
+                        ['shop_id' => $shopId, 'name' => $name],
+                        [] // defaults if you collect phone/email/address on payment
+                    );
+                    $customerId = $customer->id;
+                } else {
+                    $customer = Customer::where('id', $customerInput)
+                        ->where('shop_id', $shopId)
+                        ->first();
+                    if (!$customer) {
+                        DB::rollBack();
+                        return back()->with('error', 'Invalid customer');
+                    }
+                    $customerId = $customer->id;
+                }
+            }
+
+            // Create Sale
+            $sale = Sale::create([
+                'user_id'        => auth()->id(),
+                'shop_id'        => $shopId,
+                'customer_id'    => $customerId,
+                'table_number'   => session('table_number'),
+                'subtotal'       => $subtotal,
+                'discount'       => $discountAmount,
+                'total'          => $total,
+                'payment_method' => $request->input('method', 'cash'),
+                'cash_usd'       => $cashUsd,
+                'cash_riel'      => $cashRiel,
+                'change_usd'     => $changeUsd,
+                'change_riel'    => $changeRiel,
+                'exchange_rate'  => $exchangeRate,
+            ]);
+
+            $sale->update([
+                'invoice_no' => 'INV-' . str_pad($sale->id, 5, '0', STR_PAD_LEFT),
+            ]);
+
+            foreach ($cart as $productId => $item) {
+                // Save sale item with optional note
+                SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'product_id' => $productId,
+                    'quantity'   => $item['quantity'],
+                    'price'      => $item['price'],
+                    'total'      => $item['price'] * $item['quantity'],
+                    'notes'      => $item['notes'] ?? [],
                 ]);
-                $customerId = $customer->id;
-            } else {
-                $customer = Customer::where('id', $customerInput)
-                    ->where('shop_id', $shopId)
-                    ->first();
-                if (!$customer) {
-                    DB::rollBack();
-                    return back()->with('error', 'Invalid customer');
-                }
-                $customerId = $customer->id;
+
+                // Decrease product stock using locked product
+                $product         = $products[$productId];
+                $product->stock -= $item['quantity'];
+                $product->save();
+
+                // Log stock out
+                StockLog::create([
+                    'product_id' => $productId,
+                    'type'       => 'out',
+                    'quantity'   => $item['quantity'],
+                    'note'       => 'Sold via POS',
+                    'user_id'    => auth()->id(),
+                ]);
             }
-        }
 
-        $sale = Sale::create([
-            'user_id'        => auth()->id(),
-            'shop_id'        => $shopId,
-            'customer_id'    => $customerId,
-            'table_number'   => session('table_number'),
-            'subtotal'       => $subtotal,
-            'discount'       => $discountAmount,
-            'total'          => $total,
-            'payment_method' => $request->input('method', 'cash'),
-            'cash_usd'       => $cashUsd,
-            'cash_riel'      => $cashRiel,
-            'change_usd'     => $changeUsd,
-            'change_riel'    => $changeRiel,
-            'exchange_rate'  => $exchangeRate,
-        ]);
-
-        $sale->update([
-            'invoice_no' => 'INV-' . str_pad($sale->id, 5, '0', STR_PAD_LEFT),
-        ]);
-
-        foreach ($cart as $productId => $item) {
-            // Save sale item with optional note
-            SaleItem::create([
-                'sale_id'    => $sale->id,
-                'product_id' => $productId,
-                'quantity'   => $item['quantity'],
-                'price'      => $item['price'],
-                'total'      => $item['price'] * $item['quantity'],
-                'notes'      => $item['notes'] ?? [],
+            SystemLog::create([
+                'user_id' => auth()->id(),
+                'action'  => 'sale_created'
             ]);
 
-            // Decrease product stock using locked product
-            $product = $products[$productId];
-            $product->stock -= $item['quantity'];
-            $product->save();
-
-            // Log stock out
-            StockLog::create([
-                'product_id' => $productId,
-                'type'       => 'out',
-                'quantity'   => $item['quantity'],
-                'note'       => 'Sold via POS',
-                'user_id'    => auth()->id(),
-            ]);
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('POS checkout failed', ['err' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'An error occurred.');
         }
 
-        SystemLog::create([
-            'user_id' => auth()->id(),
-            'action'  => 'sale_created'
-        ]);
+        session()->forget('cart');
 
-    DB::commit();
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        return back()->with('error', 'An error occurred.');
+        $role = auth()->user()->role === 'superadmin'
+            ? 'superadmin'
+            : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
+
+        // Redirect to invoice print view in a single window
+        return redirect()->route("{$role}.invoice.print", ['sale' => $sale->id, 'auto' => 1]);
     }
-
-    session()->forget('cart');
-
-    $role = auth()->user()->role === 'superadmin'
-        ? 'superadmin'
-        : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-
-    return redirect()->route("{$role}.invoice.print", ['sale' => $sale->id, 'auto' => 1]);
-}
-
 
     public function payment(Request $request)
     {
@@ -392,33 +405,35 @@ class SaleController extends Controller
         }
 
         $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+
         $role = auth()->user()->role === 'superadmin'
             ? 'superadmin'
             : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-        $setting = Setting::first() ?? Setting::firstOrCreate([]);
-        $shops = auth()->user()->role === 'superadmin' ? Shop::all() : null;
+
+        $setting = Setting::first() ?? Setting::firstOrCreate(['exchange_rate' => 4100]);
+        $shops   = auth()->user()->role === 'superadmin' ? Shop::all() : null;
+
         $view = in_array(auth()->user()->role, ['admin', 'superadmin'])
             ? 'admin.pos.payment'
             : 'cashier.pos.payment';
 
-        $customers = Customer::where('shop_id', auth()->user()->shop_id)->get();
+        $customers = \App\Models\Customer::where('shop_id', auth()->user()->shop_id)
+    ->orderBy('name')
+    ->get();
 
         return view($view, [
-            'total' => $total,
-            'routePrefix' => $role,
+            'total'           => $total,
+            'routePrefix'     => $role,
             'discountPercent' => $setting->discount_percent ?? 0,
-            'shops' => $shops,
-            'setting' => $setting,
-            'customers' => $customers,
+            'shops'           => $shops,
+            'setting'         => $setting,
+            'customers'       => $customers,
         ]);
     }
 
-
-    
-
     public function history(Request $request)
     {
-        $query = Sale::with(['items.product.category', 'user'])->where('user_id', auth()->id());
+        $query      = Sale::with(['items.product.category', 'user'])->where('user_id', auth()->id());
         $categories = Category::all();
 
         if ($request->from) {
@@ -428,30 +443,26 @@ class SaleController extends Controller
         if ($request->to) {
             $query->whereDate('created_at', '<=', $request->to);
         }
-        
+
         if (request('category_id')) {
             $query->whereHas('items.product.category', fn($q) => $q->where('id', request('category_id')));
         }
 
-        $salesQuery = $query->orderByDesc('created_at');
-
-        // Calculate the total amount for all filtered sales
+        $salesQuery  = $query->orderByDesc('created_at');
         $totalAmount = (clone $salesQuery)->sum('total');
 
         if ($request->get('export') === 'csv') {
             return $this->exportCsv($salesQuery->get());
         }
 
-         if ($request->get('print') == 1) {
+        if ($request->get('print') == 1) {
             $sales = $salesQuery->get();
         } else {
             $sales = $salesQuery->paginate(20)->withQueryString();
         }
+
         return view('cashier.sales.history', compact('sales', 'totalAmount', 'categories'));
     }
-
-
-
 
     // Export the sales data to CSV
     protected function exportCsv($sales)
@@ -459,7 +470,7 @@ class SaleController extends Controller
         $filename = "cashier_sales_report_" . now()->format('Ymd_His') . ".csv";
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
@@ -495,7 +506,7 @@ class SaleController extends Controller
     // Live search products in POS
     public function liveSearch(Request $request)
     {
-        $query = $request->get('query');
+        $query    = $request->get('query');
         $category = $request->get('category');
 
         $products = Product::query()

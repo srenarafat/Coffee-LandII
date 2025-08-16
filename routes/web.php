@@ -131,6 +131,11 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
     Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
+    // ... inside Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');   // ⬅️ add this
+    Route::post('customers', [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+
+
 });
 
 // ✅ Admin Routes
@@ -196,6 +201,11 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
     Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
+    // ... inside Route::middleware(['auth', 'role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');   // ⬅️ add this
+    Route::post('customers', [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+
+
 });
 
 // ✅ Cashier Routes
@@ -227,6 +237,11 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
     Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
+    // ... inside Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')->group(function () {
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');   // ⬅️ add this
+    Route::post('customers', [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+
+
 });
 
 Route::middleware('auth')->group(function () {

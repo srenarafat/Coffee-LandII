@@ -1,55 +1,113 @@
 <?php
 
-namespace App\Models;
+namespace App\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Customer;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
-class Customer extends Model
+class CustomerController extends Controller
 {
-    use HasFactory;
-    protected $fillable = [
-        'shop_id',
-        'name',
-        'email',
-        'phone',
-        'address',
-    ];
-
-    public function sales()
+    public function index()
     {
-        return $this->hasMany(Sale::class);
-    }
+        $user   = auth()->user();
+        $shopId = $user->shop_id;
 
-    public function shop()
-    {
-        return $this->belongsTo(Shop::class);
-    }
-    
-    public function classifyByRecency(): array
-    {
-        $today = Carbon::today();
-        $sales = $this->relationLoaded('sales')
-            ? $this->sales
-            : $this->sales()->orderBy('created_at')->get();
+        if ($user->role === 'superadmin') {
+            $customers = Customer::whereHas('sales')
+                ->withMin('sales as first_sale_at', 'created_at')
+                ->withMax('sales as last_sale_at', 'created_at')
+                ->get();
+        } else {
+            $customers = Customer::where('shop_id', $shopId)
+                ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
+                ->withMin([
+                    'sales as first_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+                ], 'created_at')
+                ->withMax([
+                    'sales as last_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+                ], 'created_at')
+                ->get();
+        }
 
-        $firstSale = $sales->first()?->created_at;
-        $lastSale = $sales->last()?->created_at;
-        $category = null;
+        $newCustomers = collect();
+        $returningCustomers = collect();
+        $atRiskCustomers = collect();
 
-        if ($lastSale) {
-            if ($lastSale->isToday()) {
-                $category = $firstSale && $firstSale->isToday() ? 'new' : 'returning';
-            } else {
-                $category = $lastSale->diffInDays($today) > 30 ? 'at-risk' : 'returning';
+        foreach ($customers as $customer) {
+            $classification = $customer->classifyByRecency();
+            switch ($classification['category']) {
+                case 'new':        $newCustomers->push($customer); break;
+                case 'at-risk':    $atRiskCustomers->push($customer); break;
+                case 'returning':  $returningCustomers->push($customer); break;
             }
         }
 
-        return [
-            'first_sale' => $firstSale,
-            'last_sale' => $lastSale,
-            'category' => $category,
-        ];
+        return view('customer.index', [
+            'newCustomers'       => $newCustomers,
+            'returningCustomers' => $returningCustomers,
+            'atRiskCustomers'    => $atRiskCustomers,
+        ]);
+    }
+
+    /**
+     * Create (or reuse) a customer for the current shop.
+     * - Returns JSON for AJAX (used by Payment screen).
+     * - Idempotent: if same name exists in this shop, reuse that record.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'    => 'required|string|max:120',
+            'phone'   => 'nullable|string|max:30',
+            'email'   => 'nullable|email|max:120',
+            'address' => 'nullable|string|max:255',
+        ]);
+
+        $user   = auth()->user();
+        $shopId = $user->shop_id;
+
+        // Reuse existing by name within the same shop
+        $existing = Customer::where('shop_id', $shopId)
+            ->where('name', $request->name)
+            ->first();
+
+        if ($existing) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'id'       => $existing->id,
+                    'name'     => $existing->name,
+                    'existing' => true,
+                ], 200);
+            }
+            return back()->with('success', 'Customer found')->with('customer_id', $existing->id);
+        }
+
+        $customer = Customer::create([
+            'shop_id' => $shopId,
+            'name'    => $request->name,
+            'phone'   => $request->phone,
+            'email'   => $request->email,
+            'address' => $request->address,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'id'   => $customer->id,
+                'name' => $customer->name,
+            ], 201);
+        }
+
+        return back()->with('success', 'Customer created')->with('customer_id', $customer->id);
+    }
+
+    public function contact(Customer $customer)
+    {
+        return view('customer.contact', compact('customer'));
+    }
+
+    public function notes(Customer $customer)
+    {
+        return view('customer.notes', compact('customer'));
     }
 }

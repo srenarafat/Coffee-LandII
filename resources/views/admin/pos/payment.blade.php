@@ -1,351 +1,283 @@
 @extends('layouts.app')
 @section('content')
 <style>
-html,
-body {
-    min-height: 100vh;
-}
+  html, body { max-width:100%; overflow-x:hidden; }
+  .payment-wrap { max-width: 1080px; margin: 0 auto; }
+  .payment-card { padding: 1.25rem; }
+  .payment-title { display:inline-block; border: 4px solid #1654ff; }
 
+  /* 2 cols on desktop, 1 on mobile */
+  .payment-grid { display: grid; gap: 1rem; }
+  @media (min-width: 992px) { .payment-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 991.98px) { .payment-grid { grid-template-columns: 1fr; } }
 
-/* Keep unfocused inputs looking consistent */
-.payment-input:not(:focus) {
-    box-shadow: none !important;
-    border-color: #ced4da;
-}
+  .keypad-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px,1fr));
+    gap:12px; width:100%;
+  }
+  .number-button{
+    height:56px; border-radius:48px; font-size:18px;
+    border:1px solid #646360; background:#f8f9fa; width:100%;
+    transition:background .2s, transform .1s;
+  }
+  .number-button:hover{ background:#e2e6ea; }
+  .number-button:active{ background:#ced4da; transform:scale(.97); }
+  .special-button{ font-size:22px; }
+  .payment-input:not(:focus){ box-shadow:none!important; border-color:#ced4da; }
+  .payment-card *{ max-width:100%; box-sizing:border-box; }
 
-
-.number-button {
-    border-style: solid;
-    height: 60px;
-    background-color: #f8f9fa;
-    border-radius: 50px;
-    font-size: 18px;
-    border: #646360 solid 1px;
-    transition: background-color 0.2s, transform 0.1s;
-}
-
-
-.number-button:hover {
-    background-color: #e2e6ea;
-    cursor: pointer;
-}
-
-
-.number-button:active {
-    background-color: #ced4da;
-    transform: scale(0.96);
-}
-
-
-.special-button {
-    background-color: #ffffff;
-    font-size: 22px;
-}
-
-
-.special-button:hover {
-    background-color: #ddd;
-}
-
-
-.special-button:active {
-    background-color: #ccc;
-}
+  /* keep footer buttons visible */
+  .sticky-actions{
+    position: sticky; bottom: 0; background: #fff; padding-top: .75rem;
+  }
 </style>
 
+<div class="payment-wrap px-2 py-3">
+  <form method="POST" action="{{ route($routePrefix.'.pos.checkout') }}" id="paymentForm">
+    @csrf
 
+    <div class="card shadow payment-card">
+      <h3 class="fw-bold text-center mb-3 py-2 px-3 text-white bg-primary rounded payment-title">
+        {{ __('messages.payment_method') }}
+      </h3>
 
+      <div class="payment-grid mb-3">
+        {{-- LEFT --}}
+        <div>
+          <div class="mb-3">
+            <label class="fw-bold mb-1">Customer</label>
+            <select name="customer_id" id="customerSelect" class="form-select">
+              <option value="">Walk-in</option>
+              @foreach ($customers as $c)
+                <option value="{{ $c->id }}">{{ $c->name }}</option>
+              @endforeach
+              <option value="add_new">+ Add Customer</option>
+            </select>
+          </div>
 
-<div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 50px);">
-    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" id="paymentForm">
-        @csrf
-        <div class="card p-4 shadow d-flex flex-column min-vh-100">
-           <h3 class="fw-bold text-center mb-4 py-2 px-3 text-white bg-primary rounded" style="display:inline-block; border: 5px solid #1654ff;">
-    {{ __('messages.payment_method') }}
-</h3>
-            <div class="row g-4 mb-4">
-                {{-- Left Inputs --}}
-                <div class="col-12 col-lg-6 d-flex flex-column flex-wrap" style="max-width:100%;">
-                    <div class="mb-3">
-                        <label class="fw-bold mb-0">Customer</label>
-                        <select name="customer_id" id="customerSelect" class="form-select">
-                            <option value="">Walk-in</option>
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                            @endforeach
-                            <option value="add_new">+ Add Customer</option>
-                        </select>
-                    </div>
-                    <div class="mb-3 d-none" id="newCustomerBox">
-                        <label class="fw-bold mb-0">Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control">
-                    </div>
-                    <div class="mb-3 d-flex justify-content-between align-items-center">
-                        <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
-                        <input type="text" inputmode="decimal" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}" class="form-control w-50 payment-input">
-                    </div>
+          <div class="mb-3 d-none" id="newCustomerBox">
+            <label class="fw-bold mb-1">Customer Name</label>
+            <input type="text" id="newCustomerInput" class="form-control" autocomplete="off">
+            <small class="text-muted">Press Enter to create, or it will create automatically on Print.</small>
+          </div>
 
+          <div class="mb-3 d-flex align-items-center gap-3">
+            <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
+            <input type="text" inputmode="decimal" name="discount" id="discount"
+                   value="{{ old('discount', $discountPercent) }}"
+                   class="form-control payment-input w-50">
+          </div>
 
-                    <div class="mb-2">
-                        <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
-                        <input type="text" inputmode="decimal" name="cash_usd" id="cashInputUsd" class="form-control payment-input"
-                            value="0">
-                    </div>
-                    <div class="mb-2">
-                        <label>{{ __('messages.cash_received') }} (៛)</label>
-                        <input type="text" inputmode="decimal" name="cash_riel" id="cashInputRiel" class="form-control payment-input"
-                            value="0">
-                    </div>
-                    <div class="mb-2">
-                        <label>{{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }})</label>
-                        <input type="text" name="change_usd" id="changeUsd" class="form-control" readonly>
-                    </div>
-                    <div class="mb-2">
-                        <label>{{ __('messages.change') }} (៛)</label>
-                        <input type="text" name="change_riel" id="changeRiel" class="form-control" readonly>
-                    </div>
-                </div>
-
-
-                {{-- Right Number Pad --}}
-                <div class="col-12 col-lg-6 text-center d-flex flex-column align-items-center flex-wrap" style="max-width:100%;">
-                    <div class="d-grid w-100" style="grid-template-columns: repeat(3, 1fr); gap: 15px; min-height: 300px;">
-                        @foreach ([7,8,9,4,5,6,1,2,3,0] as $num)
-                        <button type="button" class="btn number-button"
-                            onclick="appendNumber({{ $num }})">{{ $num }}</button>
-                        @endforeach
-
-
-                        {{-- Dot (.) --}}
-                        <button type="button" class="btn number-button" style="font-size: 22px;"
-                            onclick="appendNumber('.')">.</button>
-
-
-                        {{-- Backspace --}}
-                        <button type="button" class="btn number-button special-button" onclick="clearInput()">⌫</button>
-
-
-                    </div>
-
-
-                    {{-- Total --}}
-                    <div class="mt-4 text-end pe-3 w-100 d-flex flex-column flex-wrap" style="max-width:100%;">
-                        <label class="fw-bold" style="font-size: 1.2rem;">
-                            {{ __('messages.total') }} ({{ optional($setting)->currency ?? '$' }}):
-                            <span id="totalAmount">{{ number_format($total, 2) }}</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-
-
-
-            {{-- Payment Method --}}
-            <div class="mb-4">
-                <div class="d-flex justify-content-between flex-wrap gap-2 pt-2">
-                    @foreach (['Cash' => 'Cash', 'ABA' => 'ABA', 'WING' => 'WING', 'ACLEDA' => 'ACLEDA'] as $value =>
-                    $label)
-                    <div class="text-center">
-                        <input type="radio" class="btn-check" name="method" id="method-{{ $value }}"
-                            value="{{ $value }}" {{ strtolower($value) === 'cash' ? 'checked' : '' }}>
-                        <label class="btn btn-light" for="method-{{ $value }}">
-                            <img src="{{ asset("storage/payment_logos/{$value}.png") }}" width="80"
-                                alt="{{ $label }}"><br>
-                            <span class="fw-semibold">{{ $label }}</span>
-                        </label>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-
-            {{-- Submit --}}
-            <div class="mt-auto">
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route($routePrefix . '.pos.index') }}" class="btn btn-danger">{{ __('messages.cancel') }}</a>
-                    <button type="submit" class="btn btn-primary">{{ __('messages.print_invoice') }}</button>
-                </div>
-            </div>
+          <div class="mb-2">
+            <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
+            <input type="text" inputmode="decimal" name="cash_usd" id="cashInputUsd" value="0"
+                   class="form-control payment-input">
+          </div>
+          <div class="mb-2">
+            <label>{{ __('messages.cash_received') }} (៛)</label>
+            <input type="text" inputmode="decimal" name="cash_riel" id="cashInputRiel" value="0"
+                   class="form-control payment-input">
+          </div>
+          <div class="mb-2">
+            <label>{{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }})</label>
+            <input type="text" name="change_usd" id="changeUsd" class="form-control" readonly>
+          </div>
+          <div class="mb-2">
+            <label>{{ __('messages.change') }} (៛)</label>
+            <input type="text" name="change_riel" id="changeRiel" class="form-control" readonly>
+          </div>
         </div>
-    </form>
+
+        {{-- RIGHT --}}
+        <div class="d-flex flex-column">
+          <div class="keypad-grid">
+            @foreach ([7,8,9,4,5,6,1,2,3,0] as $n)
+              <button type="button" class="btn number-button" data-val="{{ $n }}">{{ $n }}</button>
+            @endforeach
+            <button type="button" class="btn number-button" data-val=".">.</button>
+            <button type="button" class="btn number-button special-button" id="btnClear">⌫</button>
+          </div>
+
+          <div class="mt-3 text-end">
+            <label class="fw-bold" style="font-size:1.1rem;">
+              {{ __('messages.total') }} ({{ optional($setting)->currency ?? '$' }}):
+              <span id="totalAmount">{{ number_format($total,2) }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {{-- Method --}}
+      <div class="mb-3">
+        <div class="d-flex justify-content-between flex-wrap gap-2 pt-2">
+          @foreach (['Cash'=>'Cash','ABA'=>'ABA','WING'=>'WING','ACLEDA'=>'ACLEDA'] as $v=>$label)
+            <div class="text-center">
+              <input type="radio" class="btn-check" name="method" id="method-{{ $v }}"
+                     value="{{ $v }}" {{ strtolower($v)==='cash' ? 'checked':'' }}>
+              <label class="btn btn-light" for="method-{{ $v }}">
+                <img src="{{ asset("storage/payment_logos/{$v}.png") }}" width="72" alt="{{ $label }}"><br>
+                <span class="fw-semibold">{{ $label }}</span>
+              </label>
+            </div>
+          @endforeach
+        </div>
+      </div>
+
+      {{-- Actions (sticky) --}}
+      <div class="sticky-actions">
+        <div class="d-flex justify-content-between">
+          <a href="{{ route($routePrefix.'.pos.index') }}" class="btn btn-danger">{{ __('messages.cancel') }}</a>
+          <button type="submit" class="btn btn-primary" id="btnPrint">{{ __('messages.print_invoice') }}</button>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>
+
 @include('partials.toast')
 @endsection
+
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const discountInput = document.getElementById('discount');
-    const cashInputUsd = document.getElementById('cashInputUsd');
-    const cashInputRiel = document.getElementById('cashInputRiel');
-    const changeUsd = document.getElementById('changeUsd');
-    const changeRiel = document.getElementById('changeRiel');
-    const totalAmount = document.getElementById('totalAmount');
-    const customerSelect = document.getElementById('customerSelect');
-    const newCustomerBox = document.getElementById('newCustomerBox');
-    const paymentForm = document.getElementById('paymentForm');
-    const newCustomerInput = newCustomerBox.querySelector('input');
-    const routePrefix = "{{ $routePrefix }}";
+document.addEventListener('DOMContentLoaded', () => {
+  const discountInput  = document.getElementById('discount');
+  const cashInputUsd   = document.getElementById('cashInputUsd');
+  const cashInputRiel  = document.getElementById('cashInputRiel');
+  const changeUsd      = document.getElementById('changeUsd');
+  const changeRiel     = document.getElementById('changeRiel');
+  const totalAmount    = document.getElementById('totalAmount');
 
+  const customerSelect = document.getElementById('customerSelect');
+  const newCustomerBox = document.getElementById('newCustomerBox');
+  const newCustomerInput = document.getElementById('newCustomerInput');
 
-    const exchangeRate = {{ $setting->exchange_rate }};
-    const originalTotal = {{ $total ?? 0 }};
-    let selectedInput = cashInputUsd;
+  const form = document.getElementById('paymentForm');
+  const createCustomerUrl = @json(route($routePrefix.'.customers.store'));
 
+  const exchangeRate  = {{ (int)($setting->exchange_rate ?? 4100) }};
+  const originalTotal = {{ $total ?? 0 }};
 
-    const allInputs = document.querySelectorAll('.payment-input');
-    allInputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            selectedInput = input;
-            allInputs.forEach(i => i.classList.remove('focused-input'));
-            input.classList.add('focused-input');
-        });
-    });
+  let selectedInput = cashInputUsd;
+  document.querySelectorAll('.payment-input').forEach(el => {
+    el.addEventListener('focus', () => selectedInput = el);
+  });
 
-    if (customerSelect) {
-        customerSelect.addEventListener('change', function () {
-            if (this.value === 'add_new') {
-                newCustomerBox.classList.remove('d-none');
-                newCustomerInput.focus();
-            } else {
-                newCustomerBox.classList.add('d-none');
-            }
-        });
+  // show/hide quick-create box
+  customerSelect.addEventListener('change', () => {
+    if (customerSelect.value === 'add_new') {
+      newCustomerBox.classList.remove('d-none');
+      newCustomerInput.focus();
+    } else {
+      newCustomerBox.classList.add('d-none');
+    }
+  });
+
+  // Create on Enter
+  newCustomerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); createCustomer(); }
+  });
+
+  async function createCustomer(){
+    const name = (newCustomerInput.value || '').trim();
+    if (!name) { showToast("{{ __('messages.customer_name_required') }}"); return false; }
+    try{
+      const res = await fetch(createCustomerUrl, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+  },
+  body: JSON.stringify({ name }) // add phone/email/address if you collect them
+});
+
+      if(!res.ok) throw 0;
+      const data = await res.json();
+      // insert new option and select it
+      const opt = document.createElement('option');
+      opt.value = data.id; opt.textContent = data.name;
+      customerSelect.insertBefore(opt, customerSelect.querySelector('option[value="add_new"]'));
+      customerSelect.value = data.id;
+      newCustomerInput.value = '';
+      newCustomerBox.classList.add('d-none');
+      return true;
+    }catch{
+      showToast('Failed to add customer');
+      return false;
+    }
+  }
+
+  // keypad
+  document.querySelectorAll('.number-button[data-val]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!selectedInput) return;
+      const v = b.dataset.val;
+      let cur = selectedInput.value || '0';
+      if(v === '.'){
+        if(cur.includes('.')) return;
+        selectedInput.value = cur + '.';
+      }else{
+        if(cur === '0' || /^0(?:\.0+)?$/.test(cur)) selectedInput.value = String(v);
+        else selectedInput.value = cur + String(v);
+      }
+      selectedInput.dispatchEvent(new Event('input'));
+      selectedInput.focus();
+    })
+  });
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    if(!selectedInput) return; selectedInput.value='0';
+    selectedInput.dispatchEvent(new Event('input')); selectedInput.focus();
+  });
+
+  // totals
+  function updateChange(){
+    const discountPercent = parseFloat(discountInput.value) || 0;
+    const discountedTotal = originalTotal * ((100 - discountPercent)/100);
+    const usd  = parseFloat(cashInputUsd.value)  || 0;
+    const riel = parseFloat(cashInputRiel.value) || 0;
+    const totalPaidUsd = usd + (riel / exchangeRate);
+    const change = totalPaidUsd - discountedTotal;
+
+    totalAmount.textContent = discountedTotal.toFixed(2);
+    changeUsd.value  = change >= 0 ? change.toFixed(2) : '0';
+    changeRiel.value = change >= 0 ? Math.round(change * exchangeRate).toLocaleString() : '0';
+  }
+  [discountInput, cashInputUsd, cashInputRiel].forEach(i=>i.addEventListener('input', updateChange));
+  updateChange();
+
+  // popup + submit
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+
+    // Block submit while "+ Add Customer" is selected
+    if (customerSelect.value === 'add_new') {
+      const ok = await createCustomer();
+      if (!ok) return;
     }
 
-    newCustomerInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const name = newCustomerInput.value.trim();
-            if (!name) {
-                showToast("{{ __('messages.customer_name_required') }}");
-                return;
-            }
-            fetch(`/${routePrefix}/customers`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ name })
-            })
-                .then(r => r.ok ? r.json() : Promise.reject())
-                .then(data => {
-                    if (data && data.id) {
-                        const option = document.createElement('option');
-                        option.value = data.id;
-                        option.textContent = data.name;
-                        customerSelect.insertBefore(option, customerSelect.querySelector('option[value="add_new"]'));
-                        customerSelect.value = data.id;
-                        newCustomerInput.value = '';
-                        newCustomerBox.classList.add('d-none');
-                    }
-                })
-                .catch(() => showToast('Failed to add customer'));
-        }
-    });
-
-    paymentForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        if (openInvoiceWindow()) {
-            paymentForm.target = 'invoicePopup';
-            paymentForm.submit();
-        }
-    }, { once: true });
-
-    cashInputUsd.focus();
-
-
-    window.appendNumber = function(num) {
-        if (!selectedInput) return;
-
-
-        selectedInput.focus(); // 🟢 Force focus so box-shadow works correctly
-
-
-        const val = selectedInput.value;
-        if (val === '0' || /^0(?:\.0+)?$/.test(val)) {
-            selectedInput.value = num === '.' ? '0.' : num;
-        } else {
-            selectedInput.value += num;
-        }
-
-
-        selectedInput.dispatchEvent(new Event('input'));
-    };
-
-
-
-
-
-
-    window.clearInput = function() {
-        if (!selectedInput) return;
-        selectedInput.value = '0';
-        selectedInput.focus(); // ✅ keep caret visible
-        selectedInput.dispatchEvent(new Event('input'));
-    };
-
-     window.openInvoiceWindow = function() {
-        const discountPercent = parseFloat(discountInput.value) || 0;
-        const discountedTotal = originalTotal * ((100 - discountPercent) / 100);
-        const usd = parseFloat(cashInputUsd.value) || 0;
-        const riel = parseFloat(cashInputRiel.value) || 0;
-        const totalPaidUsd = usd + (riel / exchangeRate);
-        if (totalPaidUsd < discountedTotal) {
-            showToast("{{ __('messages.insufficient_payment') }}");
-            if (window.invoiceWindow && !window.invoiceWindow.closed) {
-                window.invoiceWindow.close();
-            }
-            return false;
-        }
-        if (customerSelect.value === 'add_new' && !newCustomerBox.querySelector('input').value.trim()) {
-            showToast("{{ __('messages.customer_name_required') }}");
-            if (window.invoiceWindow && !window.invoiceWindow.closed) {
-                window.invoiceWindow.close();
-            }
-            return false;
-        }
-        window.invoiceWindow = window.open('about:blank', 'invoicePopup', 'width=800,height=600');
-        if (window.invoiceWindow) {
-            window.invoiceWindow.document.write('<p>Loading invoice…</p>');
-            window.invoiceWindow.document.close();
-        }
-        return true;
-    };
-
-
-
-
-
-    function updateChange() {
-        const discountPercent = parseFloat(discountInput.value) || 0;
-        const discountedTotal = originalTotal * ((100 - discountPercent) / 100);
-
-
-        const usd = parseFloat(cashInputUsd.value) || 0;
-        const riel = parseFloat(cashInputRiel.value) || 0;
-
-
-        const totalPaidUsd = usd + (riel / exchangeRate);
-        const change = totalPaidUsd - discountedTotal;
-
-
-        totalAmount.textContent = discountedTotal.toFixed(2);
-        changeUsd.value = change >= 0 ? change.toFixed(2) : '0';
-        changeRiel.value = change >= 0 ? Math.round(change * exchangeRate).toLocaleString() : '0';
+    // Validate cash enough before opening
+    const discountPercent = parseFloat(discountInput.value) || 0;
+    const discountedTotal = originalTotal * ((100 - discountPercent)/100);
+    const usd  = parseFloat(cashInputUsd.value)  || 0;
+    const riel = parseFloat(cashInputRiel.value) || 0;
+    const totalPaidUsd = usd + (riel / exchangeRate);
+    if (totalPaidUsd < discountedTotal) {
+      showToast("{{ __('messages.insufficient_payment') }}");
+      return;
     }
 
+    // Single popup target; posting HTML to it
+    const w = window.open('about:blank','invoicePopup','width=900,height=700');
+    if(!w){ showToast('Popup blocked. Please allow popups.'); return; }
 
-    [discountInput, cashInputUsd, cashInputRiel].forEach(input => {
-        input.addEventListener('input', updateChange);
-    });
+    // make sure the temp input (new name) never submits
+    newCustomerInput.setAttribute('disabled','disabled');
 
-
-    updateChange();
+    form.target = 'invoicePopup';
+    form.submit();
+  });
 });
 </script>
 @endpush
-
-
-
