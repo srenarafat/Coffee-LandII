@@ -71,8 +71,13 @@ class CustomerController extends Controller
             'address' => 'nullable|string|max:255',
         ]);
 
+        $shopId = auth()->user()->shop_id ?? $request->input('shop_id');
+        if (!$shopId) {
+            return response()->json(['message' => 'shop_id required'], 422);
+        }
+
         $customer = Customer::firstOrCreate(
-            ['shop_id' => auth()->user()->shop_id, 'name' => $request->name],
+            ['shop_id' => $shopId, 'name' => $request->name],
             ['phone' => $request->phone, 'email' => $request->email, 'address' => $request->address]
         );
 

@@ -160,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('paymentForm');
   const createCustomerUrl = @json(route($routePrefix.'.customers.store'));
+  const isSuperadmin = @json(Auth::user()->role === 'superadmin');
+  const currentShopId = @json(request('shop_id') ?? Auth::user()->shop_id);
 
   const exchangeRate  = {{ (int)($setting->exchange_rate ?? 4100) }};
   const originalTotal = {{ $total ?? 0 }};
@@ -199,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (phone) payload.phone = phone;
       if (email) payload.email = email;
       if (address) payload.address = address;
+      if (isSuperadmin && currentShopId) payload.shop_id = currentShopId;
       const res = await fetch(createCustomerUrl, {
   method: 'POST',
   headers: {
