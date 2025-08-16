@@ -207,6 +207,5 @@ window.onafterprint = function(){
   window.close();
 };
 </script>
-@endif
 
 </html>

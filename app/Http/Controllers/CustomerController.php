@@ -97,7 +97,6 @@ class CustomerController extends Controller
             'name'    => $request->name,
             'phone'   => $request->phone,
             'email'   => $request->email,
-            'notes'   => $request->notes,
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
