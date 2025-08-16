@@ -216,4 +216,18 @@ return [
     'items_sold' => 'Items Sold',
     'average_order_value' => 'Average Order Value',
     'low_stock' => 'Low Stock',
+
+    // Customer view translations
+    'customers' => 'Customers',
+    'new' => 'New',
+    'returning' => 'Returning',
+    'at_risk' => 'At-Risk',
+    'new_customers' => 'New Customers',
+    'no_new_customers' => 'No new customers',
+    'returning_customers' => 'Returning Customers',
+    'no_returning_customers' => 'No returning customers',
+    'at_risk_customers' => 'At-Risk Customers',
+    'no_at_risk_customers' => 'No at-risk customers',
+    'contact' => 'Contact',
+    'notes' => 'Notes',
 ];

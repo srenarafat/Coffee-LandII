@@ -129,6 +129,8 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('reports/slow-products', [SlowProductController::class, 'index'])->name('reports.slow-products');
     Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
+    Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
 });
 
 // ✅ Admin Routes
@@ -187,13 +189,13 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::get('reports/slow-products', [SlowProductController::class, 'index'])->name('reports.slow-products');
     Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
 
-    
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
 
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
-
+    Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
+    Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
 });
 
 // ✅ Cashier Routes
@@ -223,6 +225,8 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
     
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/{customer}/contact', [CustomerController::class, 'contact'])->name('customers.contact');
+    Route::get('customers/{customer}/notes', [CustomerController::class, 'notes'])->name('customers.notes');
 });
 
 Route::middleware('auth')->group(function () {

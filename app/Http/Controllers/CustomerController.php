@@ -43,6 +43,8 @@ class CustomerController extends Controller
                 $days = $lastSale->diffInDays($today);
                 if ($days > 30) {
                     $atRiskCustomers->push($customer);
+                } else {
+                    $returningCustomers->push($customer);
                 }
             }
         }
@@ -52,5 +54,15 @@ class CustomerController extends Controller
             'returningCustomers' => $returningCustomers,
             'atRiskCustomers' => $atRiskCustomers,
         ]);
+    }
+    
+    public function contact(Customer $customer)
+    {
+        return view('customer.contact', compact('customer'));
+    }
+
+    public function notes(Customer $customer)
+    {
+        return view('customer.notes', compact('customer'));
     }
 }

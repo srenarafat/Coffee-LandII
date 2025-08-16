@@ -216,4 +216,18 @@ return [
     'items_sold' => 'ចំនួនទំនិញលក់',
     'average_order_value' => 'តម្លៃបញ្ជាទិញមធ្យម',
     'low_stock' => 'ស្តុកទាប',
+
+    // Customer view translations
+    'customers' => 'អតិថិជន',
+    'new' => 'ថ្មី',
+    'returning' => 'ត្រឡប់មកវិញ',
+    'at_risk' => 'មានហានិភ័យ',
+    'new_customers' => 'អតិថិជនថ្មី',
+    'no_new_customers' => 'គ្មានអតិថិជនថ្មី',
+    'returning_customers' => 'អតិថិជនត្រឡប់មកវិញ',
+    'no_returning_customers' => 'គ្មានអតិថិជនត្រឡប់មកវិញ',
+    'at_risk_customers' => 'អតិថិជនមានហានិភ័យ',
+    'no_at_risk_customers' => 'គ្មានអតិថិជនមានហានិភ័យ',
+    'contact' => 'ទំនាក់ទំនង',
+    'notes' => 'កំណត់សម្គាល់',
 ];
