@@ -128,6 +128,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('reports/z-report', [ZReportController::class, 'index'])->name('reports.zreport');
     Route::get('reports/slow-products', [SlowProductController::class, 'index'])->name('reports.slow-products');
     Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
 });
 
 // ✅ Admin Routes
