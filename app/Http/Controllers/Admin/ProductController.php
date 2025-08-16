@@ -108,5 +108,27 @@ class ProductController extends Controller
         $product->delete();
         return back()->with('success', __('messages.product_deleted_successfully'));
     }
+    
+    public function activate(Product $product)
+    {
+        if (auth()->user()->role !== 'superadmin' && $product->shop_id !== auth()->user()->shop_id) {
+            abort(403);
+        }
+
+        $product->update(['is_active' => true]);
+
+        return back()->with('success', __('messages.product_activated_successfully', ['name' => $product->name]));
+    }
+
+    public function deactivate(Product $product)
+    {
+        if (auth()->user()->role !== 'superadmin' && $product->shop_id !== auth()->user()->shop_id) {
+            abort(403);
+        }
+
+        $product->update(['is_active' => false]);
+
+        return back()->with('success', __('messages.product_deactivated_successfully', ['name' => $product->name]));
+    }
 }
 

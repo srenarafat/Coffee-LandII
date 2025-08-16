@@ -12,10 +12,34 @@
     <td>{{ optional($setting)->currency ?? '$' }}{{ number_format($prod->price, 2) }}</td>
     <td>{{ $prod->category->name ?? 'N/A' }}</td>
     <td>
+        @if($prod->is_active)
+            <span class="badge bg-success">{{ __('messages.active') }}</span>
+        @else
+            <span class="badge bg-secondary">{{ __('messages.inactive') }}</span>
+        @endif
+    </td>
+    <td>
         <div class="d-flex justify-content-center gap-2">
             <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.edit', $prod->id) : route('admin.products.edit', $prod->id) }}" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
                 ✏️ <span>{{ __('messages.edit') }}</span>
             </a>
+            @if($prod->is_active)
+                <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.deactivate', $prod->id) : route('admin.products.deactivate', $prod->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')" class="d-inline">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1 shadow-sm">
+                        ⚠️ <span>{{ __('messages.deactivate') }}</span>
+                    </button>
+                </form>
+            @else
+                <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.activate', $prod->id) : route('admin.products.activate', $prod->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')" class="d-inline">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1 shadow-sm">
+                        ✅ <span>{{ __('messages.activate') }}</span>
+                    </button>
+                </form>
+            @endif
             <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.destroy', $prod->id) : route('admin.products.destroy', $prod->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')" class="d-inline">
                 @csrf
                 @method('DELETE')

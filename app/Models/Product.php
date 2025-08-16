@@ -9,10 +9,11 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'price', 'category_id', 'image', 'shop_id', 'stock', 'promotion_flag'];
+    protected $fillable = ['name', 'price', 'category_id', 'image', 'shop_id', 'stock', 'promotion_flag', 'is_active'];
 
     protected $casts = [
         'promotion_flag' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function category()
@@ -28,6 +29,11 @@ class Product extends Model
     public function shop()
     {
         return $this->belongsTo(Shop::class);
+    }
+    
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }
 

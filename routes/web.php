@@ -90,6 +90,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('dashboard/today-sales-total', [SuperAdminController::class, 'todaySalesTotal'])->name('dashboard.today-sales-total');
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class)->except(['show']);
+    Route::patch('categories/{category}/activate', [CategoryController::class, 'activate'])->name('categories.activate');
+    Route::patch('categories/{category}/deactivate', [CategoryController::class, 'deactivate'])->name('categories.deactivate');
+    Route::patch('products/{product}/activate', [ProductController::class, 'activate'])->name('products.activate');
+    Route::patch('products/{product}/deactivate', [ProductController::class, 'deactivate'])->name('products.deactivate');
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
@@ -155,6 +159,10 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
     Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
+    Route::patch('categories/{category}/activate', [CategoryController::class, 'activate'])->name('categories.activate');
+    Route::patch('categories/{category}/deactivate', [CategoryController::class, 'deactivate'])->name('categories.deactivate');
+    Route::patch('products/{product}/activate', [ProductController::class, 'activate'])->name('products.activate');
+    Route::patch('products/{product}/deactivate', [ProductController::class, 'deactivate'])->name('products.deactivate');
     Route::post('pos/table', [PosController::class, 'setTable'])->name('pos.table');
     Route::match(['get', 'post'], 'pos/payment', [PosController::class, 'payment'])->name('pos.payment');
     

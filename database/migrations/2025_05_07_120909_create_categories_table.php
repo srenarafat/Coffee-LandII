@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            // Self-referencing nullable parent category
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('categories')
+                ->nullOnDelete();
+
             $table->string('name');
+            $table->foreignId('parent_id')->nullable()->constrained('categories');
             $table->timestamps();
         });
     }

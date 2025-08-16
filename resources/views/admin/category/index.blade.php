@@ -29,6 +29,14 @@
                         <input type="text" name="name" class="form-control shadow-sm"
                                placeholder="{{ __('messages.new_category_placeholder') }}" required>
                     </div>
+                    <div class="col-md-4">
+                        <select name="parent_id" class="form-select shadow-sm">
+                            <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
+                            @foreach($parentCategories as $parent)
+                                <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary shadow-sm px-4">
                             {{ __('messages.add_category') }}
@@ -38,57 +46,12 @@
             </form>
 
 
-            <!-- ✅ Category Table -->
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle text-center">
-                  <thead class="sticky-top" style="top: 0; z-index: 5; background-color: #dbeafe;">
-
-
-                        <tr>
-                            <th style="width: 60px;">{{ __('messages.serial') }}</th>
-                            <th>{{ __('messages.name') }}</th>
-                            <th style="width: 220px;">{{ __('messages.action') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($categories as $key => $cat)
-                        <tr>
-                            <td>{{ $key + 1 }}</td>
-                            <td class="text-start">
-                                <div id="nameDisplay{{ $cat->id }}">
-                                    <span class="fw-bold text-dark">{{ $cat->name }}</span>
-                                </div>
-                                <form id="editForm{{ $cat->id }}"
-                                      action="{{ route('admin.categories.update', $cat->id) }}"
-                                      method="POST"
-                                      class="d-none mt-2 d-flex">
-                                    @csrf @method('PUT')
-                                    <input type="text" name="name" value="{{ $cat->name }}"
-                                           class="form-control me-2" required>
-                                    <button class="btn btn-outline-primary btn-sm btn-block d-flex align-items-center justify-content-center gap-1">✅ <span>{{ __('messages.save') }}</span></button>
-                                </form>
-                            </td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button onclick="toggleEdit({{ $cat->id }})"
-                                            class="btn btn-outline-primary btn-sm">
-                                         {{ __('messages.edit') }}
-                                    </button>
-                                    <form action="{{ route('admin.categories.destroy', $cat->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('{{ __('messages.delete_category_confirm') }}')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-outline-danger btn-sm"> {{ __('messages.delete') }}</button>
-                                    </form>
-
-
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <!-- ✅ Category Tree -->
+            <ul class="list-unstyled">
+                @foreach($categories as $cat)
+                    @include('admin.category.partials.node', ['category' => $cat, 'parentCategories' => $parentCategories])
+                @endforeach
+            </ul>
 
 
         </div>
@@ -111,15 +74,6 @@
 
     .text-brown {
         color: #4E342E;
-    }
-
-
-    /* Category Table Header Color */
-    thead.sticky-top th {
-        background-color: #dbeafe !important;
-        color: #000;
-        font-weight: bold;
-        border-bottom: 1px solid #ccc;
     }
 
 

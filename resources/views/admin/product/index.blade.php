@@ -58,7 +58,8 @@
                     <th>{{ __('messages.name') }}</th>
                     <th>{{ __('messages.price') }}</th>
                     <th>{{ __('messages.category') }}</th>
-                    <th style="width: 180px;">{{ __('messages.action') }}</th>
+                    <th>{{ __('messages.status') }}</th>
+                    <th style="width: 220px;">{{ __('messages.action') }}</th>
                 </tr>
             </thead>
             <tbody id="productBody" style="min-height: 400px;">
@@ -72,9 +73,27 @@
                         <td>${{ number_format($product->price, 2) }}</td>
                         <td>{{ $product->category->name ?? '' }}</td>
                         <td>
+                            @if($product->is_active)
+                                <span class="badge bg-success">{{ __('messages.active') }}</span>
+                            @else
+                                <span class="badge bg-secondary">{{ __('messages.inactive') }}</span>
+                            @endif
+                        </td>
+                        <td>
                             <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-outline-primary btn-sm"> {{ __('messages.edit') }}</a>
-                                <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.edit', $product->id) : route('admin.products.edit', $product->id) }}" class="btn btn-outline-primary btn-sm"> {{ __('messages.edit') }}</a>
+                                @if($product->is_active)
+                                    <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.deactivate', $product->id) : route('admin.products.deactivate', $product->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-outline-warning btn-sm"> {{ __('messages.deactivate') }}</button>
+                                    </form>
+                                @else
+                                    <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.activate', $product->id) : route('admin.products.activate', $product->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-outline-success btn-sm"> {{ __('messages.activate') }}</button>
+                                    </form>
+                                @endif
+                                <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.products.destroy', $product->id) : route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.delete_confirm') }}')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm"> {{ __('messages.delete') }}</button>
                                 </form>
