@@ -6,6 +6,7 @@ use Barryvdh\Snappy\Facades\SnappyPdf;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CashierController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesReportController;
@@ -190,6 +191,8 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
 
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+
 });
 
 // ✅ Cashier Routes
@@ -217,6 +220,8 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     
     // AI Assistant chat endpoint for cashiers
     Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
+    
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
 });
 
 Route::middleware('auth')->group(function () {
