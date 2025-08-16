@@ -75,7 +75,7 @@ body {
 
 
 <div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 50px);">
-    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" target="invoicePopup" onsubmit="return openInvoiceWindow();">
+    <form method="POST" action="{{ route($routePrefix . '.pos.checkout') }}" class="container-lg" id="paymentForm">
         @csrf
         <div class="card p-4 shadow d-flex flex-column min-vh-100">
            <h3 class="fw-bold text-center mb-4 py-2 px-3 text-white bg-primary rounded" style="display:inline-block; border: 5px solid #1654ff;">
@@ -96,7 +96,7 @@ body {
                     </div>
                     <div class="mb-3 d-none" id="newCustomerBox">
                         <label class="fw-bold mb-0">Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control">
+                        <input type="text" name="customer_name" id="newCustomerInput" class="form-control" autocomplete="off">
                     </div>
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
@@ -201,6 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalAmount = document.getElementById('totalAmount');
     const customerSelect = document.getElementById('customerSelect');
     const newCustomerBox = document.getElementById('newCustomerBox');
+    const newCustomerInput = document.getElementById('newCustomerInput');
+    const form = document.getElementById('paymentForm');
+    const createCustomerUrl = @json(route($routePrefix.'.customers.store'));
 
 
     const exchangeRate = {{ $setting->exchange_rate }};
@@ -221,12 +224,23 @@ document.addEventListener('DOMContentLoaded', function() {
         customerSelect.addEventListener('change', function () {
             if (this.value === 'add_new') {
                 newCustomerBox.classList.remove('d-none');
+                newCustomerInput.removeAttribute('disabled');
+                newCustomerInput.focus();
             } else {
                 newCustomerBox.classList.add('d-none');
+                newCustomerInput.value = '';
+                newCustomerInput.setAttribute('disabled', 'disabled');
             }
         });
     }
 
+    newCustomerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); createCustomer(); }
+    });
+
+    if (customerSelect.value !== 'add_new') {
+        newCustomerInput.setAttribute('disabled', 'disabled');
+    }
 
     cashInputUsd.focus();
 
@@ -288,6 +302,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     };
+
+    async function createCustomer(){
+        const name = (newCustomerInput.value || '').trim();
+        if (!name) {
+            showToast("{{ __('messages.customer_name_required') }}");
+            return false;
+        }
+        try {
+            const res = await fetch(createCustomerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) throw 0;
+            const data = await res.json();
+            const opt = document.createElement('option');
+            opt.value = data.id;
+            opt.textContent = data.name;
+            const addOpt = customerSelect.querySelector('option[value="add_new"]');
+            customerSelect.insertBefore(opt, addOpt);
+            customerSelect.value = data.id;
+            newCustomerInput.value = '';
+            newCustomerInput.setAttribute('disabled', 'disabled');
+            newCustomerBox.classList.add('d-none');
+            return true;
+        } catch (err) {
+            showToast('Failed to add customer');
+            return false;
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (customerSelect.value === 'add_new') {
+            const ok = await createCustomer();
+            if (!ok) return;
+        }
+
+        if (!openInvoiceWindow()) return;
+
+        newCustomerInput.setAttribute('disabled', 'disabled');
+        form.target = 'invoicePopup';
+        form.submit();
+    });
 
 
 
