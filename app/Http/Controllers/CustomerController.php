@@ -9,12 +9,19 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $shopId = auth()->user()->shop_id;
+        $user = auth()->user();
+        $shopId = $user->shop_id;
 
-        $customers = Customer::where('shop_id', $shopId)
-            ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
-            ->with(['sales' => fn($q) => $q->where('shop_id', $shopId)->orderBy('created_at')])
-            ->get();
+        if ($user->role === 'superadmin') {
+            $customers = Customer::whereHas('sales')
+                ->with(['sales' => fn($q) => $q->orderBy('created_at')])
+                ->get();
+        } else {
+            $customers = Customer::where('shop_id', $shopId)
+                ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
+                ->with(['sales' => fn($q) => $q->where('shop_id', $shopId)->orderBy('created_at')])
+                ->get();
+        }
 
         $today = Carbon::today();
 
@@ -40,7 +47,7 @@ class CustomerController extends Controller
             }
         }
 
-        return view('customers.index', [
+        return view('customer.index', [
             'newCustomers' => $newCustomers,
             'returningCustomers' => $returningCustomers,
             'atRiskCustomers' => $atRiskCustomers,

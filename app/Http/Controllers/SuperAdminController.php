@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -96,6 +97,33 @@ class SuperAdminController extends Controller
             ->pluck('products.id');
 
         $slowMoversCount = $noRecentSales->merge($bottom10)->unique()->count();
+        
+         // Customer metrics across all shops
+        $today = Carbon::today();
+
+        $customers = Customer::whereHas('sales')
+            ->with(['sales' => fn($q) => $q->orderBy('created_at')])
+            ->get();
+
+        $newCustomers = $returningCustomers = $atRiskCustomers = 0;
+
+        foreach ($customers as $customer) {
+            $firstSale = $customer->sales->first()->created_at;
+            $lastSale = $customer->sales->last()->created_at;
+
+            if ($lastSale->isToday()) {
+                if ($firstSale->isToday()) {
+                    $newCustomers++;
+                } elseif ($firstSale->lt($today)) {
+                    $returningCustomers++;
+                }
+            } else {
+                $days = $lastSale->diffInDays($today);
+                if ($days >= 31 && $days <= 365) {
+                    $atRiskCustomers++;
+                }
+            }
+        }
 
         return view('superadmin.dashboard', compact(
             'recentSales',
@@ -111,7 +139,10 @@ class SuperAdminController extends Controller
             'todayAverageOrderValue',
             'lowStockCount',
             'topProductsWeekCount',
-            'slowMoversCount'
+            'slowMoversCount',
+            'newCustomers',
+            'returningCustomers',
+            'atRiskCustomers'
         ));
     }
     
