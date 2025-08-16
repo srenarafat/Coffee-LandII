@@ -67,10 +67,23 @@ body {
             <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
                 {{-- Left Inputs --}}
                 <div style="flex: 1 1 55%;">
+                    <div class="mb-3">
+                        <label class="fw-bold mb-0">Customer</label>
+                        <select name="customer_id" id="customerSelect" class="form-select">
+                            <option value="">Walk-in</option>
+                            @foreach ($customers as $customer)
+                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                            @endforeach
+                            <option value="add_new">+ Add Customer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="newCustomerBox">
+                        <label class="fw-bold mb-0">Customer Name</label>
+                        <input type="text" name="customer_name" class="form-control">
+                    </div>
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
-                        <input type="text" inputmode="decimal" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}"
-                            class="form-control w-50 payment-input">
+                        <input type="text" inputmode="decimal" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}" class="form-control w-50 payment-input">
                     </div>
 
 
@@ -167,6 +180,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const changeUsd = document.getElementById('changeUsd');
     const changeRiel = document.getElementById('changeRiel');
     const totalAmount = document.getElementById('totalAmount');
+    const customerSelect = document.getElementById('customerSelect');
+    const newCustomerBox = document.getElementById('newCustomerBox');
 
 
     const exchangeRate = {{ $setting->exchange_rate }};
@@ -183,6 +198,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    if (customerSelect) {
+        customerSelect.addEventListener('change', function () {
+            if (this.value === 'add_new') {
+                newCustomerBox.classList.remove('d-none');
+            } else {
+                newCustomerBox.classList.add('d-none');
+            }
+        });
+    }
 
     cashInputUsd.focus();
 

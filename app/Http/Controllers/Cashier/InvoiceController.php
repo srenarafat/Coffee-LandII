@@ -20,7 +20,7 @@ class InvoiceController extends Controller
         $setting = Setting::first();
         $currency = $setting->currency ?? '$';
         // Load relationships
-        $sale->load(['items.product', 'user']);
+        $sale->load(['items.product', 'user', 'customer']);
 
         // Generate QR code as SVG base64
         $qrSvg = QrCode::format('svg')
@@ -71,7 +71,7 @@ class InvoiceController extends Controller
         $currency = $setting->currency ?? '$';
 
         // Ensure relationships are loaded so the view has access
-        $sale->load(['items.product', 'user']);
+        $sale->load(['items.product', 'user', 'customer']);
 
         // Generate QR code (optional for the view)
         $qrSvg = QrCode::format('svg')

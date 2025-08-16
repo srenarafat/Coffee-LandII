@@ -104,30 +104,29 @@ class CashierController extends Controller
         
         // Customer metrics
         $shopId = auth()->user()->shop_id;
-        $today = Carbon::today();
 
         $customers = Customer::where('shop_id', $shopId)
             ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
-            ->with(['sales' => fn($q) => $q->where('shop_id', $shopId)->orderBy('created_at')])
+            ->withMin([
+                'sales as first_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+            ], 'created_at')
+            ->withMax([
+                'sales as last_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+            ], 'created_at')
             ->get();
 
         $newCustomers = $returningCustomers = $atRiskCustomers = 0;
 
         foreach ($customers as $customer) {
-            $firstSale = $customer->sales->first()->created_at;
-            $lastSale = $customer->sales->last()->created_at;
-
-            if ($lastSale->isToday()) {
-                if ($firstSale->isToday()) {
-                    $newCustomers++;
-                } elseif ($firstSale->lt($today)) {
-                    $returningCustomers++;
-                }
-            } else {
-                $days = $lastSale->diffInDays($today);
-                if ($days > 30) {
-                    $atRiskCustomers++;
-                }
+            $firstSale = Carbon::parse($customer->first_sale_at);
+            $lastSale = Carbon::parse($customer->last_sale_at);
+            $category = $customer->classifyByRecency()['category'];
+            if ($category === 'new') {
+                $newCustomers++;
+            } elseif ($category === 'returning') {
+                $returningCustomers++;
+            } elseif ($category === 'at-risk') {
+                $atRiskCustomers++;
             }
         }
 

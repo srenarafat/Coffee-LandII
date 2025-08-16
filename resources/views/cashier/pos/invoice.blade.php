@@ -57,6 +57,7 @@
                 <td style="text-align: left; border: none;">
                     No: {{ $sale->id }}<br>
                     Cashier: {{ $sale->user->name ?? 'N/A' }}<br>
+                    Customer: {{ $sale->customer->name ?? 'Walk-in' }}<br>
                     Table: {{ $sale->table_number ?? 'N/A' }}
                 </td>
                 <td style="text-align: right; border: none;">

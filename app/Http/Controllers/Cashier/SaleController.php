@@ -12,6 +12,7 @@ use App\Models\SystemLog;
 use App\Models\Shop;
 use App\Models\StockLog;
 use App\Models\Comment;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -289,9 +290,37 @@ class SaleController extends Controller
             return back()->with('error', 'Insufficient stock for: ' . implode(', ', $insufficient));
         }
 
+        // Handle customer selection or creation
+        $customerId = null;
+        $customerInput = $request->input('customer_id');
+        if ($customerInput) {
+            if ($customerInput === 'add_new') {
+                $name = trim($request->input('customer_name', ''));
+                if ($name === '') {
+                    DB::rollBack();
+                    return back()->with('error', 'Customer name required');
+                }
+                $customer = Customer::create([
+                    'shop_id' => $shopId,
+                    'name'    => $name,
+                ]);
+                $customerId = $customer->id;
+            } else {
+                $customer = Customer::where('id', $customerInput)
+                    ->where('shop_id', $shopId)
+                    ->first();
+                if (!$customer) {
+                    DB::rollBack();
+                    return back()->with('error', 'Invalid customer');
+                }
+                $customerId = $customer->id;
+            }
+        }
+
         $sale = Sale::create([
             'user_id'        => auth()->id(),
             'shop_id'        => $shopId,
+            'customer_id'    => $customerId,
             'table_number'   => session('table_number'),
             'subtotal'       => $subtotal,
             'discount'       => $discountAmount,
@@ -323,7 +352,7 @@ class SaleController extends Controller
             $product = $products[$productId];
             $product->stock -= $item['quantity'];
             $product->save();
-            
+
             // Log stock out
             StockLog::create([
                 'product_id' => $productId,
@@ -372,12 +401,15 @@ class SaleController extends Controller
             ? 'admin.pos.payment'
             : 'cashier.pos.payment';
 
+        $customers = Customer::where('shop_id', auth()->user()->shop_id)->get();
+
         return view($view, [
             'total' => $total,
             'routePrefix' => $role,
             'discountPercent' => $setting->discount_percent ?? 0,
             'shops' => $shops,
             'setting' => $setting,
+            'customers' => $customers,
         ]);
     }
 

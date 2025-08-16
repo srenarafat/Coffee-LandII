@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
-use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
@@ -14,38 +13,39 @@ class CustomerController extends Controller
 
         if ($user->role === 'superadmin') {
             $customers = Customer::whereHas('sales')
-                ->with(['sales' => fn($q) => $q->orderBy('created_at')])
+                ->withMin('sales as first_sale_at', 'created_at')
+                ->withMax('sales as last_sale_at', 'created_at')
                 ->get();
         } else {
             $customers = Customer::where('shop_id', $shopId)
                 ->whereHas('sales', fn($q) => $q->where('shop_id', $shopId))
-                ->with(['sales' => fn($q) => $q->where('shop_id', $shopId)->orderBy('created_at')])
+                ->withMin([
+                    'sales as first_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+                ], 'created_at')
+                ->withMax([
+                    'sales as last_sale_at' => fn($q) => $q->where('shop_id', $shopId),
+                ], 'created_at')
                 ->get();
         }
-
-        $today = Carbon::today();
 
         $newCustomers = collect();
         $returningCustomers = collect();
         $atRiskCustomers = collect();
 
-        foreach ($customers as $customer) {
-            $firstSale = $customer->sales->first()->created_at;
-            $lastSale = $customer->sales->last()->created_at;
-
-            if ($lastSale->isToday()) {
-                if ($firstSale->isToday()) {
+        foreach ($customers as $customer) {     
+            $firstSale = Carbon::parse($customer->first_sale_at);
+            $lastSale = Carbon::parse($customer->last_sale_at);
+            $classification = $customer->classifyByRecency();
+            switch ($classification['category']) {
+                case 'new':
                     $newCustomers->push($customer);
-                } elseif ($firstSale->lt($today)) {
-                    $returningCustomers->push($customer);
-                }
-            } else {
-                $days = $lastSale->diffInDays($today);
-                if ($days > 30) {
+                break;
+                case 'at-risk':
                     $atRiskCustomers->push($customer);
-                } else {
+                break;
+                case 'returning':
                     $returningCustomers->push($customer);
-                }
+                break;
             }
         }
 
