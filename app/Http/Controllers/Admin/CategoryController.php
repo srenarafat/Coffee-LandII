@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Rules\NotDescendant;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -18,9 +19,11 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $category = new Category();
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => ['nullable', 'exists:categories,id', new NotDescendant($category)],
         ]);
 
         Category::create($request->only('name', 'parent_id'));
@@ -32,7 +35,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => ['nullable', 'exists:categories,id', new NotDescendant($category)],
         ]);
 
         $category->update($request->only('name', 'parent_id'));

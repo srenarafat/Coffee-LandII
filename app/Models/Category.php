@@ -21,12 +21,14 @@ class Category extends Model
 
     public function children()
     {
-        return $this->hasMany(self::class, 'parent_id')->orderBy('name');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function childrenRecursive()
     {
-        return $this->children()->with('childrenRecursive')->orderBy('name');
+        return $this->children()
+            ->orderBy('name')
+            ->with(['childrenRecursive' => fn ($q) => $q->orderBy('name')]);
     }
 }
 

@@ -62,8 +62,19 @@
       <div class="col-md-4">
         <select name="parent_id" class="form-select">
           <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
+          @php
+            $collectIds = function ($cat) use (&$collectIds) {
+                $ids = [];
+                foreach ($cat->children as $child) {
+                    $ids[] = $child->id;
+                    $ids = array_merge($ids, $collectIds($child));
+                }
+                return $ids;
+            };
+            $descendantIds = $collectIds($category);
+          @endphp
           @foreach($parentCategories as $parent)
-            @if($parent->id !== $category->id)
+            @if($parent->id !== $category->id && !in_array($parent->id, $descendantIds))
               <option value="{{ $parent->id }}" {{ $category->parent_id == $parent->id ? 'selected' : '' }}>
                 {{ $parent->name }}
               </option>

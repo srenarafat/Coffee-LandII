@@ -12,21 +12,27 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $food = Category::create(['name' => 'Food']);
-        $breakfast = Category::create([
-            'name' => 'Breakfast',
-            'parent_id' => $food->id,
-        ]);
+        $food = Category::firstOrCreate(['name' => 'Food'], ['parent_id' => null]);
+        $drinks = Category::firstOrCreate(['name' => 'Drinks'], ['parent_id' => null]);
 
-        Category::create([
-            'name' => 'Type of Noodles',
-            'parent_id' => $breakfast->id,
-        ]);
+        $food->update(['parent_id' => null]);
+        $drinks->update(['parent_id' => null]);
 
-        $drinks = Category::create(['name' => 'Drinks']);
-        Category::create([
-            'name' => 'Coffee',
-            'parent_id' => $drinks->id,
-        ]);
+        Category::where('name', 'Hot Drinks')->update(['name' => 'Hot']);
+        Category::where('name', 'Ice Drinks')->update(['name' => 'Iced']);
+
+        foreach (['Breakfast', 'Lunch', 'Snack'] as $child) {
+            Category::firstOrCreate([
+                'name' => $child,
+                'parent_id' => $food->id,
+            ]);
+        }
+
+        foreach (['Hot', 'Iced'] as $child) {
+            Category::firstOrCreate([
+                'name' => $child,
+                'parent_id' => $drinks->id,
+            ]);
+        }
     }
 }
