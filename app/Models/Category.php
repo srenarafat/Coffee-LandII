@@ -9,10 +9,12 @@ class Category extends Model
 {
     use HasFactory;
 
-    /**
-     * Mass assignable attributes.
-     */
-    protected $fillable = ['name', 'parent_id', 'shop_id'];
+    // include shop_id if you set it via mass assignment
+    protected $fillable = ['shop_id', 'name', 'parent_id', 'is_active'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     public function parent()
     {
@@ -28,12 +30,25 @@ class Category extends Model
     {
         return $this->children()
             ->orderBy('name')
-            ->with(['childrenRecursive' => fn ($q) => $q->orderBy('name')]);
+            ->with(['childrenRecursive' => function ($q) {
+                $q->orderBy('name');
+            }]);
     }
-    
+
     public function shop()
     {
         return $this->belongsTo(Shop::class);
     }
-}
 
+    /** Query scopes */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /** Optional: active only if all ancestors are active */
+    public function isTreeActive(): bool
+    {
+        return (bool) $this->is_active && (!$this->parent || $this->parent->isTreeActive());
+    }
+}

@@ -1,19 +1,24 @@
 @php
   $hasChildren = $category->childrenRecursive->count() > 0;
   $childrenId  = 'children-'.$category->id;
+  $depthClass  = 'depth-'.min((int)($depth ?? 0), 2);
 @endphp
 
-<li class="tree-node" data-name="{{ strtolower($category->name) }}">
-  <div id="nameDisplay{{ $category->id }}" class="node-row">
+<li class="tree-node {{ $depthClass }}" data-name="{{ strtolower($category->name) }}" data-depth="{{ $depth ?? 0 }}">
+  <div id="nameDisplay{{ $category->id }}" class="node-row" data-active="{{ (int)$category->is_active }}">
+    {{-- depth stripe --}}
+    <span class="stripe" aria-hidden="true"></span>
+
     {{-- caret / bullet --}}
     @if($hasChildren)
       <button type="button"
               class="caret open"
               data-toggle="children"
               data-target="{{ $childrenId }}"
-              aria-label="toggle children"></button>
+              aria-label="toggle children"
+              tabindex="0"></button>
     @else
-      <span class="bullet">•</span>
+      <span class="caret" style="opacity:.35;cursor:default" aria-hidden="true">•</span>
     @endif
 
     {{-- name + status --}}
@@ -24,29 +29,27 @@
       <span class="badge bg-secondary">{{ __('messages.inactive') }}</span>
     @endif
 
-    <div class="ms-auto actions d-flex gap-2">
-      {{-- Activate / Deactivate --}}
+    {{-- actions --}}
+    <div class="ms-auto actions d-flex">
       @if($category->is_active)
         <form action="{{ route('admin.categories.deactivate', $category->id) }}" method="POST" class="d-inline">
           @csrf @method('PATCH')
-          <button class="btn btn-outline-warning btn-sm">{{ __('messages.deactivate') }}</button>
+          <button class="btn btn-warning btn-sm text-white">{{ __('messages.deactivate') }}</button>
         </form>
       @else
         <form action="{{ route('admin.categories.activate', $category->id) }}" method="POST" class="d-inline">
           @csrf @method('PATCH')
-          <button class="btn btn-outline-success btn-sm">{{ __('messages.activate') }}</button>
+          <button class="btn btn-success btn-sm text-white">{{ __('messages.activate') }}</button>
         </form>
       @endif
 
-      {{-- Edit --}}
       <button onclick="toggleEdit({{ $category->id }})"
-              class="btn btn-outline-primary btn-sm">{{ __('messages.edit') }}</button>
+              class="btn btn-info btn-sm text-white">{{ __('messages.edit') }}</button>
 
-      {{-- Delete --}}
       <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST"
             onsubmit="return confirm('{{ __('messages.delete_category_confirm') }}')" class="d-inline">
         @csrf @method('DELETE')
-        <button class="btn btn-outline-danger btn-sm">{{ __('messages.delete') }}</button>
+        <button class="btn btn-danger btn-sm text-white">{{ __('messages.delete') }}</button>
       </form>
     </div>
   </div>
@@ -83,7 +86,7 @@
         </select>
       </div>
       <div class="col-auto">
-        <button class="btn btn-outline-primary btn-sm">{{ __('messages.save') }}</button>
+        <button class="btn btn-primary btn-sm">{{ __('messages.save') }}</button>
       </div>
     </div>
   </form>
@@ -92,7 +95,11 @@
   @if($hasChildren)
     <ul id="{{ $childrenId }}" class="children list-unstyled mt-2">
       @foreach($category->childrenRecursive as $child)
-        @include('admin.category.partials.node', ['category' => $child, 'parentCategories' => $parentCategories])
+        @include('admin.category.partials.node', [
+          'category' => $child,
+          'parentCategories' => $parentCategories,
+          'depth' => ($depth ?? 0) + 1
+        ])
       @endforeach
     </ul>
   @endif

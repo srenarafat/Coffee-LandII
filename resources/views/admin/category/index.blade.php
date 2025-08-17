@@ -19,7 +19,7 @@
         <h4 class="fw-bold m-0">🗄️ {{ __('messages.category_list') }}</h4>
         <div class="d-flex gap-2">
           <input id="categorySearch" type="text" class="form-control form-control-sm"
-                placeholder="{{ __('messages.search') ?: 'Search categories…' }}">
+                 placeholder="{{ __('messages.search') ?: 'Search categories…' }}">
           <button id="expandAll"  class="btn btn-outline-secondary btn-sm">Expand all</button>
           <button id="collapseAll" class="btn btn-outline-secondary btn-sm">Collapse all</button>
         </div>
@@ -53,7 +53,11 @@
       <div class="category-tree">
         <ul class="tree list-unstyled ps-0">
           @foreach($categories as $cat)
-            @include('admin.category.partials.node', ['category' => $cat, 'parentCategories' => $parentCategories])
+            @include('admin.category.partials.node', [
+              'category' => $cat,
+              'parentCategories' => $parentCategories,
+              'depth' => 0
+            ])
           @endforeach
         </ul>
       </div>
@@ -65,33 +69,53 @@
 
 @push('styles')
 <style>
-  .category-tree .tree { --line:#e6e6e6; }
+  /* ===== Palette & tokens ===== */
+  .category-tree { --line:#e6e6e6; --row:#f8f9fa; --rowHover:#eef2ff; }
+  .depth-0 { --accent:#3b82f6; --stripe:#e0f2fe; }   /* top level */
+  .depth-1 { --accent:#8b5cf6; --stripe:#ede9fe; }   /* first child */
+  .depth-2 { --accent:#10b981; --stripe:#d1fae5; }   /* deeper nodes */
+
+  /* ===== tree connectors ===== */
   .tree li { position: relative; margin: .25rem 0 .5rem 1.25rem; }
   .tree li::before {
-    content:""; position:absolute; top:-.25rem; left:-.75rem;
-    width:.75rem; height:1.5rem; border-left:1px solid var(--line); border-bottom:1px solid var(--line);
+    content:""; position:absolute; top:.4rem; left:-.75rem;
+    width:.75rem; height:1.25rem; border-left:1px solid var(--line); border-bottom:1px solid var(--line);
   }
-  .tree > li::before { top:.4rem; }
+  .tree > li::before { top:.6rem; }
 
-  .node-row {
+  /* ===== node row ===== */
+  .node-row{
     display:flex; align-items:center; gap:.5rem;
-    background:#f8f9fa; border-radius:.5rem; padding:.5rem .75rem;
+    background: var(--row); border-radius:.6rem; padding:.5rem .75rem;
+    border-left: .35rem solid var(--accent, #cbd5e1);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.02) inset;
   }
-  .node-row .caret {
-    width:1.25rem; height:1.25rem; line-height:1.25rem; text-align:center;
-    border:none; background:transparent; cursor:pointer; user-select:none;
-    font-size:1rem;
-  }
-  .node-row .caret::before { content:"▸"; }
-  .node-row .caret.open::before { content:"▾"; }
-  .node-row .bullet { width:1.25rem; text-align:center; opacity:.4; }
-  .node-row .name { font-weight:600; color:#222; }
-  .node-row .badge { font-size:.7rem; }
-  .children { margin-left:1rem; }
-  .actions .btn { padding:.15rem .5rem; }
+  .node-row[data-active="0"]{ opacity:.7; }
+  .node-row:hover{ background: var(--rowHover); }
 
-  /* subtle highlight on search hit */
-  .hit .name { background: #fff3cd; padding:.1rem .25rem; border-radius:.25rem; }
+  .stripe{
+    width:.7rem; height:1.25rem; border-radius:.25rem; background: var(--stripe,#f1f5f9);
+  }
+
+  .caret{
+    width:1.25rem;height:1.25rem;line-height:1.25rem;text-align:center;
+    border:none;background:transparent;cursor:pointer;user-select:none;font-size:1rem;
+  }
+  .caret::before{ content:"▸"; }
+  .caret.open::before{ content:"▾"; }
+
+  .name{ font-weight:600; color:#111827; }
+  .badge{ font-size:.7rem; }
+  .children{ margin-left:1rem; }
+
+  .actions{ gap:.35rem; flex-wrap:wrap; }
+  .actions .btn{ padding:.2rem .55rem; border-radius:.5rem; }
+
+  /* search highlight */
+  .hit .name{ background:#fff3cd; padding:.05rem .3rem; border-radius:.25rem; }
+
+  /* keyboard focus */
+  .caret:focus-visible, .actions .btn:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
 </style>
 @endpush
 
@@ -103,7 +127,7 @@
     if (toast) setTimeout(() => toast.remove(), 2200);
   });
 
-  // expand / collapse handlers (delegated)
+  // expand / collapse single node (click & keyboard)
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-toggle="children"]');
     if (!btn) return;
@@ -112,8 +136,13 @@
     target.classList.toggle('d-none');
     btn.classList.toggle('open');
   });
+  document.addEventListener('keydown', (e) => {
+    const btn = e.target.closest('[data-toggle="children"]');
+    if (!btn) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+  });
 
-  // expand/collapse all
+  // expand / collapse all
   document.getElementById('expandAll')?.addEventListener('click', () => {
     document.querySelectorAll('.children').forEach(ul => ul.classList.remove('d-none'));
     document.querySelectorAll('.caret').forEach(c => c.classList.add('open'));
@@ -123,24 +152,37 @@
     document.querySelectorAll('.caret').forEach(c => c.classList.remove('open'));
   });
 
-  // search (highlights matches; keeps structure)
+  // search: highlight & auto-expand parents of hits
   const search = document.getElementById('categorySearch');
+  function expandAncestors(el){
+    let cur = el.parentElement;
+    while(cur){
+      if(cur.classList?.contains('children')) {
+        cur.classList.remove('d-none');
+        const caret = cur.previousElementSibling?.querySelector('.caret');
+        caret?.classList.add('open');
+      }
+      cur = cur.parentElement;
+    }
+  }
   if (search) {
     search.addEventListener('input', () => {
       const q = search.value.trim().toLowerCase();
       document.querySelectorAll('.tree .tree-node').forEach(li => {
         li.classList.remove('hit');
         const name = li.dataset.name || '';
-        if (q && name.includes(q)) li.classList.add('hit');
+        if (q && name.includes(q)) {
+          li.classList.add('hit');
+          expandAncestors(li);
+        }
       });
     });
   }
 
-  // inline edit toggle (keeps your existing behavior)
-  function toggleEdit(id) {
+  // expose for inline edit in partial
+  window.toggleEdit = function(id){
     document.getElementById('nameDisplay' + id).classList.add('d-none');
     document.getElementById('editForm' + id).classList.remove('d-none');
-  }
-  window.toggleEdit = toggleEdit;
+  };
 </script>
 @endpush
