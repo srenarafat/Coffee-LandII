@@ -12,7 +12,7 @@ class Category extends Model
     /**
      * Mass assignable attributes.
      */
-    protected $fillable = ['name', 'parent_id'];
+    protected $fillable = ['name', 'parent_id', 'shop_id'];
 
     public function parent()
     {
@@ -29,6 +29,11 @@ class Category extends Model
         return $this->children()
             ->orderBy('name')
             ->with(['childrenRecursive' => fn ($q) => $q->orderBy('name')]);
+    }
+    
+    public function shop()
+    {
+        return $this->belongsTo(Shop::class);
     }
 }
 

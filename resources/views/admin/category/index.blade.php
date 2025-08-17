@@ -19,7 +19,7 @@
         <h4 class="fw-bold m-0">🗄️ {{ __('messages.category_list') }}</h4>
         <div class="d-flex gap-2">
           <input id="categorySearch" type="text" class="form-control form-control-sm"
-                 placeholder="{{ __('messages.search') ?? 'Search categories…' }}">
+                placeholder="{{ __('messages.search') ?: 'Search categories…' }}">
           <button id="expandAll"  class="btn btn-outline-secondary btn-sm">Expand all</button>
           <button id="collapseAll" class="btn btn-outline-secondary btn-sm">Collapse all</button>
         </div>

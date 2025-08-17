@@ -150,6 +150,10 @@ Route::post('/admin/ai-assistant', [\App\Http\Controllers\AIChatController::clas
 
 
 
+Route::get('fix-category-structure', [CategoryController::class, 'fixStructure'])
+        ->middleware('role:admin')
+        ->name('categories.fix-structure');
+
     Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class)->except(['show']);
 
