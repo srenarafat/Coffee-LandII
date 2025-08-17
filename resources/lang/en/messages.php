@@ -175,6 +175,7 @@ return [
     'category_deleted_successfully' => 'Category deleted successfully.',
     'category_activated_successfully' => 'Category activated successfully.',
     'category_deactivated_successfully' => 'Category deactivated successfully.',
+    'category_inactive' => 'Selected category or its ancestors are inactive.',
 
     'stock_logs' => 'Stock Logs',
     'stock_log_history' => 'Stock Log History',

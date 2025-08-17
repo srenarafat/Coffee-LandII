@@ -175,6 +175,7 @@ return [
     'category_deleted_successfully' => 'លុបប្រភេទបានជោគជ័យ',
     'category_activated_successfully' => 'បើកប្រភេទបានជោគជ័យ',
     'category_deactivated_successfully' => 'បិទប្រភេទបានជោគជ័យ',
+    'category_inactive' => 'ប្រភេទឬប្រភេទមេមិនសកម្មទេ',
 
     'stock_logs' => 'កំណត់ហេតុស្តុក',
     'stock_log_history' => 'ប្រវត្តិកំណត់ហេតុស្តុក',

@@ -19,27 +19,37 @@
                         <!-- Product Name -->
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.product_name') }}</label>
-                            <input type="text" name="name" value="{{ $product->name }}" class="form-control shadow-sm" placeholder="e.g., Iced Latte" required>
+                            <input type="text" name="name" value="{{ old('name', $product->name) }}" class="form-control shadow-sm" placeholder="e.g., Iced Latte" required>
                         </div>
-
 
                         <!-- Price -->
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.price') }} ($)</label>
                             <div class="input-group shadow-sm">
                                 <span class="input-group-text">$</span>
-                                <input type="number" name="price" value="{{ $product->price }}" class="form-control" step="0.01" placeholder="e.g., 2.50" required>
+                                <input type="number" name="price" value="{{ old('price', $product->price) }}" class="form-control" step="0.01" placeholder="e.g., 2.50" required>
                             </div>
                         </div>
 
+                        @isset($shops)
+                            <div class="mb-3">
+                                <label class="form-label">{{ __('messages.choose_shop') }}</label>
+                                <select name="shop_id" class="form-select shadow-sm">
+                                    <option value=""></option>
+                                    @foreach($shops as $shop)
+                                        <option value="{{ $shop->id }}" {{ old('shop_id', $product->shop_id) == $shop->id ? 'selected' : '' }}>{{ $shop->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endisset
 
                         <!-- Category -->
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.category') }}</label>
                             <select name="category_id" class="form-select shadow-sm" required>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}" {{ $product->category_id == $cat->id ? 'selected' : '' }}>
-                                        {{ $cat->name }}
+                                @foreach($categoryOptions as $id => $name)
+                                    <option value="{{ $id }}" {{ $product->category_id == $id ? 'selected' : '' }}>
+                                        {{ $name }}
                                     </option>
                                 @endforeach
                             </select>

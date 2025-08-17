@@ -10,12 +10,23 @@
                 @csrf
 
                 <div class="row g-4">
-                    <!-- Category -->
+                    @isset($shops)
+                        <div class="col-md-6">
+                            <label class="form-label">{{ __('messages.choose_shop') }}</label>
+                            <select name="shop_id" class="form-control shadow-sm">
+                                <option value=""></option>
+                                @foreach($shops as $shop)
+                                    <option value="{{ $shop->id }}" {{ old('shop_id') == $shop->id ? 'selected' : '' }}>{{ $shop->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endisset
+
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.category') }}</label>
                         <select name="category_id" class="form-control shadow-sm" required>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @foreach($categoryOptions as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -23,13 +34,13 @@
                     <!-- Product Name -->
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.product_name') }}</label>
-                        <input type="text" name="name" class="form-control shadow-sm" placeholder="e.g. Latte" required>
+                        <input type="text" name="name" class="form-control shadow-sm" placeholder="e.g. Latte" value="{{ old('name') }}" required>
                     </div>
 
                     <!-- Price -->
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.price') }} ($)</label>
-                        <input type="number" name="price" class="form-control shadow-sm" placeholder="e.g. 2.50" step="0.01" required>
+                        <input type="number" name="price" class="form-control shadow-sm" placeholder="e.g. 2.50" step="0.01" value="{{ old('price') }}" required>
                     </div>
 
                     <!-- Product Image -->

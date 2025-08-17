@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Shop;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -29,10 +30,24 @@ class ProductController extends Controller
         return view('admin.product.index', compact('products'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
-        return view('admin.product.create', compact('categories'));
+        $shopId = auth()->user()->role === 'superadmin'
+            ? $request->input('shop_id')
+            : auth()->user()->shop_id;
+
+        $categoryOptions = category_options($shopId);
+
+        $data = [
+            'categoryOptions' => $categoryOptions,
+            'shopId' => $shopId,
+        ];
+
+        if (auth()->user()->role === 'superadmin') {
+            $data['shops'] = Shop::orderBy('name')->get();
+        }
+
+        return view('admin.product.create', $data);
     }
 
     public function store(Request $request)
@@ -63,14 +78,29 @@ class ProductController extends Controller
             ->with('success', __('messages.product_added_successfully', ['name' => $product->name]));
     }
 
-    public function edit(Product $product)
+    public function edit(Product $product, Request $request)
     {
         if (auth()->user()->role !== 'superadmin' && $product->shop_id !== auth()->user()->shop_id) {
             abort(403);
         }
 
-        $categories = Category::with('children')->whereNull('parent_id')->get();
-        return view('admin.product.edit', compact('product', 'categories'));
+        $shopId = auth()->user()->role === 'superadmin'
+            ? $request->input('shop_id', $product->shop_id)
+            : auth()->user()->shop_id;
+
+        $categoryOptions = category_options($shopId);
+
+        $data = [
+            'product' => $product,
+            'categoryOptions' => $categoryOptions,
+            'shopId' => $shopId,
+        ];
+
+        if (auth()->user()->role === 'superadmin') {
+            $data['shops'] = Shop::orderBy('name')->get();
+        }
+
+        return view('admin.product.edit', $data);
     }
 
     public function update(Request $request, Product $product)
@@ -129,6 +159,33 @@ class ProductController extends Controller
         $product->update(['is_active' => false]);
 
         return back()->with('success', __('messages.product_deactivated_successfully', ['name' => $product->name]));
+    }
+    
+    private function categoryOptionsForShop(?int $shopId = null): array
+    {
+        $categories = Category::query()
+            ->when($shopId, fn($q) => $q->where('shop_id', $shopId))
+            ->whereNull('parent_id')
+            ->with('childrenRecursive')
+            ->orderBy('name')
+            ->get();
+
+        $options = [];
+
+        $flatten = function ($category, string $prefix = '') use (&$options, &$flatten) {
+            $label = $prefix ? $prefix . ' › ' . $category->name : $category->name;
+            $options[$category->id] = $label;
+
+            foreach ($category->childrenRecursive as $child) {
+                $flatten($child, $label);
+            }
+        };
+
+        foreach ($categories as $category) {
+            $flatten($category);
+        }
+
+        return $options;
     }
 }
 
