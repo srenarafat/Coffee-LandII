@@ -1,5 +1,5 @@
 @php
-  $hasChildren = $category->children->count() > 0;
+  $hasChildren = $category->childrenRecursive->count() > 0;
   $childrenId  = 'children-'.$category->id;
 @endphp
 
@@ -65,7 +65,7 @@
           @php
             $collectIds = function ($cat) use (&$collectIds) {
                 $ids = [];
-                foreach ($cat->children as $child) {
+                foreach ($cat->childrenRecursive as $child) {
                     $ids[] = $child->id;
                     $ids = array_merge($ids, $collectIds($child));
                 }
@@ -91,7 +91,7 @@
   {{-- Children --}}
   @if($hasChildren)
     <ul id="{{ $childrenId }}" class="children list-unstyled mt-2">
-      @foreach($category->children as $child)
+      @foreach($category->childrenRecursive as $child)
         @include('admin.category.partials.node', ['category' => $child, 'parentCategories' => $parentCategories])
       @endforeach
     </ul>

@@ -11,7 +11,10 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::whereNull('parent_id')
+            ->with('childrenRecursive')
+            ->orderBy('name')
+            ->get();
         $parentCategories = Category::all();
 
         return view('admin.category.index', compact('categories', 'parentCategories'));
