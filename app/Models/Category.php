@@ -9,12 +9,15 @@ class Category extends Model
 {
     use HasFactory;
 
-    // include shop_id if you set it via mass assignment
+    /** Mass assignment */
     protected $fillable = ['shop_id', 'name', 'parent_id', 'is_active'];
 
+    /** Casts */
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /* ---------------- Relationships ---------------- */
 
     public function parent()
     {
@@ -40,15 +43,26 @@ class Category extends Model
         return $this->belongsTo(Shop::class);
     }
 
-    /** Query scopes */
+    /* ---------------- Scopes & Helpers ---------------- */
+
+    /** Only active categories (single node) */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    /** Optional: active only if all ancestors are active */
+    /** Category is active AND all ancestors are active */
     public function isTreeActive(): bool
     {
-        return (bool) $this->is_active && (!$this->parent || $this->parent->isTreeActive());
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Avoid N+1: use loaded relation if present, otherwise fetch one hop.
+        $parent = $this->relationLoaded('parent')
+            ? $this->parent
+            : $this->parent()->first();
+
+        return !$parent || $parent->isTreeActive();
     }
 }
