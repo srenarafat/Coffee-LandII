@@ -12,26 +12,21 @@ class Category extends Model
     /**
      * Mass assignable attributes.
      */
-    protected $fillable = ['name', 'parent_id', 'is_active'];
+    protected $fillable = ['name', 'parent_id'];
 
-    /**
-     * Parent category relationship.
-     */
     public function parent()
     {
         return $this->belongsTo(self::class, 'parent_id');
     }
 
-    /**
-     * Children categories relationship.
-     */
     public function children()
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('name');
     }
-    public function scopeActive($query)
+
+    public function childrenRecursive()
     {
-        return $query->where('is_active', true);
+        return $this->children()->with('childrenRecursive')->orderBy('name');
     }
 }
 

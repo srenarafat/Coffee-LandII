@@ -20,7 +20,7 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->string('name');
-            $table->foreignId('parent_id')->nullable()->constrained('categories');
+            $table->foreignId('parent_id')->nullable()->constrained('categories')->cascadeOnDelete();
             $table->timestamps();
         });
     }
