@@ -32,7 +32,7 @@ class SaleController extends Controller
         }
 
         $products = $query->get();
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
         $cart = session()->get('cart', []);
         $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
         $itemCount = collect($cart)->sum('quantity');
@@ -387,7 +387,7 @@ class SaleController extends Controller
     public function history(Request $request)
     {
         $query = Sale::with(['items.product.category', 'user'])->where('user_id', auth()->id());
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
 
         if ($request->from) {
             $query->whereDate('created_at', '>=', $request->from);

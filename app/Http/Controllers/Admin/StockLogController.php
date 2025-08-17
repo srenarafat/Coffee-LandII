@@ -34,7 +34,7 @@ class StockLogController extends Controller
         }
 
         $logs = $query->paginate(20);
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
 
         return view('admin.stock_logs.index', compact('logs', 'categories'));
     }
@@ -43,7 +43,7 @@ class StockLogController extends Controller
     {
         $categoryId = $request->get('category_id');
         $products = Product::when($categoryId, fn ($q) => $q->where('category_id', $categoryId))->get();
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
 
         return view('admin.stock_logs.create', compact('products', 'categories', 'categoryId'));
     }

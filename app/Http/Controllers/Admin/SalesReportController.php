@@ -47,7 +47,7 @@ class SalesReportController extends Controller
                 ->get();
         }
 
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
 
         return view('admin.sales.report', compact('sales', 'users', 'totalAmount', 'categories'));
     }
@@ -212,7 +212,7 @@ public function topQuantitySales(Request $request)
 
     $topProducts = $query->take(10)->get();
 
-    $categories = Category::all();
+    $categories = Category::with('children')->whereNull('parent_id')->get();
 
     return view('admin.reports.top-quantity-sales', compact('topProducts', 'period', 'categories'));
 }

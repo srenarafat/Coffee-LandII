@@ -31,7 +31,7 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
         return view('admin.product.create', compact('categories'));
     }
 
@@ -69,7 +69,7 @@ class ProductController extends Controller
             abort(403);
         }
 
-        $categories = Category::all();
+        $categories = Category::with('children')->whereNull('parent_id')->get();
         return view('admin.product.edit', compact('product', 'categories'));
     }
 
