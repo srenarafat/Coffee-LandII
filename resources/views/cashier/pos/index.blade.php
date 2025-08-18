@@ -95,11 +95,11 @@ input::placeholder {
                     <a class="category-pill {{ request('category') ? '' : 'active' }}" href="{{ url()->current() }}">
                         {{ __('All') }}
                     </a>
-                    @foreach ($categories as $category)
-                    <a class="category-pill {{ request('category') == $category->id ? 'active' : '' }}"
-                        href="{{ url()->current() }}?category={{ $category->id }}">
-                        {{ $category->name }}
-                    </a>
+                    @foreach ($flatCategories as $cat)
+                        <a class="category-pill {{ request('category') == $cat['id'] ? 'active' : '' }}"
+                           href="{{ url()->current() }}?category={{ $cat['id'] }}">
+                            {{ $cat['label'] }}
+                        </a>
                     @endforeach
                 </div>
             </div>

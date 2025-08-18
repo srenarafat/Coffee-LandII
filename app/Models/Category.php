@@ -65,4 +65,25 @@ class Category extends Model
 
         return !$parent || $parent->isTreeActive();
     }
+    
+    /**
+     * Return the given category id plus all descendant ids.
+     */
+    public static function descendantsAndSelfIds(int $id): array
+    {
+        $ids = [];
+        $queue = [$id];
+
+        while ($queue) {
+            $current = array_shift($queue);
+            $ids[]   = $current;
+
+            $children = self::where('parent_id', $current)->pluck('id');
+            foreach ($children as $childId) {
+                $queue[] = $childId;
+            }
+        }
+
+        return $ids;
+    }
 }

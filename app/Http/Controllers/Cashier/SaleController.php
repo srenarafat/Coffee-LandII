@@ -27,7 +27,8 @@ class SaleController extends Controller
             ->sellable();                    // ⬅️ enforce active category tree in UI
 
         if (request()->filled('category')) {
-            $query->where('category_id', request('category'));
+            $ids = Category::descendantsAndSelfIds((int) request('category'));
+            $query->whereIn('category_id', $ids);
         }
 
         if (request()->filled('search')) {
@@ -40,6 +41,21 @@ class SaleController extends Controller
             ->orderBy('name')
             ->get();
 
+            $flatCategories = Category::active()
+            ->with('parent')
+            ->get()
+            ->map(function ($cat) {
+                $label   = $cat->name;
+                $current = $cat->parent;
+                while ($current) {
+                    $label   = $current->name . ' › ' . $label;
+                    $current = $current->parent;
+                }
+                return ['id' => $cat->id, 'label' => $label];
+            })
+            ->sortBy('label')
+            ->values();
+
         $cart      = session()->get('cart', []);
         $total     = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
         $itemCount = collect($cart)->sum('quantity');
@@ -49,7 +65,7 @@ class SaleController extends Controller
             ? 'admin.pos.index'
             : 'cashier.pos.index';
 
-        return view($view, compact('categories', 'products', 'cart', 'total', 'itemCount', 'comments'));
+        return view($view, compact('categories', 'flatCategories', 'products', 'cart', 'total', 'itemCount', 'comments'));
     }
 
     // Add item to cart
