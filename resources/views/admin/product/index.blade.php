@@ -101,23 +101,23 @@
                                         </form>
                                     @endif
 
-                                    {{-- 🔵 Edit SECOND --}}
+                                    {{-- 🔵 Edit SECOND (solid blue like Category) --}}
                                     <a href="{{ auth()->user()->role === 'superadmin'
                                                 ? route('superadmin.products.edit', $product->id)
                                                 : route('admin.products.edit', $product->id) }}"
-                                       class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+                                       class="btn btn-edit btn-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-pencil-square"></i>
                                         <span>{{ __('messages.edit') }}</span>
                                     </a>
 
-                                    {{-- 🗑 Delete LAST --}}
+                                    {{-- 🗑 Delete LAST (solid red like Category) --}}
                                     <form action="{{ auth()->user()->role === 'superadmin'
                                                     ? route('superadmin.products.destroy', $product->id)
                                                     : route('admin.products.destroy', $product->id) }}"
                                           method="POST"
                                           onsubmit="return confirm('{{ __('messages.delete_confirm') }}')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1">
+                                        <button type="submit" class="btn btn-delete btn-sm d-flex align-items-center gap-1">
                                             <i class="bi bi-trash3"></i>
                                             <span>{{ __('messages.delete') }}</span>
                                         </button>
@@ -179,16 +179,6 @@
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .btn-outline-primary:hover {
-        background-color: #0d6efd;
-        color: white;
-    }
-
-    .btn-outline-danger:hover {
-        background-color: #dc3545;
-        color: white;
-    }
-
     /* 🔵 Header Style */
     thead.sticky-top th {
         background-color: #dbeafe !important;
@@ -197,19 +187,46 @@
         border-bottom: 1px solid #ccc;
     }
 
-    /* 🔶 Custom Deactivate button color */
-    .btn-deactivate {
+    /* ⚠️ Deactivate (amber) */
+    .btn-deactivate{
         background:#f59e0b;        /* amber-500 */
         border-color:#f59e0b;
         color:#111;
+        font-weight:600;
     }
-    .btn-deactivate:hover {
+    .btn-deactivate:hover{
         background:#d97706;        /* amber-600 */
         border-color:#d97706;
         color:#fff;
     }
 
-    /* Keep icons aligned in small buttons */
-    .btn.btn-sm .bi { font-size: 1rem; line-height: 1; }
+    /* ✏️ Edit (solid blue like Category) */
+    .btn-edit{
+        background:#3b82f6;        /* blue-500 */
+        border-color:#3b82f6;
+        color:#fff;
+        font-weight:600;
+    }
+    .btn-edit:hover{
+        background:#1d4ed8;        /* blue-700 */
+        border-color:#1d4ed8;
+        color:#fff;
+    }
+
+    /* 🗑 Delete (solid red like Category) */
+    .btn-delete{
+        background:#e11d48;        /* rose-600 */
+        border-color:#e11d48;
+        color:#fff;
+        font-weight:600;
+    }
+    .btn-delete:hover{
+        background:#b91c1c;        /* darker red */
+        border-color:#b91c1c;
+        color:#fff;
+    }
+
+    /* Icon alignment */
+    .btn.btn-sm .bi{ font-size:1rem; line-height:1; }
 </style>
 @endpush

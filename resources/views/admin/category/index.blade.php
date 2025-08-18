@@ -69,53 +69,112 @@
 
 @push('styles')
 <style>
-  /* ===== Palette & tokens ===== */
-  .category-tree { --line:#e6e6e6; --row:#f8f9fa; --rowHover:#eef2ff; }
-  .depth-0 { --accent:#3b82f6; --stripe:#e0f2fe; }   /* top level */
-  .depth-1 { --accent:#8b5cf6; --stripe:#ede9fe; }   /* first child */
-  .depth-2 { --accent:#10b981; --stripe:#d1fae5; }   /* deeper nodes */
+  /* =========================
+     Color tokens (high-contrast)
+     ========================= */
+  :root{
+    --ink:#0b1324;
+    --muted:#4b5563;
+    --line:#e6e8ee;
 
-  /* ===== tree connectors ===== */
-  .tree li { position: relative; margin: .25rem 0 .5rem 1.25rem; }
-  .tree li::before {
-    content:""; position:absolute; top:.4rem; left:-.75rem;
-    width:.75rem; height:1.25rem; border-left:1px solid var(--line); border-bottom:1px solid var(--line);
+    --blue-600:#2563eb;  --blue-50:#eef2ff;
+    --violet-600:#7c3aed;--violet-50:#f3e8ff;
+    --emerald-600:#059669;--emerald-50:#e8fff4;
+
+    --amber-600:#d97706; --amber-500:#f59e0b; --amber-50:#fff7e6;
+    --cyan-600:#0891b2;  --cyan-50:#e6fbff;
+    --rose-600:#e11d48;  --rose-50:#fff1f2;
+    --gray-row:#f8fafc;  --gray-hover:#eef2ff;
   }
-  .tree > li::before { top:.6rem; }
 
-  /* ===== node row ===== */
+  /* Depth accents */
+  .depth-0 { --accent: var(--blue-600);   --stripe: var(--blue-50); }
+  .depth-1 { --accent: var(--violet-600); --stripe: var(--violet-50); }
+  .depth-2 { --accent: var(--emerald-600);--stripe: var(--emerald-50); }
+
+  /* =========================
+     Tree connectors
+     ========================= */
+  .tree li{ position:relative; margin:.25rem 0 .6rem 1.25rem; }
+  .tree li::before{
+    content:""; position:absolute; top:.55rem; left:-.75rem;
+    width:.75rem; height:1.25rem;
+    border-left:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .tree > li::before{ top:.75rem; }
+
+  /* =========================
+     Node row
+     ========================= */
   .node-row{
-    display:flex; align-items:center; gap:.5rem;
-    background: var(--row); border-radius:.6rem; padding:.5rem .75rem;
-    border-left: .35rem solid var(--accent, #cbd5e1);
-    box-shadow: 0 0 0 1px rgba(0,0,0,.02) inset;
+    display:flex; align-items:center; gap:.55rem;
+    background: var(--gray-row);
+    border-radius:.65rem; padding:.55rem .75rem;
+    border-left:.38rem solid var(--accent, #a3b6f7);
+    box-shadow:0 0 0 1px rgba(0,0,0,.03) inset;
+    transition: background .15s ease, box-shadow .15s ease;
   }
-  .node-row[data-active="0"]{ opacity:.7; }
-  .node-row:hover{ background: var(--rowHover); }
+  .node-row:hover{ background: var(--gray-hover); }
+  .node-row[data-active="0"]{ opacity:.8; filter:saturate(.85); }
 
   .stripe{
-    width:.7rem; height:1.25rem; border-radius:.25rem; background: var(--stripe,#f1f5f9);
+    width:.7rem; height:1.2rem; border-radius:.25rem;
+    background: var(--stripe);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
   }
 
   .caret{
-    width:1.25rem;height:1.25rem;line-height:1.25rem;text-align:center;
-    border:none;background:transparent;cursor:pointer;user-select:none;font-size:1rem;
+    width:1.25rem; height:1.25rem; line-height:1.2rem;
+    text-align:center; border:none; background:transparent; cursor:pointer;
+    user-select:none; font-size:1rem; color:var(--muted);
   }
   .caret::before{ content:"▸"; }
   .caret.open::before{ content:"▾"; }
+  .caret:focus-visible{ outline:2px solid var(--blue-600); outline-offset:2px; border-radius:.25rem; }
 
-  .name{ font-weight:600; color:#111827; }
-  .badge{ font-size:.7rem; }
+  .name{ font-weight:700; color:var(--ink); letter-spacing:.2px; }
+  .badge{ font-size:.72rem; border-radius:.5rem; padding:.12rem .45rem; }
+  .badge-active{ background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; }
+
   .children{ margin-left:1rem; }
 
-  .actions{ gap:.35rem; flex-wrap:wrap; }
-  .actions .btn{ padding:.2rem .55rem; border-radius:.5rem; }
+  .actions{ gap:.4rem; flex-wrap:wrap; margin-left:auto; }
+  .actions .btn{ padding:.25rem .6rem; border-radius:.55rem; font-weight:600; }
 
-  /* search highlight */
-  .hit .name{ background:#fff3cd; padding:.05rem .3rem; border-radius:.25rem; }
+  /* Clearer action colors (works if your partial uses these classes) */
+  .actions .btn-warning, .btn-deactivate{
+    background:var(--amber-500); border-color:var(--amber-500); color:#111;
+  }
+  .actions .btn-warning:hover, .btn-deactivate:hover{
+    background:var(--amber-600); border-color:var(--amber-600); color:#fff;
+  }
+  /* 🔵 Edit button clearer */
+.actions .btn-info, .btn-edit{
+  background: #3b82f6;   /* blue-500 */
+  border-color: #3b82f6;
+  color: #fff;
+}
+.actions .btn-info:hover, .btn-edit:hover{
+  background: #1d4ed8;   /* blue-700 */
+  border-color: #1d4ed8;
+  color: #fff;
+}
 
-  /* keyboard focus */
-  .caret:focus-visible, .actions .btn:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+  .actions .btn-danger, .btn-delete{
+    background:var(--rose-600); border-color:var(--rose-600); color:#fff;
+  }
+  .actions .btn-danger:hover, .btn-delete:hover{
+    box-shadow:0 0 0 3px var(--rose-50) inset;
+  }
+
+  /* Search highlight */
+  .hit .name{ background:var(--amber-50); padding:.05rem .3rem; border-radius:.25rem; }
+
+  /* Small screen tweaks */
+  @media (max-width: 576px){
+    .actions .btn{ padding:.25rem .5rem; font-size:.75rem; }
+    .name{ font-size:.95rem; }
+  }
 </style>
 @endpush
 
@@ -127,7 +186,7 @@
     if (toast) setTimeout(() => toast.remove(), 2200);
   });
 
-  // expand / collapse single node (click & keyboard)
+  // expand/collapse single node
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-toggle="children"]');
     if (!btn) return;
@@ -142,7 +201,7 @@
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
   });
 
-  // expand / collapse all
+  // expand/collapse all
   document.getElementById('expandAll')?.addEventListener('click', () => {
     document.querySelectorAll('.children').forEach(ul => ul.classList.remove('d-none'));
     document.querySelectorAll('.caret').forEach(c => c.classList.add('open'));
@@ -152,12 +211,12 @@
     document.querySelectorAll('.caret').forEach(c => c.classList.remove('open'));
   });
 
-  // search: highlight & auto-expand parents of hits
+  // search highlight + auto-expand
   const search = document.getElementById('categorySearch');
   function expandAncestors(el){
     let cur = el.parentElement;
     while(cur){
-      if(cur.classList?.contains('children')) {
+      if(cur.classList?.contains('children')){
         cur.classList.remove('d-none');
         const caret = cur.previousElementSibling?.querySelector('.caret');
         caret?.classList.add('open');
