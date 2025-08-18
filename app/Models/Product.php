@@ -10,7 +10,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'price', 'category_id', 'image', 'shop_id', 'stock',
+        'name', 'price', 'category_id', 'image', 'stock',
         'promotion_flag', 'is_active',
     ];
 
@@ -29,11 +29,6 @@ class Product extends Model
     public function saleItems()
     {
         return $this->hasMany(SaleItem::class);
-    }
-
-    public function shop()
-    {
-        return $this->belongsTo(Shop::class);
     }
 
     /* ---------------- Scopes & Helpers ---------------- */

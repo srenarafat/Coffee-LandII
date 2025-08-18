@@ -31,24 +31,12 @@
                             </div>
                         </div>
 
-                        @isset($shops)
-                            <div class="mb-3">
-                                <label class="form-label">{{ __('messages.choose_shop') }}</label>
-                                <select name="shop_id" class="form-select shadow-sm">
-                                    <option value=""></option>
-                                    @foreach($shops as $shop)
-                                        <option value="{{ $shop->id }}" {{ old('shop_id', $product->shop_id) == $shop->id ? 'selected' : '' }}>{{ $shop->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endisset
-
                         <!-- Category -->
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.category') }}</label>
                             <select name="category_id" class="form-select shadow-sm" required>
                                 @foreach($categoryOptions as $id => $name)
-                                    <option value="{{ $id }}" {{ $product->category_id == $id ? 'selected' : '' }}>
+                                    <option value="{{ $id }}" {{ old('category_id', $product->category_id) == $id ? 'selected' : '' }}>
                                         {{ $name }}
                                     </option>
                                 @endforeach

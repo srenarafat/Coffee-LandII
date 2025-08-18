@@ -10,18 +10,6 @@
                 @csrf
 
                 <div class="row g-4">
-                    @isset($shops)
-                        <div class="col-md-6">
-                            <label class="form-label">{{ __('messages.choose_shop') }}</label>
-                            <select name="shop_id" class="form-control shadow-sm">
-                                <option value=""></option>
-                                @foreach($shops as $shop)
-                                    <option value="{{ $shop->id }}" {{ old('shop_id') == $shop->id ? 'selected' : '' }}>{{ $shop->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endisset
-
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.category') }}</label>
                         <select name="category_id" class="form-control shadow-sm" required>
