@@ -54,6 +54,7 @@ class SaleController extends Controller
                 return ['id' => $cat->id, 'label' => $label];
             })
             ->sortBy('label')
+            ->sortBy(fn($c) => strcasecmp($c['label'], 'Drinks') ? 1 : 0)
             ->values();
 
         $cart      = session()->get('cart', []);
