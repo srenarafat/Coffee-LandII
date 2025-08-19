@@ -60,4 +60,46 @@ class PosCategoryDropdownTest extends TestCase
         $response->assertSee($drinkProduct->name);
         $response->assertDontSee($foodProduct->name);
     }
+    
+    public function test_selecting_parent_category_filters_all_descendants(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+
+        $drinks = Category::create(['name' => 'Drinks', 'is_active' => true]);
+        $tea = Category::create(['name' => 'Tea', 'parent_id' => $drinks->id, 'is_active' => true]);
+        $coffee = Category::create(['name' => 'Coffee', 'parent_id' => $drinks->id, 'is_active' => true]);
+        $food = Category::create(['name' => 'Food', 'is_active' => true]);
+        $snack = Category::create(['name' => 'Snack', 'parent_id' => $food->id, 'is_active' => true]);
+
+        $teaProduct = Product::create([
+            'name' => 'Green Tea',
+            'price' => 5,
+            'category_id' => $tea->id,
+            'stock' => 10,
+            'image' => 'img.jpg',
+            'is_active' => true,
+        ]);
+        $coffeeProduct = Product::create([
+            'name' => 'Latte',
+            'price' => 4,
+            'category_id' => $coffee->id,
+            'stock' => 10,
+            'image' => 'img.jpg',
+            'is_active' => true,
+        ]);
+        $snackProduct = Product::create([
+            'name' => 'Cookie',
+            'price' => 3,
+            'category_id' => $snack->id,
+            'stock' => 10,
+            'image' => 'img.jpg',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($cashier)->get('/cashier/pos?category=' . $drinks->id);
+        $response->assertOk();
+        $response->assertSee($teaProduct->name);
+        $response->assertSee($coffeeProduct->name);
+        $response->assertDontSee($snackProduct->name);
+    }
 }

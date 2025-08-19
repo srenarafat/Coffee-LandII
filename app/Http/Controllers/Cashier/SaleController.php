@@ -47,7 +47,7 @@ class SaleController extends Controller
             ->with('childrenRecursive')
             ->get();
 
-            // Helper to flatten nested children collections
+        // Helper to flatten nested children collections
         $flatten = function ($categories) use (&$flatten) {
             $all = collect();
             foreach ($categories as $cat) {
@@ -59,8 +59,12 @@ class SaleController extends Controller
             return $all;
         };
 
-            $topCategories = $topCategories->mapWithKeys(function ($cat) use ($flatten) {
-            return [$cat->name => $flatten($cat->childrenRecursive)->sortBy('label')->values()];
+            $topCategories = $topCategories->map(function ($cat) use ($flatten) {
+            return [
+                'id'   => $cat->id,
+                'name' => $cat->name,
+                'subs' => $flatten($cat->childrenRecursive)->sortBy('label')->values(),
+            ];
         });
 
         $cart      = session()->get('cart', []);
