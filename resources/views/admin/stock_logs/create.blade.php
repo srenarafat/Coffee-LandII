@@ -8,9 +8,7 @@
             <form method="GET" class="mb-3">
                 <select name="category_id" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all_categories') }}</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ ($categoryId ?? '') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                    @endforeach
+                    {!! render_category_options($categories, $categoryId ?? null) !!}
                 </select>
             </form>
 

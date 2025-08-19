@@ -222,7 +222,7 @@ public function topQuantitySales(Request $request)
 
     $topProducts = $query->take(10)->get();
 
-    $categories = Category::with('children')->whereNull('parent_id')->get();
+    $categories = Category::with('childrenRecursive')->whereNull('parent_id')->get();
 
     return view('admin.reports.top-quantity-sales', compact('topProducts', 'period', 'categories'));
 }

@@ -44,3 +44,32 @@ if (!function_exists('category_options')) {
         return $options;
     }
 }
+
+if (!function_exists('render_category_options')) {
+    /**
+     * Render nested category <option> tags recursively.
+     *
+     * @param  \Illuminate\Support\Collection<int,\App\Models\Category>  $categories
+     * @param  int|string|null  $selected
+     * @param  string  $prefix
+     * @return string
+     */
+    function render_category_options($categories, $selected = null, string $prefix = ''): string
+    {
+        $html = '';
+
+        $traverse = function ($cats, $prefix) use (&$traverse, $selected, &$html) {
+            foreach ($cats as $cat) {
+                $isSelected = (string) $selected === (string) $cat->id ? ' selected' : '';
+                $html .= '<option value="' . $cat->id . '"' . $isSelected . '>' . $prefix . $cat->name . '</option>';
+                if ($cat->childrenRecursive && $cat->childrenRecursive->isNotEmpty()) {
+                    $traverse($cat->childrenRecursive, $prefix . '-- ');
+                }
+            }
+        };
+
+        $traverse($categories, $prefix);
+
+        return $html;
+    }
+}

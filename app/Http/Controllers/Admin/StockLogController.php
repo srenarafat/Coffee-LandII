@@ -37,7 +37,7 @@ class StockLogController extends Controller
         }
 
         $logs = $query->paginate(20);
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::with('childrenRecursive')->whereNull('parent_id')->get();
 
         return view('admin.stock_logs.index', compact('logs', 'categories'));
     }
@@ -49,7 +49,7 @@ class StockLogController extends Controller
             $ids = Category::descendantsAndSelfIds((int) $categoryId);
             $q->whereIn('category_id', $ids);
         })->get();
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::with('childrenRecursive')->whereNull('parent_id')->get();
 
         return view('admin.stock_logs.create', compact('products', 'categories', 'categoryId'));
     }

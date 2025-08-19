@@ -61,12 +61,7 @@
                 </select>
                 <select name="category_id" class="form-select rounded-pill shadow-sm" style="width: 160px;">
                     <option value="">{{ __('messages.all_categories') }}</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                        @foreach($category->children as $child)
-                            <option value="{{ $child->id }}" {{ request('category_id') == $child->id ? 'selected' : '' }}>— {{ $child->name }}</option>
-                        @endforeach
-                    @endforeach
+                    {!! render_category_options($categories, request('category_id')) !!}
                 </select>
                 <button type="submit" class="btn btn-outline-primary rounded-pill">
                     {{ __('messages.filter') }}

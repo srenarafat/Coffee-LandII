@@ -30,9 +30,7 @@
                 </select>
                 <select name="category_id" class="form-select w-auto">
                     <option value="">{{ __('messages.all_categories') }}</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                    @endforeach
+                    {!! render_category_options($categories, request('category_id')) !!}
                 </select>
                 <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}">
                 <input type="date" name="end_date" class="form-control w-auto" value="{{ request('end_date') }}">
