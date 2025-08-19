@@ -95,12 +95,23 @@ input::placeholder {
                     <a class="category-pill {{ request('category') ? '' : 'active' }}" href="{{ url()->current() }}">
                         {{ __('All') }}
                     </a>
-                    @foreach ($flatCategories as $cat)
-                        <a class="category-pill {{ request('category') == $cat['id'] ? 'active' : '' }}"
-                           href="{{ url()->current() }}?category={{ $cat['id'] }}">
-                            {{ $cat['label'] }}
-                        </a>
-                    @endforeach
+                    @foreach ($topCategories as $topName => $subs)
+                        @php
+                            $isActive = $subs->contains(fn($c) => request('category') == $c['id']);
+                        @endphp
+                        <div class="dropdown d-inline-block">
+                            <button class="category-pill dropdown-toggle {{ $isActive ? 'active' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ __($topName) }}
+                            </button>
+                            <ul class="dropdown-menu">
+                                @foreach ($subs as $cat)
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url()->current() }}?category={{ $cat['id'] }}">
+                                            {{ $cat['label'] }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                        </ul>
                 </div>
             </div>
 

@@ -39,26 +39,41 @@ class SaleController extends Controller
             ->sortBy('name')
             ->sortBy(fn($p) => strcasecmp($p->category->name ?? '', 'Drinks') ? 1 : 0)
             ->values();
+
         $categories = Category::with('childrenRecursive')  // nicer nested list
             ->whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
-            $flatCategories = Category::active()
+            // Build list of active sub-categories grouped under Drinks & Food
+        $activeCategories = Category::active()
             ->with('parent')
             ->get()
-            ->map(function ($cat) {
-                $label   = $cat->name;
-                $current = $cat->parent;
-                while ($current) {
-                    $label   = $current->name . ' › ' . $label;
-                    $current = $current->parent;
-                }
-                return ['id' => $cat->id, 'label' => $label];
-            })
-            ->sortBy('label')
-            ->sortBy(fn($c) => strcasecmp($c['label'], 'Drinks') ? 1 : 0)
-            ->values();
+            ->filter(fn ($cat) => $cat->isTreeActive());
+
+        $topCategories = collect(['Drinks', 'Food'])->mapWithKeys(function ($name) use ($activeCategories) {
+            $subs = $activeCategories
+                ->filter(function ($cat) use ($name) {
+                    $top = $cat;
+                    while ($top->parent) {
+                        $top = $top->parent;
+                    }
+                    return $top->name === $name && $cat->name !== $name;
+                })
+                ->map(function ($cat) use ($name) {
+                    $label   = $cat->name;
+                    $current = $cat->parent;
+                    while ($current && $current->name !== $name) {
+                        $label   = $current->name . ' › ' . $label;
+                        $current = $current->parent;
+                    }
+                    return ['id' => $cat->id, 'label' => $label];
+                })
+                ->sortBy('label')
+                ->values();
+
+            return [$name => $subs];
+        });
 
         $cart      = session()->get('cart', []);
         $total     = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
@@ -69,7 +84,7 @@ class SaleController extends Controller
             ? 'admin.pos.index'
             : 'cashier.pos.index';
 
-        return view($view, compact('categories', 'flatCategories', 'products', 'cart', 'total', 'itemCount', 'comments'));
+        return view($view, compact('categories', 'topCategories', 'products', 'cart', 'total', 'itemCount', 'comments'));
     }
 
     // Add item to cart
