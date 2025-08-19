@@ -96,24 +96,25 @@ input::placeholder {
                         {{ __('All') }}
                     </a>
                     @foreach ($topCategories as $topName => $subs)
-                        @php
-                            $isActive = $subs->contains(fn($c) => request('category') == $c['id']);
-                        @endphp
-                        <div class="dropdown d-inline-block">
-                            <button class="category-pill dropdown-toggle {{ $isActive ? 'active' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ __($topName) }}
-                            </button>
-                            <ul class="dropdown-menu">
-                                @foreach ($subs as $cat)
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url()->current() }}?category={{ $cat['id'] }}">
-                                            {{ $cat['label'] }}
-                                        </a>
-                                    </li>
-                                @endforeach
+                    @php
+                        $isActive = $subs->contains(fn($c) => request('category') == $c['id']);
+                    @endphp
+                    <div class="dropdown d-inline-block">
+                        <button class="category-pill dropdown-toggle {{ $isActive ? 'active' : '' }}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ __($topName) }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            @foreach ($subs as $cat)
+                                <li>
+                                    <a class="dropdown-item" href="{{ url()->current() }}?category={{ $cat['id'] }}">
+                                        {{ $cat['label'] }}
+                                    </a>
+                                </li>
+                            @endforeach
                         </ul>
-                </div>
-            @endforeach
+                    </div>
+                @endforeach
+            </div>
         </div>
 
             <!-- Language + Search -->
@@ -173,7 +174,7 @@ input::placeholder {
         </div>
         <div class="col-lg-4" style="overflow-y: auto; height: 100%;">
             <div id="cart-container">
-                @include('partials.cart', ['routePrefix' => 'cashier', 'comments' => $comments])
+                @include('partials.cart', ['routePrefix' => 'admin', 'comments' => $comments])
             </div>
         </div>
     </div>
