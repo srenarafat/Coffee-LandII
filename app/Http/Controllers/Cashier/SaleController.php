@@ -35,7 +35,10 @@ class SaleController extends Controller
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $products   = $query->get();
+        $products   = $query->get()
+            ->sortBy('name')
+            ->sortBy(fn($p) => strcasecmp($p->category->name ?? '', 'Drinks') ? 1 : 0)
+            ->values();
         $categories = Category::with('childrenRecursive')  // nicer nested list
             ->whereNull('parent_id')
             ->orderBy('name')
