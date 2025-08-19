@@ -11,11 +11,7 @@
         <label class="form-label fw-semibold">📂 Category</label>
         <select name="category_id" class="form-select shadow-sm fw-bold text-dark">
             <option value="">{{ __('messages.all_categories') }}</option>
-            @foreach ($categories as $category)
-                <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                    {{ $category->name }}
-                </option>
-            @endforeach
+            {!! render_category_options($categories, request('category_id')) !!}
         </select>
     </div>
     <div class="col-md-3 d-grid">
