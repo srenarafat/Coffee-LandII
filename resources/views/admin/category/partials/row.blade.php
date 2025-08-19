@@ -11,7 +11,9 @@
             @csrf @method('PUT')
             <input type="text" name="name" value="{{ $category->name }}"
                    class="form-control me-2" required>
-            <button class="btn btn-outline-primary btn-sm btn-block d-flex align-items-center justify-content-center gap-1">✅ <span>{{ __('messages.save') }}</span></button>
+            <button class="btn btn-outline-primary btn-sm btn-block d-flex align-items-center justify-content-center gap-1">
+              ✅ <span>{{ __('messages.save') }}</span>
+            </button>
         </form>
     </td>
     <td>

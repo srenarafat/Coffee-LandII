@@ -62,10 +62,14 @@
       <div class="col-md-4">
         <input type="text" name="name" value="{{ $category->name }}" class="form-control" required>
       </div>
+
+      {{-- 👇 Hierarchical Parent selector in edit (self/descendants disabled) --}}
       <div class="col-md-4">
         <select name="parent_id" class="form-select">
           <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
+
           @php
+            // collect descendant ids to prevent loops
             $collectIds = function ($cat) use (&$collectIds) {
                 $ids = [];
                 foreach ($cat->childrenRecursive as $child) {
@@ -75,16 +79,33 @@
                 return $ids;
             };
             $descendantIds = $collectIds($category);
+
+            $rootCats = \App\Models\Category::with('childrenRecursive')
+                        ->whereNull('parent_id')
+                        ->orderBy('name')->get();
+
+            $renderOptions = function($nodes, $depth = 0) use (&$renderOptions, $category, $descendantIds) {
+                foreach ($nodes as $n) {
+                    $indent = str_repeat('— ', $depth);
+
+                    // self or descendant -> disabled (visible to show structure)
+                    if ($n->id === $category->id || in_array($n->id, $descendantIds)) {
+                        echo '<option value="'.$n->id.'" disabled>'.$indent.e($n->name).'</option>';
+                    } else {
+                        $selected = $category->parent_id == $n->id ? ' selected' : '';
+                        echo '<option value="'.$n->id.'"'.$selected.'>'.$indent.e($n->name).'</option>';
+                    }
+
+                    if ($n->childrenRecursive && $n->childrenRecursive->count()) {
+                        $renderOptions($n->childrenRecursive, $depth + 1);
+                    }
+                }
+            };
+            $renderOptions($rootCats);
           @endphp
-          @foreach($parentCategories as $parent)
-            @if($parent->id !== $category->id && !in_array($parent->id, $descendantIds))
-              <option value="{{ $parent->id }}" {{ $category->parent_id == $parent->id ? 'selected' : '' }}>
-                {{ $parent->name }}
-              </option>
-            @endif
-          @endforeach
         </select>
       </div>
+
       <div class="col-auto">
         <button class="btn btn-primary btn-sm">{{ __('messages.save') }}</button>
       </div>

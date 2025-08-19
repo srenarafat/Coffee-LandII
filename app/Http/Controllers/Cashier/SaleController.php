@@ -440,7 +440,8 @@ class SaleController extends Controller
         }
 
         if (request('category_id')) {
-            $query->whereHas('items.product.category', fn($q) => $q->where('id', request('category_id')));
+            $ids = Category::descendantsAndSelfIds((int) request('category_id'));
+            $query->whereHas('items.product', fn($q) => $q->whereIn('category_id', $ids));
         }
 
         $salesQuery  = $query->orderByDesc('created_at');

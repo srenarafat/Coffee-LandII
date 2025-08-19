@@ -33,14 +33,32 @@
             <input type="text" name="name" class="form-control shadow-sm"
                    placeholder="{{ __('messages.new_category_placeholder') }}" required>
           </div>
+
+          {{-- 👇 Hierarchical Parent selector (clean tree) --}}
           <div class="col-md-4">
             <select name="parent_id" class="form-select shadow-sm">
               <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
-              @foreach($parentCategories as $parent)
-                <option value="{{ $parent->id }}">{{ $parent->name }}</option>
-              @endforeach
+
+              @php
+                // Build a small tree in-view for rendering options (keeps controller unchanged)
+                $rootCats = \App\Models\Category::with('childrenRecursive')
+                              ->whereNull('parent_id')
+                              ->orderBy('name')->get();
+
+                $renderOptions = function($nodes, $depth = 0) use (&$renderOptions) {
+                    foreach ($nodes as $n) {
+                        $indent = str_repeat('— ', $depth);
+                        echo '<option value="'.$n->id.'">'.$indent.e($n->name).'</option>';
+                        if ($n->childrenRecursive && $n->childrenRecursive->count()) {
+                            $renderOptions($n->childrenRecursive, $depth + 1);
+                        }
+                    }
+                };
+                $renderOptions($rootCats);
+              @endphp
             </select>
           </div>
+
           <div class="col-auto">
             <button type="submit" class="btn btn-primary shadow-sm px-4">
               {{ __('messages.add_category') }}
@@ -141,31 +159,28 @@
   .actions{ gap:.4rem; flex-wrap:wrap; margin-left:auto; }
   .actions .btn{ padding:.25rem .6rem; border-radius:.55rem; font-weight:600; }
 
-  /* Clearer action colors (works if your partial uses these classes) */
+  /* Clearer action colors */
   .actions .btn-warning, .btn-deactivate{
     background:var(--amber-500); border-color:var(--amber-500); color:#111;
   }
   .actions .btn-warning:hover, .btn-deactivate:hover{
     background:var(--amber-600); border-color:var(--amber-600); color:#fff;
   }
-  /* 🔵 Edit button clearer */
-.actions .btn-info, .btn-edit{
-  background: #3b82f6;   /* blue-500 */
-  border-color: #3b82f6;
-  color: #fff;
-}
-.actions .btn-info:hover, .btn-edit:hover{
-  background: #1d4ed8;   /* blue-700 */
-  border-color: #1d4ed8;
-  color: #fff;
-}
-
+  .actions .btn-info, .btn-edit{
+    background:#3b82f6; border-color:#3b82f6; color:#fff;
+  }
+  .actions .btn-info:hover, .btn-edit:hover{
+    background:#1d4ed8; border-color:#1d4ed8; color:#fff;
+  }
   .actions .btn-danger, .btn-delete{
     background:var(--rose-600); border-color:var(--rose-600); color:#fff;
   }
   .actions .btn-danger:hover, .btn-delete:hover{
     box-shadow:0 0 0 3px var(--rose-50) inset;
   }
+
+  /* Dropdown readability */
+  select.form-select option[disabled]{ color:#9ca3af; font-style:italic; }
 
   /* Search highlight */
   .hit .name{ background:var(--amber-50); padding:.05rem .3rem; border-radius:.25rem; }
