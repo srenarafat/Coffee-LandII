@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Models\{Product, Category};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -35,13 +36,22 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
         ]);
+
+         $validator->after(function ($validator) use ($request) {
+            $category = Category::find($request->category_id);
+            if (!$category || !$category->isTreeActive()) {
+                $validator->errors()->add('category_id', __('messages.category_inactive'));
+            }
+        });
+
+        $validator->validate();
 
         $data = $request->only(['name', 'price', 'category_id', 'description']);
 
@@ -67,13 +77,22 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $category = Category::find($request->category_id);
+            if (!$category || !$category->isTreeActive()) {
+                $validator->errors()->add('category_id', __('messages.category_inactive'));
+            }
+        });
+
+        $validator->validate();
 
         $data = $request->only(['name', 'price', 'category_id', 'description']);
 

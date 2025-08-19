@@ -41,17 +41,25 @@ class Product extends Model
 
     /**
      * Products that can be shown in the POS grid/search.
-     * UI-friendly filter: category must be active and (if it has a parent) the parent is active.
-     * (For deeper trees, server-side guard `isSellable()` is authoritative.)
+     * Category must be active and have no inactive ancestors.
      */
     public function scopeSellable($query)
     {
-        return $query->active()->whereHas('category', function ($q) {
-            $q->where('is_active', 1)
-              ->where(function ($q) {
-                  $q->whereNull('parent_id')
-                    ->orWhereHas('parent', fn($p) => $p->where('is_active', 1));
-              });
+        $categories = (new Category())->getTable();
+
+        return $query->active()->whereIn('category_id', function ($sub) use ($categories) {
+            $sub->select('id')->fromRaw("(
+                WITH RECURSIVE ancestors AS (
+                    SELECT id, parent_id, is_active, id AS root_id FROM {$categories}
+                    UNION ALL
+                    SELECT c.id, c.parent_id, c.is_active, a.root_id
+                    FROM {$categories} c
+                    JOIN ancestors a ON c.id = a.parent_id
+                )
+                SELECT root_id AS id FROM ancestors
+                GROUP BY root_id
+                HAVING MIN(is_active) = 1
+            ) AS active_categories");
         });
     }
 

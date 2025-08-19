@@ -60,13 +60,19 @@ class CategoryController extends Controller
     
     public function activate(Category $category)
     {
-        $category->update(['is_active' => true]);
+        $ids = Category::descendantsAndSelfIds($category->id);
+        Category::whereIn('id', $ids)->update(['is_active' => true]);
+        Product::whereIn('category_id', $ids)->update(['is_active' => true]);
+
         return back()->with('success', __('messages.category_activated_successfully'));
     }
 
     public function deactivate(Category $category)
     {
-        $category->update(['is_active' => false]);
+        $ids = Category::descendantsAndSelfIds($category->id);
+        Category::whereIn('id', $ids)->update(['is_active' => false]);
+        Product::whereIn('category_id', $ids)->update(['is_active' => false]);
+
         return back()->with('success', __('messages.category_deactivated_successfully'));
     }
     
