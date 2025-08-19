@@ -38,24 +38,9 @@
           <div class="col-md-4">
             <select name="parent_id" class="form-select shadow-sm">
               <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
-
-              @php
-                // Build a small tree in-view for rendering options (keeps controller unchanged)
-                $rootCats = \App\Models\Category::with('childrenRecursive')
-                              ->whereNull('parent_id')
-                              ->orderBy('name')->get();
-
-                $renderOptions = function($nodes, $depth = 0) use (&$renderOptions) {
-                    foreach ($nodes as $n) {
-                        $indent = str_repeat('— ', $depth);
-                        echo '<option value="'.$n->id.'">'.$indent.e($n->name).'</option>';
-                        if ($n->childrenRecursive && $n->childrenRecursive->count()) {
-                            $renderOptions($n->childrenRecursive, $depth + 1);
-                        }
-                    }
-                };
-                $renderOptions($rootCats);
-              @endphp
+@foreach($categoryOptions as $id => $label)
+                <option value="{{ $id }}">{{ $label }}</option>
+              @endforeach
             </select>
           </div>
 
@@ -219,15 +204,16 @@
   // expand/collapse all
   document.getElementById('expandAll')?.addEventListener('click', () => {
     document.querySelectorAll('.children').forEach(ul => ul.classList.remove('d-none'));
-    document.querySelectorAll('.caret').forEach(c => c.classList.add('open'));
+    document.querySelectorAll('.caret[data-toggle="children"]').forEach(c => c.classList.add('open'));
   });
   document.getElementById('collapseAll')?.addEventListener('click', () => {
     document.querySelectorAll('.children').forEach(ul => ul.classList.add('d-none'));
-    document.querySelectorAll('.caret').forEach(c => c.classList.remove('open'));
+    document.querySelectorAll('.caret[data-toggle="children"]').forEach(c => c.classList.remove('open'));
   });
 
   // search highlight + auto-expand
   const search = document.getElementById('categorySearch');
+  const collapseBtn = document.getElementById('collapseAll');
   function expandAncestors(el){
     let cur = el.parentElement;
     while(cur){

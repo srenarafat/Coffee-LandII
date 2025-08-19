@@ -12,7 +12,7 @@
     {{-- caret / bullet --}}
     @if($hasChildren)
       <button type="button"
-              class="caret open"
+              class="caret"
               data-toggle="children"
               data-target="{{ $childrenId }}"
               aria-label="toggle children"
@@ -114,7 +114,7 @@
 
   {{-- Children --}}
   @if($hasChildren)
-    <ul id="{{ $childrenId }}" class="children list-unstyled mt-2">
+    <ul id="{{ $childrenId }}" class="children list-unstyled mt-2 d-none">
       @foreach($category->childrenRecursive as $child)
         @include('admin.category.partials.node', [
           'category' => $child,

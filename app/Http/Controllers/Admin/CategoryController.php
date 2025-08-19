@@ -18,8 +18,9 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
         $parentCategories = Category::all();
+        $categoryOptions = category_options(null);
 
-        return view('admin.category.index', compact('categories', 'parentCategories'));
+        return view('admin.category.index', compact('categories', 'parentCategories', 'categoryOptions'));
     }
 
     public function store(Request $request)
