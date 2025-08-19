@@ -16,6 +16,7 @@
 
             <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.store') : route('admin.stock-logs.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="category_id" value="{{ $categoryId }}">
 
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.product') }}</label>
@@ -46,7 +47,9 @@
                     <input type="text" name="note" class="form-control shadow-sm">
                 </div>
                 <div class="mt-4 text-end">
-                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.index') : route('admin.stock-logs.index') }}" class="btn btn-outline-secondary shadow-sm me-2">
+                    <a href="{{ auth()->user()->role === 'superadmin'
+                        ? route('superadmin.stock-logs.index', ['category_id' => $categoryId])
+                        : route('admin.stock-logs.index', ['category_id' => $categoryId]) }}" class="btn btn-outline-secondary shadow-sm me-2">
                         <i class="bi bi-arrow-left"></i> {{ __('messages.back') }}
                     </a>
                     <button type="submit" class="btn btn-primary shadow-sm">

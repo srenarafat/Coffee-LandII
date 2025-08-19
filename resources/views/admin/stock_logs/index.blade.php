@@ -5,11 +5,13 @@
 <div class="container my-4">
     <div class="card shadow-sm border-0 rounded-4 animate__animated">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">📋 {{ __('messages.stock_log_history') }}</h5>
+            <h5 class="mb-0 fw-bold">📋 {{ __('messages.stock_history') }}</h5>
             <div class="d-flex gap-2">
                 <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) : route('admin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) }}" class="btn btn-outline-success btn-sm">⬇️ {{ __('messages.export_csv') }}</a>
                 <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) : route('admin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) }}" class="btn btn-outline-primary btn-sm">🖨️ {{ __('messages.print') }}</a>
-                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.create') : route('admin.stock-logs.create') }}" class="btn btn-primary btn-sm">{{ __('messages.stock_adjustment') }}</a>
+                <a href="{{ auth()->user()->role === 'superadmin'
+                    ? route('superadmin.stock-logs.create', ['category_id' => request('category_id')])
+                    : route('admin.stock-logs.create', ['category_id' => request('category_id')]) }}" class="btn btn-primary btn-sm">{{ __('messages.stock_adjustment') }}</a>
             </div>
         </div>
         <div class="card-body position-relative">

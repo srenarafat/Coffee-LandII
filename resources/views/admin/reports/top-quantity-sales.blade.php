@@ -15,16 +15,36 @@
 
             <!-- Export CSV -->
             <a href="{{ auth()->user()->role === 'superadmin'
-                ? route('superadmin.reports.top-quantity-sales.export', ['filter' => request('period'), 'month' => request('month'), 'year' => request('year'), 'category_id' => request('category_id')])
-                : route('admin.reports.top-quantity-sales.export', ['filter' => request('period'), 'month' => request('month'), 'year' => request('year'), 'category_id' => request('category_id')]) }}"
+                ? route('superadmin.reports.top-quantity-sales.export', [
+                    'filter' => request('period'),
+                    'month' => request('month'),
+                    'year' => request('year'),
+                    'category_id' => request('category_id'),
+                ])
+                : route('admin.reports.top-quantity-sales.export', [
+                    'filter' => request('period'),
+                    'month' => request('month'),
+                    'year' => request('year'),
+                    'category_id' => request('category_id'),
+                ]) }}"
                 class="btn btn-outline-success rounded-pill px-4">
                 ⬇️ {{ __('messages.export_csv') }}
             </a>
 
             <!-- Print PDF -->
             <a href="{{ auth()->user()->role === 'superadmin'
-                ? route('superadmin.reports.top-quantity-sales.pdf', ['filter' => request('period'), 'month' => request('month'), 'year' => request('year'), 'category_id' => request('category_id')])
-                : route('admin.reports.top-quantity-sales.pdf', ['filter' => request('period'), 'month' => request('month'), 'year' => request('year'), 'category_id' => request('category_id')]) }}"
+                ? route('superadmin.reports.top-quantity-sales.pdf', [
+                    'filter' => request('period'),
+                    'month' => request('month'),
+                    'year' => request('year'),
+                    'category_id' => request('category_id'),
+                ])
+                : route('admin.reports.top-quantity-sales.pdf', [
+                    'filter' => request('period'),
+                    'month' => request('month'),
+                    'year' => request('year'),
+                    'category_id' => request('category_id'),
+                ]) }}"
                 class="btn btn-outline-primary rounded-pill px-4">
                 🖨️ {{ __('messages.print') }}
             </a>
@@ -43,6 +63,9 @@
                     <option value="">{{ __('messages.all_categories') }}</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                        @foreach($category->children as $child)
+                            <option value="{{ $child->id }}" {{ request('category_id') == $child->id ? 'selected' : '' }}>— {{ $child->name }}</option>
+                        @endforeach
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-outline-primary rounded-pill">

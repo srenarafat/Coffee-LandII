@@ -177,8 +177,8 @@ return [
     'category_deactivated_successfully' => 'Category deactivated successfully.',
     'category_inactive' => 'Selected category or its ancestors are inactive.',
 
-    'stock_logs' => 'Stock Logs',
-    'stock_log_history' => 'Stock Log History',
+    'stock_History' => 'Stock History',
+    'stock_history' => 'Stock History',
     'stock_adjustment' => 'Stock Adjustment',
     'stock_in' => 'Stock In',
     'stock_out' => 'Stock Out',

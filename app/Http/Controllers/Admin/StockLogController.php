@@ -10,7 +10,6 @@ use App\Models\Category;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
-
 class StockLogController extends Controller
 {
     public function index(Request $request)
@@ -30,7 +29,11 @@ class StockLogController extends Controller
         }
 
         if ($request->category_id) {
-            $query->whereHas('product', fn ($q) => $q->where('category_id', $request->category_id));
+            $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+            // ✅ Arrow functions cannot use `use (...)`    
+            $query->whereHas('product', function ($q) use ($ids) {
+    $q->whereIn('category_id', $ids);
+});
         }
 
         $logs = $query->paginate(20);
@@ -42,7 +45,10 @@ class StockLogController extends Controller
     public function create(Request $request)
     {
         $categoryId = $request->get('category_id');
-        $products = Product::when($categoryId, fn ($q) => $q->where('category_id', $categoryId))->get();
+        $products = Product::when($categoryId, function ($q) use ($categoryId) {
+            $ids = Category::descendantsAndSelfIds((int) $categoryId);
+            $q->whereIn('category_id', $ids);
+        })->get();
         $categories = Category::with('children')->whereNull('parent_id')->get();
 
         return view('admin.stock_logs.create', compact('products', 'categories', 'categoryId'));
@@ -77,11 +83,11 @@ class StockLogController extends Controller
         ]);
 
         $route = auth()->user()->role === 'superadmin' ? 'superadmin.stock-logs.index' : 'admin.stock-logs.index';
-        return redirect()->route($route)->with(
+        return redirect()->route($route, ['category_id' => $request->category_id])->with(
             'success',
             __('messages.stock_updated', ['name' => $product->name])
         );
-        }
+    }
 
     public function exportCsv(Request $request)
     {
@@ -91,7 +97,10 @@ class StockLogController extends Controller
             })
             ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
             ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->category_id, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('category_id', $request->category_id)))
+            ->when($request->category_id, function ($q) use ($request) {
+                $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+                $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));
+            })
             ->latest()
             ->get();
 
@@ -130,7 +139,10 @@ class StockLogController extends Controller
             })
             ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
             ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->category_id, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('category_id', $request->category_id)))
+            ->when($request->category_id, function ($q) use ($request) {
+                $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+                $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));
+            })
             ->latest()
             ->get();
 
@@ -142,4 +154,3 @@ class StockLogController extends Controller
             ->download('stock_logs.pdf');
     }
 }
-

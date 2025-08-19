@@ -19,11 +19,17 @@
       <label class="form-label fw-semibold">📂 {{ __('messages.category') }}</label>
       <select name="category_id" class="form-select form-select-sm shadow-sm fw-bold text-dark">
         <option value="">{{ __('messages.all_categories') }}</option>
-        @foreach($categories as $category)
-          <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-            {{ $category->name }}
-          </option>
-        @endforeach
+        @php
+          $renderOptions = function ($cats, $prefix = '') use (&$renderOptions) {
+            foreach ($cats as $cat) {
+              echo '<option value="'.$cat->id.'"'.(request('category_id') == $cat->id ? ' selected' : '').'>'.$prefix.$cat->name.'</option>';
+              if ($cat->childrenRecursive->isNotEmpty()) {
+                $renderOptions($cat->childrenRecursive, $prefix.'-- ');
+              }
+            }
+          };
+          $renderOptions($categories);
+        @endphp
       </select>
     </div>
 

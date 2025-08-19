@@ -47,7 +47,7 @@ class SalesReportController extends Controller
                 ->get();
         }
 
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::with('childrenRecursive')->whereNull('parent_id')->get();
 
         return view('admin.sales.report', compact('sales', 'users', 'totalAmount', 'categories'));
     }
@@ -77,8 +77,10 @@ class SalesReportController extends Controller
             ->when($request->user_id, fn ($q) => $q->where('user_id', $request->user_id))
             ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
             ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->category_id, fn ($q) =>
-                $q->whereHas('items.product.category', fn ($q2) => $q2->where('id', $request->category_id)))
+            ->when($request->category_id, function ($q) use ($request) {
+                $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+                $q->whereHas('items.product', fn ($q2) => $q2->whereIn('category_id', $ids));
+            })
             ->orderBy('created_at', 'desc');
     }
 
@@ -88,6 +90,7 @@ class SalesReportController extends Controller
         $request->merge([
             'start_date' => $today,
             'end_date' => $today,
+            'category_id' => $request->category_id,
         ]);
 
         return $this->index($request);
@@ -98,6 +101,7 @@ class SalesReportController extends Controller
         $request->merge([
             'start_date' => now()->startOfWeek()->toDateString(),
             'end_date' => now()->endOfWeek()->toDateString(),
+            'category_id' => $request->category_id,
         ]);
 
         return $this->index($request);
@@ -165,6 +169,10 @@ public function topQuantitySales(Request $request)
     $year = $request->input('year');
     $categoryId = $request->input('category_id');
 
+    $shopId = auth()->user()->role === 'superadmin'
+        ? $request->input('shop_id')
+        : auth()->user()->shop_id;
+
     $query = SaleItem::select(
             'sale_items.product_id',
             'categories.id as category_id',
@@ -176,6 +184,7 @@ public function topQuantitySales(Request $request)
         ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
         ->join('products', 'sale_items.product_id', '=', 'products.id')
         ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->when($shopId, fn ($q) => $q->where('sales.shop_id', $shopId))
         ->groupBy(
             'sale_items.product_id',
             'categories.id',
@@ -194,11 +203,11 @@ public function topQuantitySales(Request $request)
     } elseif ($period === 'month') {
         $query->whereMonth('sales.created_at', now()->month)
               ->whereYear('sales.created_at', now()->year);
-              } elseif (in_array($period, ['all', 'all_day'])) {
+        } elseif (in_array($period, ['all', 'all_day'])) {
         // No date restriction
     }
 
-     if ($month) {
+    if ($month) {
         $query->whereMonth('sales.created_at', $month);
     }
 
@@ -207,7 +216,8 @@ public function topQuantitySales(Request $request)
     }
 
     if ($categoryId) {
-        $query->where('categories.id', $categoryId);
+        $ids = Category::descendantsAndSelfIds((int) $categoryId);
+        $query->whereIn('categories.id', $ids);
     }
 
     $topProducts = $query->take(10)->get();
@@ -225,6 +235,10 @@ public function exportTopQuantityCsv(Request $request)
     $year = $request->input('year');
     $categoryId = $request->input('category_id');
 
+    $shopId = auth()->user()->role === 'superadmin'
+        ? $request->input('shop_id')
+        : auth()->user()->shop_id;
+
     $query = DB::table('sale_items')
         ->join('products', 'sale_items.product_id', '=', 'products.id')
         ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -236,6 +250,7 @@ public function exportTopQuantityCsv(Request $request)
             DB::raw('MONTH(sales.created_at) as month'),
             DB::raw('YEAR(sales.created_at) as year')
         )
+        ->when($shopId, fn ($q) => $q->where('sales.shop_id', $shopId))
         ->groupBy(
             'products.name',
             'categories.id',
@@ -265,7 +280,8 @@ public function exportTopQuantityCsv(Request $request)
     }
 
     if ($categoryId) {
-        $query->where('categories.id', $categoryId);
+        $ids = Category::descendantsAndSelfIds((int) $categoryId);
+        $query->whereIn('categories.id', $ids);
     }
 
     $topProducts = $query->get();
@@ -305,6 +321,10 @@ public function exportTopQuantityPdf(Request $request)
     $year = $request->input('year');
     $categoryId = $request->input('category_id');
 
+    $shopId = auth()->user()->role === 'superadmin'
+        ? $request->input('shop_id')
+        : auth()->user()->shop_id;
+
     $query = DB::table('sale_items')
         ->join('products', 'sale_items.product_id', '=', 'products.id')
         ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -316,6 +336,7 @@ public function exportTopQuantityPdf(Request $request)
             DB::raw('MONTH(sales.created_at) as month'),
             DB::raw('YEAR(sales.created_at) as year')
         )
+        ->when($shopId, fn ($q) => $q->where('sales.shop_id', $shopId))
         ->groupBy(
             'products.name',
             'categories.id',
@@ -344,7 +365,8 @@ public function exportTopQuantityPdf(Request $request)
     }
 
     if ($categoryId) {
-        $query->where('categories.id', $categoryId);
+        $ids = Category::descendantsAndSelfIds((int) $categoryId);
+        $query->whereIn('categories.id', $ids);
     }
 
     $topProducts = $query->get();

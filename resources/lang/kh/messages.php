@@ -177,8 +177,8 @@ return [
     'category_deactivated_successfully' => 'បិទប្រភេទបានជោគជ័យ',
     'category_inactive' => 'ប្រភេទឬប្រភេទមេមិនសកម្មទេ',
 
-    'stock_logs' => 'កំណត់ហេតុស្តុក',
-    'stock_log_history' => 'ប្រវត្តិកំណត់ហេតុស្តុក',
+    'stock_History' => 'កំណត់ហេតុស្តុក',
+    'stock_History' => 'កំណត់ហេតុស្តុក',
     'stock_adjustment' => 'កែតម្រូវស្តុក',
     'stock_in' => 'បញ្ចូលស្តុក',
     'stock_out' => 'ដកស្តុក',
