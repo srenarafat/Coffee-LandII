@@ -113,7 +113,8 @@ input::placeholder {
                                 @endforeach
                         </ul>
                 </div>
-            </div>
+            @endforeach
+        </div>
 
             <!-- Language + Search -->
             <div class="d-flex align-items-center gap-3">
@@ -172,7 +173,7 @@ input::placeholder {
         </div>
         <div class="col-lg-4" style="overflow-y: auto; height: 100%;">
             <div id="cart-container">
-                @include('partials.cart', ['routePrefix' => 'admin', 'comments' => $comments])
+                @include('partials.cart', ['routePrefix' => 'cashier', 'comments' => $comments])
             </div>
         </div>
     </div>
