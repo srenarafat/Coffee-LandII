@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ZReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\IngredientStockController;
 use App\Http\Controllers\Cashier\SaleController as PosController;
 use App\Http\Controllers\Cashier\InvoiceController;
 use App\Http\Controllers\LanguageController;
@@ -97,6 +98,9 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
+    Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
+    Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
+    Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
     Route::resource('users', SuperAdminUserController::class);
     Route::get('system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
@@ -201,6 +205,9 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
+    Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
+    Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
+    Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
 
 });
 

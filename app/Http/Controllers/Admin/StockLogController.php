@@ -9,28 +9,50 @@ use App\Models\StockLog;
 use App\Models\Category;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\Snappy\Facades\SnappyPdf;
+use Carbon\Carbon;
 
 class StockLogController extends Controller
 {
     public function index(Request $request)
     {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        if ($preset = $request->get('preset')) {
+            $now = Carbon::now();
+            switch ($preset) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay()->toDateString();
+                    $endDate = $now->copy()->endOfDay()->toDateString();
+                    break;
+                case 'this_week':
+                    $startDate = $now->copy()->startOfWeek()->toDateString();
+                    $endDate = $now->copy()->endOfWeek()->toDateString();
+                    break;
+                case 'this_month':
+                    $startDate = $now->copy()->startOfMonth()->toDateString();
+                    $endDate = $now->copy()->endOfMonth()->toDateString();
+                    break;
+            }
+        }
+
         $query = StockLog::with('product.category', 'user')->latest();
 
         if (in_array($request->get('type'), ['in', 'out'])) {
             $query->where('type', $request->get('type'));
         }
 
-        if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
         }
 
-        if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
         }
 
         if ($request->category_id) {
             $ids = Category::descendantsAndSelfIds((int) $request->category_id);
-            // ✅ Arrow functions cannot use `use (...)`    
+            // ✅ Arrow functions cannot use `use (...)` 
             $query->whereHas('product', function ($q) use ($ids) {
     $q->whereIn('category_id', $ids);
 });
@@ -91,12 +113,33 @@ class StockLogController extends Controller
 
     public function exportCsv(Request $request)
     {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        if ($preset = $request->get('preset')) {
+            $now = Carbon::now();
+            switch ($preset) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay()->toDateString();
+                    $endDate = $now->copy()->endOfDay()->toDateString();
+                    break;
+                case 'this_week':
+                    $startDate = $now->copy()->startOfWeek()->toDateString();
+                    $endDate = $now->copy()->endOfWeek()->toDateString();
+                    break;
+                case 'this_month':
+                    $startDate = $now->copy()->startOfMonth()->toDateString();
+                    $endDate = $now->copy()->endOfMonth()->toDateString();
+                    break;
+            }
+        }
+
         $logs = StockLog::with('product.category', 'user')
             ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
                 $q->where('type', $request->get('type'));
             })
-            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
+            ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
             ->when($request->category_id, function ($q) use ($request) {
                 $ids = Category::descendantsAndSelfIds((int) $request->category_id);
                 $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));
@@ -133,12 +176,33 @@ class StockLogController extends Controller
 
     public function exportPdf(Request $request)
     {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        if ($preset = $request->get('preset')) {
+            $now = Carbon::now();
+            switch ($preset) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay()->toDateString();
+                    $endDate = $now->copy()->endOfDay()->toDateString();
+                    break;
+                case 'this_week':
+                    $startDate = $now->copy()->startOfWeek()->toDateString();
+                    $endDate = $now->copy()->endOfWeek()->toDateString();
+                    break;
+                case 'this_month':
+                    $startDate = $now->copy()->startOfMonth()->toDateString();
+                    $endDate = $now->copy()->endOfMonth()->toDateString();
+                    break;
+            }
+        }
+
         $logs = StockLog::with('product.category', 'user')
             ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
                 $q->where('type', $request->get('type'));
             })
-            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
+            ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
             ->when($request->category_id, function ($q) use ($request) {
                 $ids = Category::descendantsAndSelfIds((int) $request->category_id);
                 $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));

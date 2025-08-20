@@ -7,8 +7,8 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold">📋 {{ __('messages.stock_history') }}</h5>
             <div class="d-flex gap-2">
-                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) : route('admin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) }}" class="btn btn-outline-success btn-sm">⬇️ {{ __('messages.export_csv') }}</a>
-                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) : route('admin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id')]) }}" class="btn btn-outline-primary btn-sm">🖨️ {{ __('messages.print') }}</a>
+                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id'), 'preset' => request('preset')]) : route('admin.stock-logs.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id'), 'preset' => request('preset')]) }}" class="btn btn-outline-success btn-sm">⬇️ {{ __('messages.export_csv') }}</a>
+                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id'), 'preset' => request('preset')]) : route('admin.stock-logs.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'category_id' => request('category_id'), 'preset' => request('preset')]) }}" class="btn btn-outline-primary btn-sm">🖨️ {{ __('messages.print') }}</a>
                 <a href="{{ auth()->user()->role === 'superadmin'
                     ? route('superadmin.stock-logs.create', ['category_id' => request('category_id')])
                     : route('admin.stock-logs.create', ['category_id' => request('category_id')]) }}" class="btn btn-primary btn-sm">{{ __('messages.stock_adjustment') }}</a>
@@ -31,6 +31,12 @@
                 <select name="category_id" class="form-select w-auto">
                     <option value="">{{ __('messages.all_categories') }}</option>
                     {!! render_category_options($categories, request('category_id')) !!}
+                </select>
+                <select name="preset" class="form-select w-auto">
+                    <option value="">{{ __('messages.all_day') }}</option>
+                    <option value="today" {{ request('preset') == 'today' ? 'selected' : '' }}>{{ __('messages.today') }}</option>
+                    <option value="this_week" {{ request('preset') == 'this_week' ? 'selected' : '' }}>{{ __('messages.this_week') }}</option>
+                    <option value="this_month" {{ request('preset') == 'this_month' ? 'selected' : '' }}>{{ __('messages.this_month') }}</option>
                 </select>
                 <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}">
                 <input type="date" name="end_date" class="form-control w-auto" value="{{ request('end_date') }}">
