@@ -1,6 +1,6 @@
 @props(['sales', 'exportRoute', 'printRoute', 'filter' => null, 'totalAmount' => 0])
 <!-- Header: Logo + Date + Export Buttons -->
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 mt-3">
 
 
     <!-- Left: Logo + Shop Name -->
@@ -143,6 +143,11 @@
         box-sizing: border-box !important;
         box-shadow: none !important;
     }
+
+    .print-area > div:first-child {
+        margin-top: 10px;
+    }
+
 
 
     .sidebar, .navbar, .btn, .logout-section,
