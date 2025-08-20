@@ -5,7 +5,7 @@
     <style>
         @font-face {
             font-family: 'Hanuman';
-            src: url("file:///{{ str_replace('\\\\', '/', public_path('fonts/Hanuman-Regular.ttf')) }}") format('truetype');
+            src: url("{{ 'file://' . str_replace('\\', '/', public_path('fonts/Hanuman-Regular.ttf')) }}") format('truetype');
         }
         body {
             font-family: 'Hanuman', DejaVu Sans, sans-serif;

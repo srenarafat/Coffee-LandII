@@ -104,7 +104,8 @@ class TopQuantityCategoryFilterTest extends TestCase
         SnappyPdf::shouldReceive('loadHTML')->once()->withArgs(function ($html) use ($childProduct, $otherProduct) {
             return str_contains($html, $childProduct->name) && !str_contains($html, $otherProduct->name);
         })->andReturnSelf();
-        SnappyPdf::shouldReceive('setOption')->andReturnSelf();
+        SnappyPdf::shouldReceive('setOption')->once()->with('encoding', 'UTF-8')->andReturnSelf();
+        SnappyPdf::shouldReceive('setOption')->once()->with('enable-local-file-access', true)->andReturnSelf();
         SnappyPdf::shouldReceive('download')->andReturn(response('pdf'));
 
         $response = $this->actingAs($user)->get('/admin/reports/top-quantity-sales/pdf?filter=all&category_id=' . $parent->id);

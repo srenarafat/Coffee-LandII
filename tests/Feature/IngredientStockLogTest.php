@@ -74,7 +74,8 @@ class IngredientStockLogTest extends TestCase
         SnappyPdf::shouldReceive('loadHTML')->once()->withArgs(function ($html) use ($ingredient) {
             return str_contains($html, 'Ingredient') && str_contains($html, $ingredient->name);
         })->andReturnSelf();
-        SnappyPdf::shouldReceive('setOption')->andReturnSelf();
+        SnappyPdf::shouldReceive('setOption')->once()->with('encoding', 'UTF-8')->andReturnSelf();
+        SnappyPdf::shouldReceive('setOption')->once()->with('enable-local-file-access', true)->andReturnSelf();
         SnappyPdf::shouldReceive('download')->andReturn(response('pdf'));
 
         $response = $this->actingAs($user)->get('/admin/ingredient-stock/pdf');

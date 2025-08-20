@@ -6,15 +6,19 @@
             <h5 class="fw-bold mb-4">{{ __('messages.stock_adjustment') }}</h5>
             <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.store') : route('admin.ingredient-stock.store') }}" method="POST">
                 @csrf
+                @php
+                    $selected = $ingredients->firstWhere('id', request('ingredient_id'));
+                    $selectedDisplay = $selected ? $selected->name . ' (Unit: ' . $selected->unit . ', Stock: ' . $selected->stock . ')' : '';
+                @endphp
                 <div class="mb-3">
                     <label class="form-label">Ingredient</label>
-                    <select name="ingredient_id" class="form-select shadow-sm" required>
+                    <input type="text" id="ingredient-input" class="form-control shadow-sm" list="ingredientList" value="{{ $selectedDisplay }}" placeholder="Start typing..." required>
+                    <datalist id="ingredientList">
                         @foreach($ingredients as $ingredient)
-                            <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>
-                                {{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})
-                            </option>
+                            <option data-id="{{ $ingredient->id }}" value="{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
                         @endforeach
-                    </select>
+                    </datalist>
+                    <input type="hidden" name="ingredient_id" id="ingredient-id" value="{{ request('ingredient_id') }}">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.type') }}</label>
@@ -44,3 +48,18 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const input = document.getElementById('ingredient-input');
+        const hidden = document.getElementById('ingredient-id');
+        const options = Array.from(document.getElementById('ingredientList').options);
+
+        input.addEventListener('input', function() {
+            const match = options.find(o => o.value === this.value);
+            hidden.value = match ? match.dataset.id : '';
+        });
+    });
+</script>
+@endpush
