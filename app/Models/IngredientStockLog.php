@@ -15,6 +15,10 @@ class IngredientStockLog extends Model
         'user_id',
     ];
 
+    protected $casts = [
+        'quantity' => 'decimal:2',
+    ];
+
     public function ingredient()
     {
         return $this->belongsTo(Ingredient::class);

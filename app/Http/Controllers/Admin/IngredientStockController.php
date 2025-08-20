@@ -48,12 +48,12 @@ class IngredientStockController extends Controller
         $request->validate([
             'ingredient_id' => 'required',
             'type' => 'required|in:in,out',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|numeric|min:0.01',
             'note' => 'nullable|string',
         ]);
 
         $ingredient = Ingredient::findOrFail($request->ingredient_id);
-        $quantity = (int) $request->quantity;
+        $quantity = (float) $request->quantity;
 
         if ($request->type === 'out' && $ingredient->stock < $quantity) {
             return back()->withErrors(['quantity' => __('messages.stock_not_enough')]);

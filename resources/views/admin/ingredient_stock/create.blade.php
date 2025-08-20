@@ -15,11 +15,14 @@
                     <input type="text" id="ingredient-input" class="form-control shadow-sm" list="ingredientList" value="{{ $selectedDisplay }}" placeholder="Start typing..." required>
                     <datalist id="ingredientList">
                         @foreach($ingredients as $ingredient)
-                            <option data-id="{{ $ingredient->id }}" value="{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
+                            <option data-id="{{ $ingredient->id }}" data-unit="{{ $ingredient->unit }}" value="{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
                         @endforeach
                     </datalist>
                     <input type="hidden" name="ingredient_id" id="ingredient-id" value="{{ request('ingredient_id') }}">
                 </div>
+                @error('ingredient_id')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.type') }}</label>
                     <select name="type" class="form-select shadow-sm" required>
@@ -27,14 +30,26 @@
                         <option value="out" {{ request('type') === 'out' ? 'selected' : '' }}>{{ __('messages.stock_out') }}</option>
                     </select>
                 </div>
+                @error('type')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.qty') }}</label>
-                    <input type="number" name="quantity" class="form-control shadow-sm" min="1" required>
+                    <div class="input-group">
+                        <input type="number" name="quantity" class="form-control shadow-sm" min="0.01" step="0.01" required>
+                        <span class="input-group-text" id="unit-display">{{ $selected->unit ?? '' }}</span>
+                    </div>
                 </div>
+                @error('quantity')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
                 <div class="mb-3">
                     <label class="form-label">{{ __('messages.note_optional') }}</label>
                     <input type="text" name="note" class="form-control shadow-sm">
                 </div>
+                @error('note')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
                 <div class="mt-4 text-end">
                     <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index') }}" class="btn btn-outline-secondary shadow-sm me-2">
                         <i class="bi bi-arrow-left"></i> {{ __('messages.back') }}
@@ -55,11 +70,17 @@
         const input = document.getElementById('ingredient-input');
         const hidden = document.getElementById('ingredient-id');
         const options = Array.from(document.getElementById('ingredientList').options);
+        const unitDisplay = document.getElementById('unit-display');
 
-        input.addEventListener('input', function() {
-            const match = options.find(o => o.value === this.value);
+        function updateSelection() {
+            const match = options.find(o => o.value === input.value);
             hidden.value = match ? match.dataset.id : '';
-        });
+        unitDisplay.textContent = match ? match.dataset.unit : '';
+        }
+
+        input.addEventListener('input', updateSelection);
+
+        updateSelection();
     });
 </script>
 @endpush
