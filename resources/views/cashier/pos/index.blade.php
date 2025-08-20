@@ -8,7 +8,7 @@
   .hide-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
   .hide-scrollbar::-webkit-scrollbar{ display:none; }
 
-  /* ===== Category pills (single compact pill with dropdown) ===== */
+  /* ===== Category pills ===== */
   .category-pill{
     color:#111; background:#fff; border:2px solid transparent;
     border-radius:999px; padding:6px 14px; text-decoration:none!important;
@@ -21,45 +21,58 @@
     margin-left:.4rem; border-top-width:.35em; border-right-width:.35em; border-left-width:.35em;
   }
 
-  /* Dropdown menu styling */
+  /* ===== Dropdown menu ===== */
   .cat-ddmenu{
-    min-width:240px; max-height:360px; overflow:auto;
-    border-radius:12px; padding:.35rem; box-shadow:0 8px 22px rgba(0,0,0,.08);
+    min-width:268px; max-height:380px; overflow:auto;
+    border-radius:14px; padding:.25rem 0; box-shadow:0 10px 24px rgba(0,0,0,.10);
   }
-  .cat-ddmenu .dropdown-item{ border-radius:8px; padding:.45rem .65rem; }
-  .cat-ddmenu .dropdown-item.active{ background:#dbeafe; color:#1d4ed8; font-weight:600; }
+  .cat-ddmenu .dropdown-divider{ margin:.35rem 0; }
 
-  /* Hierarchical indentation (matches Category page style) */
-  .cat-ddmenu .dropdown-item.dd-depth-1 { padding-left:.70rem; font-weight:700; } /* first level = bold */
-  .cat-ddmenu .dropdown-item.dd-depth-2 { padding-left:1.55rem; }
-  .cat-ddmenu .dropdown-item.dd-depth-3 { padding-left:2.25rem; }
-  .cat-ddmenu .dropdown-item.dd-depth-4 { padding-left:3.0rem; }
+  /* sticky "All Drinks / All Food" row */
+  .cat-ddmenu .cat-sticky{
+    position:sticky; top:0; z-index:1; background:#fff;
+    border-bottom:1px solid #eee;
+  }
+  .cat-ddmenu .cat-sticky > a{
+    display:block; padding:.60rem .85rem; font-weight:700; border-radius:0;
+  }
+
+  /* generic row + links */
+  .cat-ddmenu .dd-row{ display:block; padding:.50rem .85rem; border-radius:8px; }
+  .cat-ddmenu .dd-link{ color:inherit; text-decoration:none; display:block; }
+  .cat-ddmenu .dd-link:hover{ background:#f3f4f6; }
+
+  /* active link */
+  .cat-ddmenu .dd-link.active{ background:#dbeafe; color:#1d4ed8; font-weight:600; }
+
+  /* depth styling */
+  .cat-ddmenu .dd-depth-1{ padding-left:.85rem; font-weight:700; } /* section header */
+  .cat-ddmenu .dd-depth-2{ padding-left:1.65rem; }
+  .cat-ddmenu .dd-depth-3{ padding-left:2.35rem; }
+  .cat-ddmenu .dd-depth-4{ padding-left:3.05rem; }
+
+  /* subtle bullet for depth >= 2 */
+  .cat-ddmenu .dd-link.dd-depth-2::before,
+  .cat-ddmenu .dd-link.dd-depth-3::before,
+  .cat-ddmenu .dd-link.dd-depth-4::before{
+    content:"•"; font-size:.6rem; margin-right:.45rem; vertical-align:middle; opacity:.55;
+  }
+
+  /* section separators between depth-1 blocks */
+  .cat-ddmenu .cat-split{ margin:.25rem 0; border-top:1px dashed #e5e7eb; }
 
   /* ===== Products ===== */
   .product-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
   @media (min-width:992px){ .product-grid{ grid-template-columns:repeat(4,1fr); } }
 
-  .product-card{
-    background:#fff; border-radius:10px; box-shadow:0 1px 6px rgba(0,0,0,.08);
-    padding:14px; text-align:center;
-  }
-  .product-card img{
-    width:100%; height:120px; object-fit:cover; border-radius:6px;
-    border:1px solid #ddd; background:#f8f8f8; margin-bottom:10px;
-  }
+  .product-card{ background:#fff; border-radius:10px; box-shadow:0 1px 6px rgba(0,0,0,.08); padding:14px; text-align:center; }
+  .product-card img{ width:100%; height:120px; object-fit:cover; border-radius:6px; border:1px solid #ddd; background:#f8f8f8; margin-bottom:10px; }
 
   /* ===== Cart ===== */
-  .cart-box{
-    position:sticky; top:80px; background:#fff; padding:16px; border-radius:10px;
-    box-shadow:0 1px 8px rgba(0,0,0,.08);
-  }
-
+  .cart-box{ position:sticky; top:80px; background:#fff; padding:16px; border-radius:10px; box-shadow:0 1px 8px rgba(0,0,0,.08); }
   input::placeholder{ font-size:13px; }
 
-  @media (max-width:991px){
-    .product-cart-layout{ grid-template-columns:1fr; }
-    .cart-box{ position:static; }
-  }
+  @media (max-width:991px){ .product-cart-layout{ grid-template-columns:1fr; } .cart-box{ position:static; } }
 
   /* ===== Header responsive tweak ===== */
   @media (max-width:768px){ .pos-search { width:200px !important; } }
@@ -88,43 +101,40 @@
               {{ __($top['name']) }}
             </button>
 
-            {{-- Hierarchical dropdown that mirrors Category structure --}}
+            {{-- Hierarchical dropdown (uses $top['subs'] which already has name,id,depth) --}}
             <ul class="dropdown-menu cat-ddmenu">
-              <li>
-                <a class="dropdown-item fw-semibold {{ request('category') == $top['id'] ? 'active' : '' }}"
+              <li class="cat-sticky">
+                <a class="dd-link {{ request('category') == $top['id'] ? 'active' : '' }}"
                    href="{{ url()->current() }}?category={{ $top['id'] }}">
                   {{ __('All') }} {{ __($top['name']) }}
                 </a>
               </li>
 
-              @php
-                // Convert labels like "Drinks › Iced › water" into depth & name
-                $structured = collect($top['subs'])
-                  ->map(function($c) use ($top) {
-                      $parts = array_map('trim', explode('›', $c['label']));
-                      // Remove top-level name if present
-                      if (isset($parts[0]) && trim($parts[0]) === $top['name']) array_shift($parts);
-                      $depth = max(count($parts), 1);
-                      $name  = end($parts) ?: $c['label'];
-                      return ['id'=>$c['id'], 'name'=>$name, 'depth'=>$depth];
-                  })
-                  ->sortBy([['depth','asc'], ['name','asc']])   // first level first, alphabetically
-                  ->values();
-              @endphp
-
-              <li><hr class="dropdown-divider"></li>
-
-              @foreach ($structured as $item)
+              @php $isFirstSection = true; $prevDepth = 1; @endphp
+              @foreach ($top['subs'] as $i => $item)
                 @php
                   $isActive = request('category') == $item['id'];
-                  $depthCls = 'dd-depth-' . $item['depth'];
+                  $depthCls = 'dd-depth-' . (int)$item['depth'];
+                  // Add a dashed separator before each new depth-1 section (except the first)
+                  $showSplit = (!$isFirstSection && (int)$item['depth'] === 1);
                 @endphp
+
+                @if($showSplit)
+                  <li><div class="cat-split"></div></li>
+                @endif
+
                 <li>
-                  <a class="dropdown-item {{ $depthCls }} {{ $isActive ? 'active' : '' }}"
+                  {{-- Keep all items clickable, but style depth-1 as a section header --}}
+                  <a class="dd-row dd-link {{ $depthCls }} {{ $isActive ? 'active' : '' }}"
                      href="{{ url()->current() }}?category={{ $item['id'] }}">
                     {{ $item['name'] }}
                   </a>
                 </li>
+
+                @php
+                  if ((int)$item['depth'] === 1) { $isFirstSection = false; }
+                  $prevDepth = (int)$item['depth'];
+                @endphp
               @endforeach
             </ul>
           </div>

@@ -47,13 +47,17 @@ class SaleController extends Controller
             ->with('childrenRecursive')
             ->get();
 
-        // Helper to flatten nested children collections
-        $flatten = function ($categories) use (&$flatten) {
+        // Helper to flatten nested children collections while tracking depth
+        $flatten = function ($categories, $depth = 1) use (&$flatten) {
             $all = collect();
-            foreach ($categories as $cat) {
-                $all->push(['id' => $cat->id, 'label' => $cat->name]);
+            foreach ($categories->sortBy('name') as $cat) {
+                $all->push([
+                    'id'    => $cat->id,
+                    'name'  => $cat->name,
+                    'depth' => $depth,
+                ]);
                 if ($cat->childrenRecursive->isNotEmpty()) {
-                    $all = $all->merge($flatten($cat->childrenRecursive));
+                    $all = $all->merge($flatten($cat->childrenRecursive, $depth + 1));
                 }
             }
             return $all;
@@ -63,7 +67,7 @@ class SaleController extends Controller
             return [
                 'id'   => $cat->id,
                 'name' => $cat->name,
-                'subs' => $flatten($cat->childrenRecursive)->sortBy('label')->values(),
+                'subs' => $flatten($cat->childrenRecursive)->values(),
             ];
         });
 

@@ -102,4 +102,23 @@ class PosCategoryDropdownTest extends TestCase
         $response->assertSee($coffeeProduct->name);
         $response->assertDontSee($snackProduct->name);
     }
+    
+    public function test_dropdown_displays_correct_depth_classes(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+
+        $drinks = Category::create(['name' => 'Drinks', 'is_active' => true]);
+        $hot = Category::create(['name' => 'Hot', 'parent_id' => $drinks->id, 'is_active' => true]);
+        $tea = Category::create(['name' => 'Tea', 'parent_id' => $hot->id, 'is_active' => true]);
+        Category::create(['name' => 'Green', 'parent_id' => $tea->id, 'is_active' => true]);
+
+        $response = $this->actingAs($cashier)->get('/cashier/pos');
+        $response->assertOk();
+
+        $html = $response->getContent();
+
+        $this->assertMatchesRegularExpression('/dd-depth-1[^>]*>\s*Hot/', $html);
+        $this->assertMatchesRegularExpression('/dd-depth-2[^>]*>\s*Tea/', $html);
+        $this->assertMatchesRegularExpression('/dd-depth-3[^>]*>\s*Green/', $html);
+    }
 }
