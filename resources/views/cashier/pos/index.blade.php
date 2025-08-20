@@ -23,17 +23,21 @@
 
   /* Dropdown menu styling */
   .cat-ddmenu{
-    min-width:220px; max-height:360px; overflow:auto;
+    min-width:240px; max-height:360px; overflow:auto;
     border-radius:12px; padding:.35rem; box-shadow:0 8px 22px rgba(0,0,0,.08);
   }
   .cat-ddmenu .dropdown-item{ border-radius:8px; padding:.45rem .65rem; }
   .cat-ddmenu .dropdown-item.active{ background:#dbeafe; color:#1d4ed8; font-weight:600; }
 
+  /* Hierarchical indentation (matches Category page style) */
+  .cat-ddmenu .dropdown-item.dd-depth-1 { padding-left:.70rem; font-weight:700; } /* first level = bold */
+  .cat-ddmenu .dropdown-item.dd-depth-2 { padding-left:1.55rem; }
+  .cat-ddmenu .dropdown-item.dd-depth-3 { padding-left:2.25rem; }
+  .cat-ddmenu .dropdown-item.dd-depth-4 { padding-left:3.0rem; }
+
   /* ===== Products ===== */
   .product-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
-  @media (min-width:992px){
-    .product-grid{ grid-template-columns:repeat(4,1fr); }
-  }
+  @media (min-width:992px){ .product-grid{ grid-template-columns:repeat(4,1fr); } }
 
   .product-card{
     background:#fff; border-radius:10px; box-shadow:0 1px 6px rgba(0,0,0,.08);
@@ -58,9 +62,7 @@
   }
 
   /* ===== Header responsive tweak ===== */
-  @media (max-width:768px){
-    .pos-search { width:200px !important; }
-  }
+  @media (max-width:768px){ .pos-search { width:200px !important; } }
 </style>
 
 <div class="container-fluid">
@@ -85,6 +87,8 @@
                     type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
               {{ __($top['name']) }}
             </button>
+
+            {{-- Hierarchical dropdown that mirrors Category structure --}}
             <ul class="dropdown-menu cat-ddmenu">
               <li>
                 <a class="dropdown-item fw-semibold {{ request('category') == $top['id'] ? 'active' : '' }}"
@@ -92,12 +96,33 @@
                   {{ __('All') }} {{ __($top['name']) }}
                 </a>
               </li>
+
+              @php
+                // Convert labels like "Drinks › Iced › water" into depth & name
+                $structured = collect($top['subs'])
+                  ->map(function($c) use ($top) {
+                      $parts = array_map('trim', explode('›', $c['label']));
+                      // Remove top-level name if present
+                      if (isset($parts[0]) && trim($parts[0]) === $top['name']) array_shift($parts);
+                      $depth = max(count($parts), 1);
+                      $name  = end($parts) ?: $c['label'];
+                      return ['id'=>$c['id'], 'name'=>$name, 'depth'=>$depth];
+                  })
+                  ->sortBy([['depth','asc'], ['name','asc']])   // first level first, alphabetically
+                  ->values();
+              @endphp
+
               <li><hr class="dropdown-divider"></li>
-              @foreach ($top['subs'] as $cat)
+
+              @foreach ($structured as $item)
+                @php
+                  $isActive = request('category') == $item['id'];
+                  $depthCls = 'dd-depth-' . $item['depth'];
+                @endphp
                 <li>
-                  <a class="dropdown-item {{ request('category') == $cat['id'] ? 'active' : '' }}"
-                     href="{{ url()->current() }}?category={{ $cat['id'] }}">
-                    {{ $cat['label'] }}
+                  <a class="dropdown-item {{ $depthCls }} {{ $isActive ? 'active' : '' }}"
+                     href="{{ url()->current() }}?category={{ $item['id'] }}">
+                    {{ $item['name'] }}
                   </a>
                 </li>
               @endforeach
