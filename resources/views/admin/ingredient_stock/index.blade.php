@@ -4,7 +4,13 @@
 <div class="container my-4">
     <div class="card shadow-sm border-0 rounded-4 animate__animated">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">📋 Ingredient Stock History</h5>
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0 fw-bold">📋 Ingredient Stock History</h5>
+                <div class="d-flex gap-2">
+                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.index') : route('admin.stock-logs.index') }}" class="btn btn-outline-secondary btn-sm d-print-none" title="Stock Logs">📦</a>
+                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index') }}" class="btn btn-outline-secondary btn-sm d-print-none" title="Ingredient Stock">🥕</a>
+                </div>
+            </div>
             <div class="d-flex gap-2">
                 <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'ingredient_id' => request('ingredient_id')]) : route('admin.ingredient-stock.export', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'ingredient_id' => request('ingredient_id')]) }}" class="btn btn-outline-success btn-sm">⬇️ {{ __('messages.export_csv') }}</a>
                 <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'ingredient_id' => request('ingredient_id')]) : route('admin.ingredient-stock.pdf', ['type' => request('type'), 'start_date' => request('start_date'), 'end_date' => request('end_date'), 'ingredient_id' => request('ingredient_id')]) }}" class="btn btn-outline-primary btn-sm">🖨️ {{ __('messages.print') }}</a>
@@ -28,7 +34,9 @@
                 <select name="ingredient_id" class="form-select w-auto">
                     <option value="">All Ingredients</option>
                     @foreach($ingredients as $ingredient)
-                        <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>{{ $ingredient->name }}</option>
+                        <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>
+                            {{ $ingredient->name }} ({{ $ingredient->stock }} {{ $ingredient->unit }})
+                        </option>
                     @endforeach
                 </select>
                 <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}">
@@ -43,6 +51,7 @@
                             <th class="text-center">{{ __('messages.type') }}</th>
                             <th class="text-center">{{ __('messages.qty') }}</th>
                             <th class="text-center">Unit</th>
+                            <th class="text-center">{{ __('messages.current_stock') }}</th>
                             <th class="text-center">{{ __('messages.Note') }}</th>
                             <th class="text-center">{{ __('messages.users') }}</th>
                             <th class="text-center">{{ __('messages.date') }}</th>
@@ -59,13 +68,14 @@
                             </td>
                             <td class="text-center">{{ $log->quantity }}</td>
                             <td class="text-center">{{ $log->unit }}</td>
+                            <td class="text-center">{{ $log->ingredient->stock }} {{ $log->unit }}</td>
                             <td class="text-center">{{ $log->note }}</td>
                             <td class="text-center">{{ $log->user->name }}</td>
                             <td class="text-center">{{ $log->created_at->format('d/m/Y H:i') }}</td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center">{{ __('messages.no_stock_logs') }}</td>
+                            <td colspan="8" class="text-center">{{ __('messages.no_stock_logs') }}</td>
                         </tr>
                         @endforelse
                     </tbody>

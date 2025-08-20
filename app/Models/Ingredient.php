@@ -9,6 +9,11 @@ class Ingredient extends Model
     protected $fillable = [
         'name',
         'unit',
+        'stock',
+    ];
+
+    protected $casts = [
+        'stock' => 'integer',
     ];
 
     public function stockLogs()

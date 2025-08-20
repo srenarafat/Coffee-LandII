@@ -53,11 +53,19 @@ class IngredientStockController extends Controller
         ]);
 
         $ingredient = Ingredient::findOrFail($request->ingredient_id);
+        $quantity = (int) $request->quantity;
+
+        if ($request->type === 'out' && $ingredient->stock < $quantity) {
+            return back()->withErrors(['quantity' => __('messages.stock_not_enough')]);
+        }
+
+        $ingredient->stock += $request->type === 'in' ? $quantity : -$quantity;
+        $ingredient->save();
 
         IngredientStockLog::create([
             'ingredient_id' => $ingredient->id,
             'type' => $request->type,
-            'quantity' => $request->quantity,
+            'quantity' => $quantity,
             'unit' => $ingredient->unit,
             'note' => $request->note,
             'user_id' => auth()->id(),
@@ -89,7 +97,7 @@ class IngredientStockController extends Controller
         $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
             echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($file, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Note', 'User', 'Date']);
+            fputcsv($file, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Stock', 'Note', 'User', 'Date']);
             foreach ($logs as $log) {
                 fputcsv($file, [
                     $log->ingredient->id,
@@ -97,6 +105,7 @@ class IngredientStockController extends Controller
                     strtoupper($log->type),
                     $log->quantity,
                     $log->unit,
+                    $log->ingredient->stock,
                     $log->note,
                     $log->user->name,
                     $log->created_at->format('d/m/Y H:i'),

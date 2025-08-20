@@ -31,6 +31,7 @@
                 <th>{{ __('messages.type') }}</th>
                 <th>{{ __('messages.qty') }}</th>
                 <th>Unit</th>
+                <th>{{ __('messages.current_stock') }}</th>
                 <th>{{ __('messages.Note') }}</th>
                 <th>{{ __('messages.users') }}</th>
                 <th>{{ __('messages.date') }}</th>
@@ -43,6 +44,7 @@
                 <td>{{ strtoupper($log->type) }}</td>
                 <td>{{ $log->quantity }}</td>
                 <td>{{ $log->unit }}</td>
+                <td>{{ $log->ingredient->stock }} {{ $log->unit }}</td>
                 <td>{{ $log->note }}</td>
                 <td>{{ $log->user->name }}</td>
                 <td>{{ $log->created_at->format('d/m/Y H:i') }}</td>

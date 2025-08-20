@@ -183,6 +183,7 @@ return [
     'stock_in' => 'Stock In',
     'stock_out' => 'Stock Out',
     'no_stock_logs' => 'No stock logs found.',
+    'current_stock' => 'Current Stock',
     'product_id' => 'Product ID',
     'stock_not_enough' => 'Not enough stock.',
     'stock_updated' => ':name 🎉 Stock updated successfully.',

@@ -11,7 +11,7 @@
                     <select name="ingredient_id" class="form-select shadow-sm" required>
                         @foreach($ingredients as $ingredient)
                             <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>
-                                {{ $ingredient->name }} (Unit: {{ $ingredient->unit }})
+                                {{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})
                             </option>
                         @endforeach
                     </select>

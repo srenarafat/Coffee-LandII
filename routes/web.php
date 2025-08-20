@@ -234,6 +234,13 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
     Route::get('invoice/{sale}/print', [InvoiceController::class, 'printView'])->name('invoice.print');
     
+    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
+    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
+    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
+    Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
+    Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
+    Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
+
     // AI Assistant chat endpoint for cashiers
     Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');
 });
