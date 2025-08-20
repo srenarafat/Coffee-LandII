@@ -400,13 +400,13 @@ html, body {
 <div class="main-content" id="mainContent">
     @yield('content')
     <!-- Floating Chatbot Button -->
-<div id="chatbotButton" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; cursor: grab;">
+<div id="chatbotButton" class="d-print-none" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; cursor: grab;">
     <img src="{{ asset('images/chatbot-icon.png') }}" alt="Chatbot" style="width: 60px; height: 60px;" draggable="false">
 </div>
 
 
 <!-- Chatbot Modal -->
-<div id="chatbotPopup" style="display: none; position: fixed; bottom: 100px; right: 30px; z-index: 9998; background: #fff; width: 500px; height: 600px; box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
+<div id="chatbotPopup" class="d-print-none" style="display: none; position: fixed; bottom: 100px; right: 30px; z-index: 9998; background: #fff; width: 500px; height: 600px; box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
     <div id="chatbotHeader" style="background: #198754;
  color: white; padding: 10px; font-weight: bold; cursor: grab; display:flex; justify-content:space-between; align-items:center;">
         <span>{{ __('messages.chatbot_pos_assistant') }}</span>

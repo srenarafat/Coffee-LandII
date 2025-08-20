@@ -54,7 +54,7 @@
         <tr>
             <td>{{ $sale->invoice_no }}</td>
             <td>{{ $sale->user->name ?? '-' }}</td>
-            <td>{{ $sale->created_at->format('d M Y, H:i') }}</td>
+            <td class="text-nowrap">{{ $sale->created_at->format('d M Y, H:i') }}</td>
             @php
                 $categoryNames = $sale->items->pluck('product.category.name')->unique();
             @endphp
