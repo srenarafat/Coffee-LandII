@@ -30,4 +30,24 @@ class IngredientSelectionTest extends TestCase
             'unit' => 'kg',
         ]);
     }
+    
+    public function test_submitting_with_only_ingredient_name_is_processed(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $ingredient = Ingredient::create(['name' => 'Sugar', 'unit' => 'kg', 'stock' => 0]);
+
+        $response = $this->actingAs($user)->post('/admin/ingredient-stock', [
+            'ingredient_name' => 'Sugar',
+            'type' => 'in',
+            'quantity' => 2,
+            'note' => null,
+        ]);
+
+        $response->assertRedirect('/admin/ingredient-stock');
+        $this->assertDatabaseHas('ingredient_stock_logs', [
+            'ingredient_id' => $ingredient->id,
+            'quantity' => 2,
+            'unit' => 'kg',
+        ]);
+    }
 }

@@ -18,15 +18,12 @@ class IngredientStockController extends Controller
         if (in_array($request->get('type'), ['in', 'out'])) {
             $query->where('type', $request->get('type'));
         }
-
         if ($request->start_date) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
-
         if ($request->end_date) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
-
         if ($request->ingredient_id) {
             $query->where('ingredient_id', $request->ingredient_id);
         }
@@ -45,39 +42,101 @@ class IngredientStockController extends Controller
 
     public function store(Request $request)
     {
-        $validator = validator($request->all(), [
-            'ingredient_id' => 'required',
-            'type' => 'required|in:in,out',
-            'quantity' => 'required|numeric|min:0.01',
-            'note' => 'nullable|string',
+        // Clean unit input proactively
+        $cleanUnit = function (?string $u) {
+            $u = preg_replace('/^\s*\d+\s*/', '', (string)$u);           // remove leading numbers
+            $u = preg_replace('/[^A-Za-z\s\/\.\-]/', '', $u);            // keep letters only symbols
+            return trim($u);
+        };
+
+        // Validation
+        $request->merge(['unit' => $cleanUnit($request->unit)]);
+        $request->validate([
+            'ingredient_id'   => 'nullable|exists:ingredients,id',
+            'ingredient_name' => 'required_without:ingredient_id|string|max:255',
+            'unit'            => 'required_without:ingredient_id|regex:/^[A-Za-z\s\/\.\-]+$/|max:50',
+            'type'            => 'required|in:in,out',
+            'quantity'        => 'required|numeric|min:0.01',
+            'note'            => 'nullable|string',
+            'edit_existing'   => 'nullable|boolean',
+            'rename_to'       => 'nullable|string|max:255',
         ]);
 
-        if ($validator->fails()) {
-            if ($validator->errors()->has('ingredient_id') && $request->filled('ingredient_name')) {
-                $ingredient = Ingredient::where('name', $request->input('ingredient_name'))->first();
+        // Resolve or create ingredient
+        if ($request->filled('ingredient_id')) {
+            $ingredient = Ingredient::findOrFail($request->ingredient_id);
+        } else {
+            $nameNorm = $this->normalizeName($request->ingredient_name);
 
-                if ($ingredient) {
-                    $request->merge(['ingredient_id' => $ingredient->id]);
+            // exact case-insensitive match
+            $ingredient = Ingredient::whereRaw('LOWER(name) = ?', [mb_strtolower($nameNorm)])->first();
 
-                    $request->validate([
-                        'ingredient_id' => 'required',
-                        'type' => 'required|in:in,out',
-                        'quantity' => 'required|numeric|min:0.01',
-                        'note' => 'nullable|string',
-                    ]);
-                } else {
-                    $validator->validate();
+            // fuzzy match small typos (optional)
+            if (!$ingredient) {
+                $all = Ingredient::select('id','name')->get();
+                $best = null; $bestDist = PHP_INT_MAX;
+                foreach ($all as $row) {
+                    $d = levenshtein(mb_strtolower($nameNorm), mb_strtolower($row->name));
+                    if ($d < $bestDist) { $bestDist = $d; $best = $row; }
                 }
-            } else {
-                $validator->validate();
+                if ($best && ($bestDist <= 1 || (mb_strlen($nameNorm) <= 5 && $bestDist <= 2))) {
+                    $ingredient = Ingredient::find($best->id);
+                }
+            }
+
+            if (!$ingredient) {
+                $ingredient = Ingredient::create([
+                    'name'  => $nameNorm,
+                    'unit'  => $request->unit,
+                    'stock' => 0,
+                    // If your schema requires shop_id, add it here:
+                    // 'shop_id' => auth()->user()->shop_id,
+                ]);
             }
         }
 
-        $ingredient = Ingredient::findOrFail($request->ingredient_id);
-        $quantity = (float) $request->quantity;
+        // If editing existing (rename/unit/merge)
+        if ($request->boolean('edit_existing') && $request->filled('ingredient_id')) {
+            $renameTo = trim((string)$request->rename_to);
+            $newUnit  = $cleanUnit($request->unit);
 
+            // 1) Rename with merge if destination exists
+            if ($renameTo !== '') {
+                $renameToNorm = $this->normalizeName($renameTo);
+                $target = Ingredient::whereRaw('LOWER(name) = ?', [mb_strtolower($renameToNorm)])->first();
+
+                if ($target && $target->id !== $ingredient->id) {
+                    // Merge: move logs, combine stock, prefer provided unit
+                    IngredientStockLog::where('ingredient_id', $ingredient->id)
+                        ->update(['ingredient_id' => $target->id]);
+                    $target->stock += $ingredient->stock;
+                    if ($newUnit !== '') $target->unit = $newUnit;
+                    $target->save();
+
+                    $ingredient->delete();
+                    $ingredient = $target;
+                } else {
+                    $ingredient->name = $renameToNorm;
+                }
+            }
+
+            // 2) Unit change
+            if ($newUnit !== '') {
+                $ingredient->unit = $newUnit;
+            }
+            $ingredient->save();
+
+            // 3) Align past logs’ unit for this ingredient
+            if ($newUnit !== '') {
+                IngredientStockLog::where('ingredient_id', $ingredient->id)
+                    ->update(['unit' => $newUnit]);
+            }
+        }
+
+        // Stock movement
+        $quantity = (float) $request->quantity;
         if ($request->type === 'out' && $ingredient->stock < $quantity) {
-            return back()->withErrors(['quantity' => __('messages.stock_not_enough')]);
+            return back()->withErrors(['quantity' => __('messages.stock_not_enough')])->withInput();
         }
 
         $ingredient->stock += $request->type === 'in' ? $quantity : -$quantity;
@@ -85,19 +144,25 @@ class IngredientStockController extends Controller
 
         IngredientStockLog::create([
             'ingredient_id' => $ingredient->id,
-            'type' => $request->type,
-            'quantity' => $quantity,
-            'unit' => $ingredient->unit,
-            'note' => $request->note,
-            'user_id' => auth()->id(),
+            'type'          => $request->type,
+            'quantity'      => $quantity,
+            'unit'          => $ingredient->unit,  // always canonical unit
+            'note'          => $request->note,
+            'user_id'       => auth()->id(),
         ]);
 
-        $route = auth()->user()->role === 'superadmin' ? 'superadmin.ingredient-stock.index' : 'admin.ingredient-stock.index';
+        $route = auth()->user()->role === 'superadmin'
+            ? 'superadmin.ingredient-stock.index'
+            : 'admin.ingredient-stock.index';
 
-        return redirect()->route($route)->with(
-            'success',
-            __('messages.stock_updated', ['name' => $ingredient->name])
-        );
+        return redirect()->route($route)
+            ->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));
+    }
+
+    private function normalizeName(string $name): string
+    {
+        $name = preg_replace('/\s+/', ' ', trim($name));
+        return mb_convert_case($name, MB_CASE_TITLE, "UTF-8"); // Title Case
     }
 
     public function exportCsv(Request $request)
@@ -116,23 +181,23 @@ class IngredientStockController extends Controller
         ];
 
         $callback = function () use ($logs) {
-            $file = fopen('php://output', 'w');
-            echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($file, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Stock', 'Note', 'User', 'Date']);
+            $out = fopen('php://output', 'w');
+            echo chr(0xEF) . chr(0xBB) . chr(0xBF); // UTF-8 BOM
+            fputcsv($out, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Current Stock', 'Note', 'User', 'Date']);
             foreach ($logs as $log) {
-                fputcsv($file, [
+                fputcsv($out, [
                     $log->ingredient->id,
                     $log->ingredient->name,
                     strtoupper($log->type),
                     $log->quantity,
-                    $log->unit,
-                    $log->ingredient->stock,
+                    $log->ingredient->unit,
+                    $log->ingredient->stock . ' ' . $log->ingredient->unit,
                     $log->note,
                     $log->user->name,
                     $log->created_at->format('d/m/Y H:i'),
                 ]);
             }
-            fclose($file);
+            fclose($out);
         };
 
         return new StreamedResponse($callback, 200, $headers);
