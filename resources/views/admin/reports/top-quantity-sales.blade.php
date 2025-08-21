@@ -1,17 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Title Centered Above Chart -->
+<!-- Title + Controls Row -->
 <div class="row g-4 mb-2">
+    <!-- Title -->
     <div class="col-lg-5 text-center">
         <h5 class="fw-bold text-center text-uppercase text-brown mb-0">
             📊 {{ __('messages.top_quantity_sale_products') }}
         </h5>
     </div>
 
-    <!-- Button Group Centered Above Table -->
-    <div class="col-lg-7 text-center">
-        <div class="d-inline-flex flex-wrap justify-content-center gap-3">
+    <!-- Controls (right on lg+, centered on small) -->
+    <div class="col-lg-7">
+        <div class="d-flex flex-wrap align-items-center gap-4 justify-content-lg-end justify-content-center">
 
             <!-- Export CSV -->
             <a href="{{ auth()->user()->role === 'superadmin'
@@ -27,7 +28,7 @@
                     'year' => request('year'),
                     'category_id' => request('category_id'),
                 ]) }}"
-                class="btn btn-outline-success rounded-pill px-4">
+               class="btn btn-outline-success rounded-pill px-4">
                 ⬇️ {{ __('messages.export_csv') }}
             </a>
 
@@ -45,27 +46,31 @@
                     'year' => request('year'),
                     'category_id' => request('category_id'),
                 ]) }}"
-                class="btn btn-outline-primary rounded-pill px-4">
+               class="btn btn-outline-primary rounded-pill px-4">
                 🖨️ {{ __('messages.print') }}
             </a>
 
-            <!-- Filter Form -->
-            <form method="GET"
-                action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.reports.topQuantitySales') : route('admin.reports.topQuantitySales') }}"
-                class="d-flex align-items-center gap-2">
-                <select name="period" class="form-select rounded-pill shadow-sm" style="width: 140px;">
-                    <option value="today" {{ request('period', 'all') == 'today' ? 'selected' : '' }}>{{ __('messages.today') }}</option>
-                    <option value="week" {{ request('period', 'all') == 'week' ? 'selected' : '' }}>{{ __('messages.this_week') }}</option>
-                    <option value="month" {{ request('period', 'all') == 'month' ? 'selected' : '' }}>{{ __('messages.this_month') }}</option>
-                    <option value="all" {{ request('period', 'all') == 'all' ? 'selected' : '' }}>{{ __('messages.all_day') }}</option>
+            <!-- Filters -->
+            <form id="top-qty-form" method="GET"
+                  action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.reports.topQuantitySales') : route('admin.reports.topQuantitySales') }}"
+                  class="d-flex flex-wrap align-items-center gap-2">
+                <select name="period"
+                        class="form-select rounded-pill shadow-sm"
+                        style="width: 160px;"
+                        onchange="this.form.submit()">
+                    <option value="today"  {{ request('period','all')=='today'  ? 'selected':'' }}>{{ __('messages.today') }}</option>
+                    <option value="week"   {{ request('period','all')=='week'   ? 'selected':'' }}>{{ __('messages.this_week') }}</option>
+                    <option value="month"  {{ request('period','all')=='month'  ? 'selected':'' }}>{{ __('messages.this_month') }}</option>
+                    <option value="all"    {{ request('period','all')=='all'    ? 'selected':'' }}>{{ __('messages.all_day') }}</option>
                 </select>
-                <select name="category_id" class="form-select rounded-pill shadow-sm" style="width: 160px;">
+
+                <select name="category_id"
+                        class="form-select rounded-pill shadow-sm"
+                        style="width: 160px;"
+                        onchange="this.form.submit()">
                     <option value="">{{ __('messages.all_categories') }}</option>
                     {!! render_category_options($categories, request('category_id')) !!}
                 </select>
-                <button type="submit" class="btn btn-outline-primary rounded-pill">
-                    {{ __('messages.filter') }}
-                </button>
             </form>
         </div>
     </div>
@@ -116,28 +121,19 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('topSalesChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: {!! json_encode($topProducts->pluck('product.name')) !!},
-            datasets: [{
-                label: '{{ __('messages.quantity_sold') }}',
-                data: {!! json_encode($topProducts->pluck('total_quantity')) !!},
-                backgroundColor: [
-                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
+const ctx = document.getElementById('topSalesChart').getContext('2d');
+new Chart(ctx, {
+  type: 'pie',
+  data: {
+    labels: {!! json_encode($topProducts->pluck('product.name')) !!},
+    datasets: [{
+      label: '{{ __('messages.quantity_sold') }}',
+      data: {!! json_encode($topProducts->pluck('total_quantity')) !!},
+      backgroundColor: ['#007bff','#28a745','#ffc107','#dc3545','#6f42c1','#20c997','#fd7e14'],
+      borderWidth: 1
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
 </script>
 @endpush

@@ -65,28 +65,27 @@
                 </div>
             @endif
 
-            <form method="GET" class="mb-3 d-flex gap-2 flex-wrap">
-                <select name="type" class="form-select w-auto">
+            <form method="GET" id="stock-log-filter-form" class="mb-3 d-flex gap-2 flex-wrap">
+                <select name="type" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all') }}</option>
                     <option value="in"  {{ request('type') == 'in'  ? 'selected' : '' }}>{{ __('messages.stock_in') }}</option>
                     <option value="out" {{ request('type') == 'out' ? 'selected' : '' }}>{{ __('messages.stock_out') }}</option>
                 </select>
 
-                <select name="category_id" class="form-select w-auto">
+                <select name="category_id" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all_categories') }}</option>
                     {!! render_category_options($categories, request('category_id')) !!}
                 </select>
 
-                <select name="preset" class="form-select w-auto">
+                <select name="preset" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all_day') }}</option>
                     <option value="today"      {{ request('preset') == 'today' ? 'selected' : '' }}>{{ __('messages.today') }}</option>
                     <option value="this_week"  {{ request('preset') == 'this_week' ? 'selected' : '' }}>{{ __('messages.this_week') }}</option>
                     <option value="this_month" {{ request('preset') == 'this_month' ? 'selected' : '' }}>{{ __('messages.this_month') }}</option>
                 </select>
 
-                <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}">
-                <input type="date" name="end_date"   class="form-control w-auto" value="{{ request('end_date') }}">
-                <button type="submit" class="btn btn-outline-primary">{{ __('messages.filter') }}</button>
+                <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}" onchange="this.form.submit()">
+                <input type="date" name="end_date"   class="form-control w-auto" value="{{ request('end_date') }}" onchange="this.form.submit()">
             </form>
 
             <div class="table-responsive">

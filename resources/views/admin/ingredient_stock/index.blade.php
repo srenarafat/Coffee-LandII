@@ -65,14 +65,14 @@
             @endif
 
             {{-- Filters --}}
-            <form method="GET" class="mb-3 d-flex flex-wrap gap-2">
-                <select name="type" class="form-select w-auto">
+            <form method="GET" id="stock-filter-form" class="mb-3 d-flex flex-wrap gap-2">
+                <select name="type" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all') }}</option>
                     <option value="in"  {{ request('type') == 'in'  ? 'selected' : '' }}>{{ __('messages.stock_in') }}</option>
                     <option value="out" {{ request('type') == 'out' ? 'selected' : '' }}>{{ __('messages.stock_out') }}</option>
                 </select>
 
-                <select name="ingredient_id" class="form-select w-auto">
+                <select name="ingredient_id" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all') }} Ingredients</option>
                     @foreach($ingredients as $ingredient)
                         <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>
@@ -81,10 +81,9 @@
                     @endforeach
                 </select>
 
-                <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}">
-                <input type="date" name="end_date" class="form-control w-auto" value="{{ request('end_date') }}">
+                <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}" onchange="this.form.submit()">
+                <input type="date" name="end_date" class="form-control w-auto" value="{{ request('end_date') }}" onchange="this.form.submit()">
 
-                <button type="submit" class="btn btn-outline-primary">{{ __('messages.filter') }}</button>
                 @if(request()->hasAny(['type','ingredient_id','start_date','end_date']))
                     <a href="{{ $ingredientIndex }}" class="btn btn-outline-secondary">Reset</a>
                 @endif
