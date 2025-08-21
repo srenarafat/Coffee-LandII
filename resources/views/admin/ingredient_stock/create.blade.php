@@ -73,12 +73,23 @@
         const unitDisplay = document.getElementById('unit-display');
 
         function updateSelection() {
-            const match = options.find(o => o.value === input.value);
+            const value = input.value.toLowerCase().trim();
+            const match = options.find(o => {
+                const name = o.value.split(' (')[0].toLowerCase();
+                return o.value.toLowerCase() === value || o.dataset.id === value || name.includes(value);
+            });
             hidden.value = match ? match.dataset.id : '';
-        unitDisplay.textContent = match ? match.dataset.unit : '';
+            unitDisplay.textContent = match ? match.dataset.unit : '';
         }
 
         input.addEventListener('input', updateSelection);
+        input.addEventListener('change', updateSelection);
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!hidden.value) {
+                e.preventDefault();
+                alert('Please select a valid ingredient.');
+            }
+        });
 
         updateSelection();
     });
