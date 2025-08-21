@@ -155,14 +155,16 @@ class StockLogController extends Controller
         $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
             echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($file, ['ID', 'Category', 'Product', 'Type', 'Quantity', 'Note', 'User', 'Date']);
+            fputcsv($file, ['ID', 'Category', 'Product', 'Type', 'Quantity', 'Current Stock', 'Note', 'User', 'Date']);
             foreach ($logs as $log) {
+                $stockNow = rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.');
                 fputcsv($file, [
                     $log->product->id,
                     $log->product->category->name,
                     $log->product->name,
                     strtoupper($log->type),
                     $log->quantity,
+                    $stockNow,
                     $log->note,
                     $log->user->name,
                     $log->created_at->format('d/m/Y H:i'),

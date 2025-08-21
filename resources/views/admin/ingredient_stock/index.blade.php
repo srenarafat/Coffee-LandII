@@ -3,31 +3,53 @@
 @section('content')
 <div class="container my-4">
     <div class="card shadow-sm border-0 rounded-4 animate__animated">
+
+        @php
+            $isSuper = auth()->user()->role === 'superadmin';
+            $productIndex    = $isSuper ? route('superadmin.stock-logs.index')       : route('admin.stock-logs.index');
+            $ingredientIndex = $isSuper ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index');
+            $onProducts = request()->routeIs('superadmin.stock-logs.*') || request()->routeIs('admin.stock-logs.*');
+        @endphp
+
         <div class="card-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
                 <h5 class="mb-0 fw-bold">📋 Ingredient Stock History</h5>
-                <div class="d-flex gap-2">
-                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.stock-logs.index') : route('admin.stock-logs.index') }}"
-                       class="btn btn-outline-secondary btn-sm d-print-none" title="Product Stock Logs">📦</a>
-                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index') }}"
-                       class="btn btn-outline-secondary btn-sm d-print-none" title="Ingredient Stock">🥕</a>
+
+                {{-- Segmented switch: Products | Ingredients --}}
+                <div class="btn-group btn-group-sm btn-switch" role="group" aria-label="Switch section">
+                    <a href="{{ $productIndex }}"
+                       class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom"
+                       title="Product stock history">
+                        <i class="bi bi-box-seam me-1"></i> Products
+                    </a>
+                    <a href="{{ $ingredientIndex }}"
+                       class="btn {{ $onProducts ? 'btn-outline-secondary' : 'btn-primary text-white' }}"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom"
+                       title="Ingredient stock ledger">
+                        <span class="me-1" aria-hidden="true">🥕</span> Ingredients
+                    </a>
                 </div>
             </div>
 
             <div class="d-flex gap-2">
-                <a href="{{ auth()->user()->role === 'superadmin'
+                <a href="{{ $isSuper
                             ? route('superadmin.ingredient-stock.export', ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')])
                             : route('admin.ingredient-stock.export',       ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')]) }}"
-                   class="btn btn-outline-success btn-sm d-print-none">⬇️ {{ __('messages.export_csv') }}</a>
+                   class="btn btn-outline-success btn-sm d-print-none">
+                    <i class="bi bi-filetype-csv me-1"></i>{{ __('messages.export_csv') }}
+                </a>
 
-                <a href="{{ auth()->user()->role === 'superadmin'
+                <a href="{{ $isSuper
                             ? route('superadmin.ingredient-stock.pdf', ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')])
                             : route('admin.ingredient-stock.pdf',       ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')]) }}"
-                   class="btn btn-outline-primary btn-sm d-print-none">🖨️ {{ __('messages.print') }}</a>
+                   class="btn btn-outline-primary btn-sm d-print-none">
+                    <i class="bi bi-printer me-1"></i>{{ __('messages.print') }}
+                </a>
 
-                <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.create') : route('admin.ingredient-stock.create') }}"
+                <a href="{{ $isSuper ? route('superadmin.ingredient-stock.create') : route('admin.ingredient-stock.create') }}"
                    class="btn btn-primary btn-sm d-print-none">
-                   {{ __('messages.stock_adjustment') }}
+                    <i class="bi bi-plus-lg me-1"></i>{{ __('messages.stock_adjustment') }}
                 </a>
             </div>
         </div>
@@ -64,8 +86,7 @@
 
                 <button type="submit" class="btn btn-outline-primary">{{ __('messages.filter') }}</button>
                 @if(request()->hasAny(['type','ingredient_id','start_date','end_date']))
-                    <a href="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index') }}"
-                       class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ $ingredientIndex }}" class="btn btn-outline-secondary">Reset</a>
                 @endif
             </form>
 
@@ -85,24 +106,40 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            // Fallback running balance per ingredient if some rows miss stock_after
+                            $running = [];
+                        @endphp
+
                         @forelse($logs as $log)
                             @php
-                                // nice numbers without trailing zeros
-                                $qty = rtrim(rtrim(number_format($log->quantity, 2, '.', ''), '0'), '.');
-                                $stockNow = rtrim(rtrim(number_format($log->ingredient->stock, 2, '.', ''), '0'), '.');
-                                $unit = $log->ingredient->unit; // always use canonical unit
+                                $qty  = rtrim(rtrim(number_format($log->quantity, 2, '.', ''), '0'), '.');
+                                $unit = $log->ingredient->unit;
+
+                                if (!is_null($log->stock_after)) {
+                                    $after = (float) $log->stock_after;
+                                } else {
+                                    $id = $log->ingredient_id;
+                                    if (!array_key_exists($id, $running)) {
+                                        $running[$id] = (float) $log->ingredient->stock;
+                                    }
+                                    $after = $running[$id];
+                                    $delta = ($log->type === 'in') ? (float)$log->quantity : -(float)$log->quantity;
+                                    $running[$id] = $running[$id] - $delta;
+                                }
+
+                                $afterFmt = rtrim(rtrim(number_format($after, 2, '.', ''), '0'), '.');
                             @endphp
                             <tr>
                                 <td class="text-center">{{ $log->ingredient->name }}</td>
                                 <td class="text-center">
-                                    <span class="badge fw-normal badge-type
-                                        {{ strtolower($log->type) === 'in' ? 'bg-success' : 'bg-danger' }}">
+                                    <span class="badge fw-normal badge-type {{ strtolower($log->type) === 'in' ? 'bg-success' : 'bg-danger' }}">
                                         {{ strtoupper($log->type) }}
                                     </span>
                                 </td>
                                 <td class="text-center">{{ $qty }}</td>
                                 <td class="text-center">{{ $unit }}</td>
-                                <td class="text-center">{{ $stockNow }} {{ $unit }}</td>
+                                <td class="text-center">{{ $afterFmt }} {{ $unit }}</td>
                                 <td class="text-center">{{ $log->note }}</td>
                                 <td class="text-center">{{ $log->user->name }}</td>
                                 <td class="text-center">{{ $log->created_at->format('d/m/Y H:i') }}</td>
@@ -116,7 +153,6 @@
                 </table>
             </div>
 
-            {{-- Pagination --}}
             <div class="mt-3 d-flex justify-content-center">
                 {{ $logs->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
@@ -128,29 +164,18 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <style>
-    #successToast {
-        border-left: 6px solid #198754;
-        background-color: #d1e7dd;
-        font-size: 14px;
-        border-radius: 6px;
-        z-index: 1050;
-    }
-    thead.sticky-top {
-        top: 0;
-        z-index: 5;
-        background-color: #dbeafe !important;
-    }
-    thead.sticky-top th {
-        background-color: #dbeafe !important;
-        color: #000;
-        font-weight: bold;
-        border-bottom: 1px solid #ccc;
-    }
-    .badge-type { font-size: 0.75rem; }
-    .btn-outline-primary:hover { background-color: #0d6efd; color: #fff; }
-    .btn-outline-success:hover { background-color: #198754; color: #fff; }
-    .btn-outline-danger:hover  { background-color: #dc3545; color: #fff; }
-    .table td, .table th { vertical-align: middle; }
+    #successToast{border-left:6px solid #198754;background:#d1e7dd;font-size:14px;border-radius:6px;z-index:1050}
+    thead.sticky-top{top:0;z-index:5;background-color:#dbeafe!important}
+    thead.sticky-top th{background-color:#dbeafe!important;color:#000;font-weight:bold;border-bottom:1px solid #ccc}
+    .badge-type{font-size:.75rem}
+    .btn-outline-primary:hover{background:#0d6efd;color:#fff}
+    .btn-outline-success:hover{background:#198754;color:#fff}
+    .btn-outline-danger:hover{background:#dc3545;color:#fff}
+    .table td,.table th{vertical-align:middle}
+
+    /* Segmented switch styling (same as product page) */
+    .btn-switch .btn{border-radius:999px}
+    .btn-switch .btn + .btn{margin-left:6px}
 </style>
 @endpush
 
@@ -165,6 +190,9 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => toast.remove(), 800);
         }, 2000);
     }
+    // enable Bootstrap tooltips on the switcher
+    const tts = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tts.forEach(el => new bootstrap.Tooltip(el));
 });
 </script>
 @endpush

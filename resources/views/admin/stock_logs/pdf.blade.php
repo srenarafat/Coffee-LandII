@@ -32,6 +32,7 @@
                 <th>{{ __('messages.product') }}</th>
                 <th>{{ __('messages.type') }}</th>
                 <th>{{ __('messages.qty') }}</th>
+                <th>{{ __('messages.current_stock') }}</th>
                 <th>{{ __('messages.Note') }}</th>
                 <th>{{ __('messages.users') }}</th>
                 <th>{{ __('messages.date') }}</th>
@@ -45,6 +46,7 @@
                 <td>{{ $log->product->name }}</td>
                 <td>{{ strtoupper($log->type) }}</td>
                 <td>{{ $log->quantity }}</td>
+                <td>{{ rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.') }}</td>
                 <td>{{ $log->note }}</td>
                 <td>{{ $log->user->name }}</td>
                 <td>{{ $log->created_at->format('d/m/Y H:i') }}</td>

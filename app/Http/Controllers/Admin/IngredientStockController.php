@@ -146,6 +146,7 @@ class IngredientStockController extends Controller
             'ingredient_id' => $ingredient->id,
             'type'          => $request->type,
             'quantity'      => $quantity,
+            'stock_after'   => $ingredient->stock,   // 👈 capture balance right now
             'unit'          => $ingredient->unit,  // always canonical unit
             'note'          => $request->note,
             'user_id'       => auth()->id(),
@@ -191,7 +192,7 @@ class IngredientStockController extends Controller
                     strtoupper($log->type),
                     $log->quantity,
                     $log->ingredient->unit,
-                    $log->ingredient->stock . ' ' . $log->ingredient->unit,
+                    $log->stock_after . ' ' . $log->ingredient->unit,
                     $log->note,
                     $log->user->name,
                     $log->created_at->format('d/m/Y H:i'),

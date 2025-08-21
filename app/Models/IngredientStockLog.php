@@ -10,13 +10,15 @@ class IngredientStockLog extends Model
         'ingredient_id',
         'type',
         'quantity',
+        'stock_after',
         'unit',
         'note',
         'user_id',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'quantity'    => 'float',
+        'stock_after' => 'float',
     ];
 
     public function ingredient()
