@@ -4,7 +4,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h5 class="fw-bold mb-4">{{ __('messages.stock_adjustment') }}</h5>
-            <form action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.store') : route('admin.ingredient-stock.store') }}" method="POST">
+            <form id="ingredient-form" action="{{ auth()->user()->role === 'superadmin' ? route('superadmin.ingredient-stock.store') : route('admin.ingredient-stock.store') }}" method="POST">
                 @csrf
                 @php
                     $selected = $ingredients->firstWhere('id', request('ingredient_id'));
@@ -15,7 +15,7 @@
                     <input type="text" id="ingredient-input" class="form-control shadow-sm" list="ingredientList" value="{{ $selectedDisplay }}" placeholder="Start typing..." required>
                     <datalist id="ingredientList">
                         @foreach($ingredients as $ingredient)
-                            <option data-id="{{ $ingredient->id }}" data-unit="{{ $ingredient->unit }}" value="{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
+                            <option value="{{ $ingredient->id }}|{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
                         @endforeach
                     </datalist>
                     <input type="hidden" name="ingredient_id" id="ingredient-id" value="{{ request('ingredient_id') }}">
@@ -66,25 +66,41 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
         const input = document.getElementById('ingredient-input');
         const hidden = document.getElementById('ingredient-id');
         const options = Array.from(document.getElementById('ingredientList').options);
         const unitDisplay = document.getElementById('unit-display');
+        const form = document.getElementById('ingredient-form');
 
         function updateSelection() {
-            const value = input.value.toLowerCase().trim();
+            const rawValue = input.value.trim();
+            const lower = rawValue.toLowerCase();
             const match = options.find(o => {
-                const name = o.value.split(' (')[0].toLowerCase();
-                return o.value.toLowerCase() === value || o.dataset.id === value || name.includes(value);
+                const [id, displayText] = o.value.split('|');
+                const name = displayText.split(' (')[0].toLowerCase();
+                return o.value.toLowerCase() === lower || displayText.toLowerCase() === lower || id === lower || name.includes(lower);
             });
-            hidden.value = match ? match.dataset.id : '';
-            unitDisplay.textContent = match ? match.dataset.unit : '';
+            
+            if (match) {
+                const [id, displayText] = match.value.split('|');
+                hidden.value = id;
+                const unitMatch = displayText.match(/Unit:\s*([^,]+)/i);
+                unitDisplay.textContent = unitMatch ? unitMatch[1] : '';
+                if (rawValue !== displayText) {
+                    input.value = displayText;
+                }
+            } else {
+                hidden.value = '';
+                unitDisplay.textContent = '';
+            }
         }
 
         input.addEventListener('input', updateSelection);
         input.addEventListener('change', updateSelection);
-        document.querySelector('form').addEventListener('submit', function(e) {
+        input.addEventListener('blur', updateSelection);
+        form.addEventListener('submit', function(e) {
+            updateSelection();
             if (!hidden.value) {
                 e.preventDefault();
                 alert('Please select a valid ingredient.');
