@@ -15,7 +15,7 @@
                     <input type="text" id="ingredient-input" class="form-control shadow-sm" list="ingredientList" value="{{ $selectedDisplay }}" placeholder="Start typing..." required>
                     <datalist id="ingredientList">
                         @foreach($ingredients as $ingredient)
-                            <option data-id="{{ $ingredient->id }}" data-unit="{{ $ingredient->unit }}" value="{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
+                            <option value="{{ $ingredient->id }}|{{ $ingredient->name }} (Unit: {{ $ingredient->unit }}, Stock: {{ $ingredient->stock }})"></option>
                         @endforeach
                     </datalist>
                     <input type="hidden" name="ingredient_id" id="ingredient-id" value="{{ request('ingredient_id') }}">
@@ -73,13 +73,26 @@
         const unitDisplay = document.getElementById('unit-display');
 
         function updateSelection() {
-            const value = input.value.toLowerCase().trim();
+            const rawValue = input.value.trim();
+            const lower = rawValue.toLowerCase();
             const match = options.find(o => {
-                const name = o.value.split(' (')[0].toLowerCase();
-                return o.value.toLowerCase() === value || o.dataset.id === value || name.includes(value);
+                const [id, displayText] = o.value.split('|');
+                const name = displayText.split(' (')[0].toLowerCase();
+                return o.value.toLowerCase() === lower || displayText.toLowerCase() === lower || id === lower || name.includes(lower);
             });
-            hidden.value = match ? match.dataset.id : '';
-            unitDisplay.textContent = match ? match.dataset.unit : '';
+
+            if (match) {
+                const [id, displayText] = match.value.split('|');
+                hidden.value = id;
+                const unitMatch = displayText.match(/Unit:\s*([^,]+)/i);
+                unitDisplay.textContent = unitMatch ? unitMatch[1] : '';
+                if (rawValue !== displayText) {
+                    input.value = displayText;
+                }
+            } else {
+                hidden.value = '';
+                unitDisplay.textContent = '';
+            }
         }
 
         input.addEventListener('input', updateSelection);
