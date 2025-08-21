@@ -75,13 +75,28 @@
 
         function updateSelection() {
             const rawValue = input.value.trim();
+            const separator = rawValue.indexOf('|');
+
+            if (separator !== -1) {
+                const left = rawValue.slice(0, separator).trim();
+                const right = rawValue.slice(separator + 1).trim();
+
+                if (/^\d+$/.test(left)) {
+                    hidden.value = left;
+                    input.value = right;
+                    const unitMatch = right.match(/Unit:\s*([^,]+)/i);
+                    unitDisplay.textContent = unitMatch ? unitMatch[1] : '';
+                    return;
+                }
+            }
+
             const lower = rawValue.toLowerCase();
             const match = options.find(o => {
                 const [id, displayText] = o.value.split('|');
                 const name = displayText.split(' (')[0].toLowerCase();
                 return o.value.toLowerCase() === lower || displayText.toLowerCase() === lower || id === lower || name.includes(lower);
             });
-            
+
             if (match) {
                 const [id, displayText] = match.value.split('|');
                 hidden.value = id;
@@ -110,4 +125,5 @@
         updateSelection();
     });
 </script>
+
 @endpush

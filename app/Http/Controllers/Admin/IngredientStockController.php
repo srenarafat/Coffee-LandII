@@ -45,12 +45,33 @@ class IngredientStockController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = validator($request->all(), [
             'ingredient_id' => 'required',
             'type' => 'required|in:in,out',
             'quantity' => 'required|numeric|min:0.01',
             'note' => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            if ($validator->errors()->has('ingredient_id') && $request->filled('ingredient_name')) {
+                $ingredient = Ingredient::where('name', $request->input('ingredient_name'))->first();
+
+                if ($ingredient) {
+                    $request->merge(['ingredient_id' => $ingredient->id]);
+
+                    $request->validate([
+                        'ingredient_id' => 'required',
+                        'type' => 'required|in:in,out',
+                        'quantity' => 'required|numeric|min:0.01',
+                        'note' => 'nullable|string',
+                    ]);
+                } else {
+                    $validator->validate();
+                }
+            } else {
+                $validator->validate();
+            }
+        }
 
         $ingredient = Ingredient::findOrFail($request->ingredient_id);
         $quantity = (float) $request->quantity;

@@ -38,6 +38,31 @@ class IngredientStockLogTest extends TestCase
         $this->assertEquals(5, $ingredient->stock);
     }
 
+    public function test_can_create_ingredient_stock_log_using_name_only(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $ingredient = Ingredient::create(['name' => 'Milk', 'unit' => 'L', 'stock' => 0]);
+
+        $response = $this->actingAs($user)->post('/admin/ingredient-stock', [
+            'ingredient_name' => 'Milk',
+            'type' => 'in',
+            'quantity' => 5,
+            'note' => 'Added milk',
+        ]);
+
+        $response->assertRedirect('/admin/ingredient-stock');
+        $this->assertDatabaseHas('ingredient_stock_logs', [
+            'ingredient_id' => $ingredient->id,
+            'type' => 'in',
+            'quantity' => 5,
+            'unit' => 'L',
+            'note' => 'Added milk',
+        ]);
+
+        $ingredient->refresh();
+        $this->assertEquals(5, $ingredient->stock);
+    }
+
     public function test_index_can_filter_by_type(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
