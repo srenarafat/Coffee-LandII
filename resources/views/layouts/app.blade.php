@@ -261,7 +261,7 @@ html, body {
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
                   {{ request()->routeIs('admin.stock-logs.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.stock_History') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
         </a>
 
 
@@ -318,7 +318,7 @@ html, body {
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
                   {{ request()->routeIs('superadmin.stock-logs.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.stock_History') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
         </a>
 
 

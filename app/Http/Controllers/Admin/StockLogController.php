@@ -209,7 +209,17 @@ class StockLogController extends Controller
             $callback = function () use ($logs) {
                 $file = fopen('php://output', 'w');
                 echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-                fputcsv($file, ['ID', 'Category', 'Product', 'Type', 'Quantity', 'Current Stock', 'Note', 'User', 'Date']);
+                fputcsv($file, [
+                    __('messages.id'),
+                    __('messages.user'),
+                    __('messages.category'),
+                    __('messages.product'),
+                    __('messages.type'),
+                    __('messages.quantity'),
+                    __('messages.current_stock'),
+                    __('messages.note'),
+                    __('messages.date'),
+                ]);
                 foreach ($logs as $log) {
                     $stockNow = rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.');
                     fputcsv($file, [
@@ -277,7 +287,15 @@ class StockLogController extends Controller
         $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
             echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($file, ['ID', 'Category', 'Product', 'Total In', 'Total Out', 'Current Stock', 'Last Transaction']);
+            fputcsv($file, [
+                __('messages.id'),
+                __('messages.category'),
+                __('messages.product'),
+                __('messages.total_in'),
+                __('messages.total_out'),
+                __('messages.current_stock'),
+                __('messages.last_transaction'),
+            ]);
             foreach ($products as $product) {
                 $stockNow = rtrim(rtrim(number_format($product->stock, 2, '.', ''), '0'), '.');
                 fputcsv($file, [

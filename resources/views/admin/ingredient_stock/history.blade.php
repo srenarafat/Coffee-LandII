@@ -17,12 +17,12 @@
     <table class="table table-bordered table-striped table-hover align-middle mb-0">
         <thead class="table-light">
             <tr>
+                <th class="text-center">{{ __('messages.users') }}</th>
                 <th class="text-center">{{ __('messages.type') }}</th>
                 <th class="text-center">{{ __('messages.qty') }}</th>
-                <th class="text-center">Unit</th>
+                <th class="text-center">{{ __('messages.unit') }}</th>
                 <th class="text-center">{{ __('messages.current_stock') }}</th>
                 <th class="text-center">{{ __('messages.Note') }}</th>
-                <th class="text-center">{{ __('messages.users') }}</th>
                 <th class="text-center">{{ __('messages.date') }}</th>
             </tr>
         </thead>
@@ -47,6 +47,7 @@
                     $afterFmt = rtrim(rtrim(number_format($after, 2, '.', ''), '0'), '.');
                 @endphp
                 <tr>
+                    <td class="text-center">{{ $log->user->name }}</td>
                     <td class="text-center">
                         <span class="badge fw-normal badge-type {{ strtolower($log->type) === 'in' ? 'bg-success' : 'bg-danger' }}">
                             {{ strtoupper($log->type) }}
@@ -56,7 +57,6 @@
                     <td class="text-center">{{ $unit }}</td>
                     <td class="text-center">{{ $afterFmt }} {{ $unit }}</td>
                     <td class="text-center">{{ $log->note }}</td>
-                    <td class="text-center">{{ $log->user->name }}</td>
                     <td class="text-center">{{ $log->created_at->format('d/m/Y H:i') }}</td>
                 </tr>
             @empty

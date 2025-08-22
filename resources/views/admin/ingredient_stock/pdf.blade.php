@@ -24,14 +24,14 @@
 </head>
 <body>
     @if(isset($logs))
-        <h4 style="text-align:center;">Ingredient Stock Log</h4>
+        <h4 style="text-align:center;">{{ __('messages.ingredient_stock_log') }}</h4>
         <table>
             <thead>
                 <tr>
-                    <th>Ingredient</th>
+                    <th>{{ __('messages.ingredient') }}</th>
                     <th>{{ __('messages.type') }}</th>
                     <th>{{ __('messages.qty') }}</th>
-                    <th>Unit</th>
+                    <th>{{ __('messages.unit') }}</th>
                     <th>{{ __('messages.current_stock') }}</th>
                     <th>{{ __('messages.Note') }}</th>
                     <th>{{ __('messages.users') }}</th>
@@ -54,15 +54,15 @@
             </tbody>
         </table>
     @else
-        <h4 style="text-align:center;">Ingredient Stock Summary</h4>
+        <h4 style="text-align:center;">{{ __('messages.ingredient_stock_summary') }}</h4>
         <table>
             <thead>
                 <tr>
-                    <th>Ingredient</th>
-                    <th>Total In</th>
-                    <th>Total Out</th>
+                    <th>{{ __('messages.ingredient') }}</th>
+                    <th>{{ __('messages.total_in') }}</th>
+                    <th>{{ __('messages.total_out') }}</th>
                     <th>{{ __('messages.current_stock') }}</th>
-                    <th>Last At</th>
+                    <th>{{ __('messages.last_at') }}</th>
                 </tr>
             </thead>
             <tbody>

@@ -13,18 +13,18 @@
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h5 class="mb-0 fw-bold">🥕 Ingredient Stock History</h5>
+                <h5 class="mb-0 fw-bold">🥕 {{ __('messages.ingredient_stock_history') }}</h5>
 
                 <div class="btn-group btn-group-sm btn-switch" role="group" aria-label="Switch section">
                     <a href="{{ $productIndex }}"
                        class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
-                       data-bs-toggle="tooltip" title="Product stock history">
-                        <i class="bi bi-box-seam me-1"></i> Products
+                       data-bs-toggle="tooltip" title="{{ __('messages.product_stock_history') }}">
+                        <i class="bi bi-box-seam me-1"></i> {{ __('messages.products') }}
                     </a>
                     <a href="{{ $ingredientIndex }}"
                        class="btn {{ $onProducts ? 'btn-outline-secondary' : 'btn-primary text-white' }}"
-                       data-bs-toggle="tooltip" title="Ingredient stock ledger">
-                        <span class="me-1" aria-hidden="true">🥕</span> Ingredients
+                       data-bs-toggle="tooltip" title="{{ __('messages.ingredient_stock_ledger') }}">
+                        <span class="me-1" aria-hidden="true">🥕</span> {{ __('messages.ingredients') }}
                     </a>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                 </select>
 
                 <select name="ingredient_id" class="form-select w-auto" onchange="this.form.submit()">
-                    <option value="">{{ __('messages.all') }} Ingredients</option>
+                    <option value="">{{ __('messages.all_ingredients') }}</option>
                     @foreach($ingredients as $ingredient)
                         <option value="{{ $ingredient->id }}" {{ request('ingredient_id') == $ingredient->id ? 'selected' : '' }}>
                             {{ $ingredient->name }} ({{ rtrim(rtrim(number_format($ingredient->stock, 2, '.', ''), '0'), '.') }} {{ $ingredient->unit }})
@@ -87,11 +87,11 @@
                     <thead class="sticky-top" style="top: 0; z-index: 5; background-color: #dbeafe;">
                         <tr>
                             <th class="text-center">{{ __('messages.ingredient_id') }}</th>
-                            <th class="text-center">Ingredient</th>
-                            <th class="text-center">Total In</th>
-                            <th class="text-center">Total Out</th>
+                            <th class="text-center">{{ __('messages.ingredient') }}</th>
+                            <th class="text-center">{{ __('messages.total_in') }}</th>
+                            <th class="text-center">{{ __('messages.total_out') }}</th>
                             <th class="text-center">{{ __('messages.current_stock') }}</th>
-                            <th class="text-center">Last At</th>
+                            <th class="text-center">{{ __('messages.last at') }}</th>
                             <th class="text-center"></th>
                         </tr>
                     </thead>
@@ -119,7 +119,7 @@
                                             data-bs-target="#historyModal"
                                             data-title="{{ $item->name }}"
                                             data-url="{{ $historyRoute }}">
-                                        <i class="bi bi-clock-history me-1"></i> Details
+                                        <i class="bi bi-clock-history me-1"></i> {{ __('messages.Details') }}
                                     </button>
                                 </td>
                             </tr>
@@ -144,13 +144,13 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="historyModalLabel">History</h5>
+        <h5 class="modal-title" id="historyModalLabel">{{ __('messages.stock_history') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="historyModalBody">
         <div class="py-5 text-center text-muted">
             <div class="spinner-border me-2" role="status" aria-hidden="true"></div>
-            Loading…
+            {{ __('messages.loading') }}
         </div>
       </div>
     </div>
@@ -192,13 +192,13 @@ document.addEventListener('DOMContentLoaded', function(){
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.view-history-btn');
         if (!btn) return;
-        const title = btn.dataset.title || 'History';
+        const title = btn.dataset.title || '{{ __('messages.stock_history') }}';
         const url   = btn.dataset.url;
 
         document.getElementById('historyModalLabel').textContent = `${title} — {{ __('messages.stock_history') }}`;
         const body = document.getElementById('historyModalBody');
         body.innerHTML = `<div class="py-5 text-center text-muted">
-            <div class="spinner-border me-2" role="status"></div> Loading…
+            <div class="spinner-border me-2" role="status"></div> {{ __('messages.loading') }}
         </div>`;
 
         htmx.ajax('GET', url, { target: '#historyModalBody', swap: 'innerHTML' });

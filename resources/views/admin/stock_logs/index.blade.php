@@ -19,14 +19,14 @@
                     <a href="{{ $productIndex }}"
                        class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                       title="Product stock history">
-                        <i class="bi bi-box-seam me-1"></i> Products
+                       title="{{ __('messages.product_stock_history') }}">
+                        <i class="bi bi-box-seam me-1"></i> {{ __('messages.products') }}
                     </a>
                     <a href="{{ $ingredientIndex }}"
                        class="btn {{ $onProducts ? 'btn-outline-secondary' : 'btn-primary text-white' }}"
                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                       title="Ingredient stock ledger">
-                        <span class="me-1" aria-hidden="true">🥕</span> Ingredients
+                       title="{{ __('messages.ingredient_stock_ledger') }}">
+                        <span class="me-1" aria-hidden="true">🥕</span> {{ __('messages.ingredients') }}
                     </a>
                 </div>
             </div>
@@ -119,7 +119,7 @@
                         data-bs-target="#historyModal"
                         data-title="{{ $product->name }}"
                         data-url="{{ $historyRoute }}">
-                    <i class="bi bi-clock-history me-1"></i> Details
+                    <i class="bi bi-clock-history me-1"></i> {{ __('messages.Details') }}
                 </button>
             </td>
         </tr>
@@ -144,13 +144,13 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="historyModalLabel">History</h5>
+        <h5 class="modal-title" id="historyModalLabel">{{ __('messages.stock_history') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="historyModalBody">
         <div class="py-5 text-center text-muted">
             <div class="spinner-border me-2" role="status" aria-hidden="true"></div>
-            Loading…
+            {{ __('messages.loading') }}
         </div>
       </div>
     </div>
@@ -192,13 +192,13 @@ document.addEventListener('DOMContentLoaded', function(){
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.view-history-btn');
         if (!btn) return;
-        const title = btn.dataset.title || 'History';
+        const title = btn.dataset.title || '{{ __('messages.stock_history') }}';
         const url   = btn.dataset.url;
 
         document.getElementById('historyModalLabel').textContent = `${title} — {{ __('messages.stock_history') }}`;
         const body = document.getElementById('historyModalBody');
         body.innerHTML = `<div class="py-5 text-center text-muted">
-            <div class="spinner-border me-2" role="status"></div> Loading…
+            <div class="spinner-border me-2" role="status"></div> {{ __('messages.loading') }}
         </div>`;
 
         // Load detail with HTMX into the modal body

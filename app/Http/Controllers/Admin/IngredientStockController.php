@@ -229,7 +229,17 @@ class IngredientStockController extends Controller
             $callback = function () use ($logs) {
                 $out = fopen('php://output', 'w');
                 echo chr(0xEF) . chr(0xBB) . chr(0xBF); // UTF-8 BOM
-                fputcsv($out, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Current Stock', 'Note', 'User', 'Date']);
+                fputcsv($out, [
+                    __('messages.id'),
+                    __('messages.user'),
+                    __('messages.ingredient'),
+                    __('messages.type'),
+                    __('messages.quantity'),
+                    __('messages.unit'),
+                    __('messages.current_stock'),
+                    __('messages.note'),
+                    __('messages.date'),
+                ]);
                 foreach ($logs as $log) {
                     fputcsv($out, [
                         $log->ingredient->id,
@@ -288,7 +298,14 @@ class IngredientStockController extends Controller
         $callback = function () use ($items) {
             $out = fopen('php://output', 'w');
             echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($out, ['ID', 'Ingredient', 'Total In', 'Total Out', 'Current Stock', 'Last Movement']);
+            fputcsv($out, [
+                __('messages.id'),
+                __('messages.ingredient'),
+                __('messages.total_in'),
+                __('messages.total_out'),
+                __('messages.current_stock'),
+                __('messages.last_movement'),
+            ]);
             foreach ($items as $row) {
                 fputcsv($out, [
                     $row->id,

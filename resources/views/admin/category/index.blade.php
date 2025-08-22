@@ -14,31 +14,44 @@
         </div>
       @endif
 
+      @php
+        // Safe i18n fallbacks so we never render the raw key like "messages.search"
+        $t = fn($key, $fallback) => ($tmp = __($key)) === $key ? $fallback : $tmp;
+        $titleText         = $t('messages.category_list', 'Category List');
+        $searchPlaceholder = $t('messages.search', 'Search categories…');
+        $noParentText      = $t('messages.no_parent', 'No Parent');
+        $addCategoryText   = $t('messages.add_category', 'Add');
+        $expandAllText     = $t('messages.expand_all', 'Expand all');
+        $collapseAllText   = $t('messages.collapse_all', 'Collapse all');
+        $newCategoryPh     = $t('messages.new_category_placeholder', 'New Category…');
+      @endphp
+
       {{-- Header --}}
       <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
-        <h4 class="fw-bold m-0">🗄️ {{ __('messages.category_list') }}</h4>
+        <h4 class="fw-bold m-0">🗄️ {{ $titleText }}</h4>
         <div class="d-flex gap-2">
+          <label for="categorySearch" class="visually-hidden">{{ $searchPlaceholder }}</label>
           <input id="categorySearch" type="text" class="form-control form-control-sm"
-                 placeholder="{{ __('messages.search') ?: 'Search categories…' }}">
-          <button id="expandAll"  class="btn btn-outline-secondary btn-sm">Expand all</button>
-          <button id="collapseAll" class="btn btn-outline-secondary btn-sm">Collapse all</button>
+                 placeholder="{{ $searchPlaceholder }}" aria-label="{{ $searchPlaceholder }}">
+          <button id="expandAll"  class="btn btn-outline-secondary btn-sm" type="button">{{ $expandAllText }}</button>
+          <button id="collapseAll" class="btn btn-outline-secondary btn-sm" type="button">{{ $collapseAllText }}</button>
         </div>
       </div>
 
       {{-- Create --}}
-      <form action="{{ route('admin.categories.store') }}" method="POST" class="mb-4">
+      <form action="{{ route('admin.categories.store') }}" method="POST" class="mb-4" autocomplete="off">
         @csrf
         <div class="row g-2 align-items-center">
           <div class="col-md-4">
             <input type="text" name="name" class="form-control shadow-sm"
-                   placeholder="{{ __('messages.new_category_placeholder') }}" required>
+                   placeholder="{{ $newCategoryPh }}" aria-label="{{ $newCategoryPh }}" required>
           </div>
 
-          {{-- 👇 Hierarchical Parent selector (clean tree) --}}
+          {{-- Hierarchical Parent selector --}}
           <div class="col-md-4">
-            <select name="parent_id" class="form-select shadow-sm">
-              <option value="">{{ __('messages.no_parent') ?? 'No Parent' }}</option>
-@foreach($categoryOptions as $id => $label)
+            <select name="parent_id" class="form-select shadow-sm" aria-label="{{ $noParentText }}">
+              <option value="">{{ $noParentText }}</option>
+              @foreach($categoryOptions as $id => $label)
                 <option value="{{ $id }}">{{ $label }}</option>
               @endforeach
             </select>
@@ -46,7 +59,7 @@
 
           <div class="col-auto">
             <button type="submit" class="btn btn-primary shadow-sm px-4">
-              {{ __('messages.add_category') }}
+              {{ $addCategoryText }}
             </button>
           </div>
         </div>
@@ -72,32 +85,19 @@
 
 @push('styles')
 <style>
-  /* =========================
-     Color tokens (high-contrast)
-     ========================= */
   :root{
-    --ink:#0b1324;
-    --muted:#4b5563;
-    --line:#e6e8ee;
-
+    --ink:#0b1324; --muted:#4b5563; --line:#e6e8ee;
     --blue-600:#2563eb;  --blue-50:#eef2ff;
     --violet-600:#7c3aed;--violet-50:#f3e8ff;
     --emerald-600:#059669;--emerald-50:#e8fff4;
-
     --amber-600:#d97706; --amber-500:#f59e0b; --amber-50:#fff7e6;
-    --cyan-600:#0891b2;  --cyan-50:#e6fbff;
     --rose-600:#e11d48;  --rose-50:#fff1f2;
     --gray-row:#f8fafc;  --gray-hover:#eef2ff;
   }
-
-  /* Depth accents */
   .depth-0 { --accent: var(--blue-600);   --stripe: var(--blue-50); }
   .depth-1 { --accent: var(--violet-600); --stripe: var(--violet-50); }
   .depth-2 { --accent: var(--emerald-600);--stripe: var(--emerald-50); }
 
-  /* =========================
-     Tree connectors
-     ========================= */
   .tree li{ position:relative; margin:.25rem 0 .6rem 1.25rem; }
   .tree li::before{
     content:""; position:absolute; top:.55rem; left:-.75rem;
@@ -106,9 +106,6 @@
   }
   .tree > li::before{ top:.75rem; }
 
-  /* =========================
-     Node row
-     ========================= */
   .node-row{
     display:flex; align-items:center; gap:.55rem;
     background: var(--gray-row);
@@ -120,16 +117,13 @@
   .node-row:hover{ background: var(--gray-hover); }
   .node-row[data-active="0"]{ opacity:.8; filter:saturate(.85); }
 
-  .stripe{
-    width:.7rem; height:1.2rem; border-radius:.25rem;
-    background: var(--stripe);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
-  }
+  .stripe{ width:.7rem; height:1.2rem; border-radius:.25rem; background: var(--stripe);
+           box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
 
   .caret{
-    width:1.25rem; height:1.25rem; line-height:1.2rem;
-    text-align:center; border:none; background:transparent; cursor:pointer;
-    user-select:none; font-size:1rem; color:var(--muted);
+    width:1.25rem; height:1.25rem; line-height:1.2rem; text-align:center;
+    border:none; background:transparent; cursor:pointer; user-select:none;
+    font-size:1rem; color:var(--muted);
   }
   .caret::before{ content:"▸"; }
   .caret.open::before{ content:"▾"; }
@@ -144,33 +138,17 @@
   .actions{ gap:.4rem; flex-wrap:wrap; margin-left:auto; }
   .actions .btn{ padding:.25rem .6rem; border-radius:.55rem; font-weight:600; }
 
-  /* Clearer action colors */
-  .actions .btn-warning, .btn-deactivate{
-    background:var(--amber-500); border-color:var(--amber-500); color:#111;
-  }
-  .actions .btn-warning:hover, .btn-deactivate:hover{
-    background:var(--amber-600); border-color:var(--amber-600); color:#fff;
-  }
-  .actions .btn-info, .btn-edit{
-    background:#3b82f6; border-color:#3b82f6; color:#fff;
-  }
-  .actions .btn-info:hover, .btn-edit:hover{
-    background:#1d4ed8; border-color:#1d4ed8; color:#fff;
-  }
-  .actions .btn-danger, .btn-delete{
-    background:var(--rose-600); border-color:var(--rose-600); color:#fff;
-  }
-  .actions .btn-danger:hover, .btn-delete:hover{
-    box-shadow:0 0 0 3px var(--rose-50) inset;
-  }
+  .actions .btn-warning, .btn-deactivate{ background:var(--amber-500); border-color:var(--amber-500); color:#111; }
+  .actions .btn-warning:hover, .btn-deactivate:hover{ background:var(--amber-600); border-color:var(--amber-600); color:#fff; }
+  .actions .btn-info, .btn-edit{ background:#3b82f6; border-color:#3b82f6; color:#fff; }
+  .actions .btn-info:hover, .btn-edit:hover{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+  .actions .btn-danger, .btn-delete{ background:var(--rose-600); border-color:var(--rose-600); color:#fff; }
+  .actions .btn-danger:hover, .btn-delete:hover{ box-shadow:0 0 0 3px var(--rose-50) inset; }
 
-  /* Dropdown readability */
   select.form-select option[disabled]{ color:#9ca3af; font-style:italic; }
 
-  /* Search highlight */
   .hit .name{ background:var(--amber-50); padding:.05rem .3rem; border-radius:.25rem; }
 
-  /* Small screen tweaks */
   @media (max-width: 576px){
     .actions .btn{ padding:.25rem .5rem; font-size:.75rem; }
     .name{ font-size:.95rem; }
@@ -211,9 +189,8 @@
     document.querySelectorAll('.caret[data-toggle="children"]').forEach(c => c.classList.remove('open'));
   });
 
-  // search highlight + auto-expand
+  // search highlight + auto-expand ancestors
   const search = document.getElementById('categorySearch');
-  const collapseBtn = document.getElementById('collapseAll');
   function expandAncestors(el){
     let cur = el.parentElement;
     while(cur){
@@ -230,7 +207,7 @@
       const q = search.value.trim().toLowerCase();
       document.querySelectorAll('.tree .tree-node').forEach(li => {
         li.classList.remove('hit');
-        const name = li.dataset.name || '';
+        const name = (li.dataset.name || '').toLowerCase();
         if (q && name.includes(q)) {
           li.classList.add('hit');
           expandAncestors(li);
@@ -239,7 +216,7 @@
     });
   }
 
-  // expose for inline edit in partial
+  // inline edit helper (used in node partial)
   window.toggleEdit = function(id){
     document.getElementById('nameDisplay' + id).classList.add('d-none');
     document.getElementById('editForm' + id).classList.remove('d-none');

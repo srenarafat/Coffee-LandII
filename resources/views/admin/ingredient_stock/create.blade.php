@@ -20,7 +20,7 @@
 
                 {{-- Ingredient (free type or pick from list) --}}
                 <div class="mb-2">
-                    <label class="form-label">Ingredient</label>
+                    <label class="form-label">{{ __('messages.ingredient') }}</label>
                     <input
                         type="text"
                         id="ingredient-input"
@@ -28,7 +28,7 @@
                         class="form-control shadow-sm @error('ingredient_name') is-invalid @enderror @error('ingredient_id') is-invalid @enderror"
                         list="ingredientList"
                         value="{{ old('ingredient_name', $selected->name ?? '') }}"
-                        placeholder="Type a name (e.g., Sugar) or pick from list"
+                        placeholder="{{ __('messages.ingredient_placeholder') }}"
                         autocomplete="off"
                         required>
                     <datalist id="ingredientList">
@@ -42,7 +42,7 @@
                     <div class="form-text d-flex align-items-center gap-2">
                         <span id="match-hint" class="text-muted"></span>
                         <button type="button" id="edit-existing-btn" class="btn btn-link p-0" style="text-decoration: underline; display:none;">
-                            Edit existing
+                            {{ __('messages.edit_existing') }}
                         </button>
                     </div>
 
@@ -57,7 +57,7 @@
                 {{-- Unit (ONE shared input, used for NEW and when EDITING existing) --}}
                 <div id="unit-row" class="mb-2" style="display:none;">
                     <label class="form-label">
-                        Unit <small id="unit-required-note" class="text-muted">(required for new ingredient)</small>
+                        {{ __('messages.unit') }} <small id="unit-required-note" class="text-muted">(required for new ingredient)</small>
                     </label>
                     <input type="text"
                            id="unit-input"
@@ -75,13 +75,13 @@
                 <div id="edit-existing-panel" class="mt-2" style="display:none;">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label class="form-label">Rename to (optional)</label>
+                            <label class="form-label">{{ __('messages.rename_to_optional') }}</label>
                             <input type="text" name="rename_to" id="rename-to" class="form-control"
                                    placeholder="e.g., Sugar" value="{{ old('rename_to') }}">
                         </div>
                     </div>
                     <input type="hidden" name="edit_existing" id="edit-existing-flag" value="{{ old('edit_existing', '0') }}">
-                    <small class="text-muted">Tip: to change unit of this ingredient, use the Unit field above.</small>
+                    <small class="text-muted">{{ __('messages.tip_change_unit') }}</small>
                 </div>
 
                 {{-- Type --}}
