@@ -25,7 +25,7 @@ if (!function_exists('category_options')) {
             ->when($shopId, fn ($q) => $q->where('shop_id', $shopId))
             ->whereNull('parent_id')
             ->with('childrenRecursive')
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->get();
 
         $options = [];

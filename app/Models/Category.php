@@ -32,9 +32,9 @@ class Category extends Model
     public function childrenRecursive()
     {
         return $this->children()
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->with(['childrenRecursive' => function ($q) {
-                $q->orderBy('name');
+                $q->orderByDesc('created_at');
             }]);
     }
 

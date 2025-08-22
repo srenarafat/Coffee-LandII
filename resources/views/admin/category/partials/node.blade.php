@@ -82,7 +82,7 @@
 
             $rootCats = \App\Models\Category::with('childrenRecursive')
                         ->whereNull('parent_id')
-                        ->orderBy('name')->get();
+                        ->orderByDesc('created_at')->get();
 
             $renderOptions = function($nodes, $depth = 0) use (&$renderOptions, $category, $descendantIds) {
                 foreach ($nodes as $n) {

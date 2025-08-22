@@ -17,7 +17,7 @@ class ProductController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $products = $query->get();
+        $products = $query->orderByDesc('created_at')->get();
 
         if ($request->ajax()) {
             return view('admin.product.partials.tbody', compact('products'))->render();
