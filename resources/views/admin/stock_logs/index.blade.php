@@ -95,37 +95,41 @@
                             <th class="text-center">{{ __('messages.product_id') }}</th>
                             <th class="text-center">{{ __('messages.category') }}</th>
                             <th class="text-center">{{ __('messages.product') }}</th>
-                            <th class="text-center">{{ __('messages.type') }}</th>
-                            <th class="text-center">{{ __('messages.qty') }}</th>
+                            <th class="text-center">{{ __('messages.stock_in') }}</th>
+                            <th class="text-center">{{ __('messages.stock_out') }}</th>
                             <th class="text-center">{{ __('messages.current_stock') }}</th>
-                            <th class="text-center">{{ __('messages.Note') }}</th>
-                            <th class="text-center">{{ __('messages.users') }}</th>
                             <th class="text-center">{{ __('messages.date') }}</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($logs as $log)
+                        @forelse($products as $product)
                             @php
-                                $stockNow = rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.');
+                                $stockNow = rtrim(rtrim(number_format($product->stock, 2, '.', ''), '0'), '.');
+                                $historyRoute = ($isSuper ? route('superadmin.stock-logs.history', $product) : route('admin.stock-logs.history', $product)) . (request()->getQueryString() ? '?' . request()->getQueryString() : '');
                             @endphp
                             <tr>
-                                <td class="text-center">{{ $log->product->id }}</td>
-                                <td class="text-start">{{ $log->product->category->name ?? '' }}</td>
-                                <td class="text-start">{{ $log->product->name }}</td>
-                                <td class="text-center">
-                                    <span class="badge badge-type fw-normal {{ strtolower($log->type) === 'in' ? 'bg-success' : 'bg-danger' }}">
-                                        {{ strtoupper($log->type) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">{{ $log->quantity }}</td>
+                                <td class="text-center">{{ $product->id }}</td>
+                                <td class="text-start">{{ $product->category->name ?? '' }}</td>
+                                <td class="text-start">{{ $product->name }}</td>
+                                <td class="text-center">{{ $product->total_in ?? 0 }}</td>
+                                <td class="text-center">{{ $product->total_out ?? 0 }}</td>
                                 <td class="text-center">{{ $stockNow }}</td>
-                                <td class="text-center">{{ $log->note }}</td>
-                                <td class="text-center">{{ $log->user->name }}</td>
-                                <td class="text-center">{{ $log->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="text-center">{{ optional($product->last_at)->format('d/m/Y H:i') }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#history-{{ $product->id }}" aria-expanded="false" aria-controls="history-{{ $product->id }}">
+                                        ▶ Details
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="history-{{ $product->id }}">
+                                <td colspan="8">
+                                    <div hx-get="{{ $historyRoute }}" hx-trigger="revealed" hx-swap="innerHTML" class="p-2"></div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center">{{ __('messages.no_stock_logs') }}</td>
+                                <td colspan="8" class="text-center">{{ __('messages.no_stock_logs') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -133,7 +137,7 @@
             </div>
 
             <div class="mt-3 d-flex justify-content-center">
-                {{ $logs->appends(request()->query())->links('pagination::bootstrap-5') }}
+                {{ $products->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
@@ -158,6 +162,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
     const toast = document.getElementById('successToast');

@@ -13,7 +13,55 @@ class IngredientStockController extends Controller
 {
     public function index(Request $request)
     {
-        $query = IngredientStockLog::with('ingredient', 'user')->latest();
+        $logFilter = function ($q) use ($request) {
+            if ($request->start_date) {
+                $q->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->end_date) {
+                $q->whereDate('created_at', '<=', $request->end_date);
+            }
+            if (in_array($request->get('type'), ['in', 'out'])) {
+                $q->where('type', $request->get('type'));
+            }
+        };
+
+        $summaryQuery = Ingredient::query()
+            ->select('id', 'name', 'unit', 'stock')
+            ->when($request->ingredient_id, fn ($q) => $q->where('id', $request->ingredient_id))
+            ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
+                if ($request->start_date) {
+                    $q->whereDate('created_at', '>=', $request->start_date);
+                }
+                if ($request->end_date) {
+                    $q->whereDate('created_at', '<=', $request->end_date);
+                }
+                $q->where('type', 'in');
+            }], 'quantity')
+            ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
+                if ($request->start_date) {
+                    $q->whereDate('created_at', '>=', $request->start_date);
+                }
+                if ($request->end_date) {
+                    $q->whereDate('created_at', '<=', $request->end_date);
+                }
+                $q->where('type', 'out');
+            }], 'quantity')
+            ->withMax(['stockLogs as last_at' => $logFilter], 'created_at')
+            ->when(
+                $request->start_date || $request->end_date || $request->get('type'),
+                fn ($q) => $q->whereHas('stockLogs', $logFilter)
+            )
+            ->orderBy('name');
+
+        $items = $summaryQuery->paginate(20)->appends($request->query());
+        $ingredients = Ingredient::all();
+
+        return view('admin.ingredient_stock.index', compact('items', 'ingredients'));
+    }
+
+    public function history(Request $request, Ingredient $ingredient)
+    {
+        $query = $ingredient->stockLogs()->with('user')->latest();
 
         if (in_array($request->get('type'), ['in', 'out'])) {
             $query->where('type', $request->get('type'));
@@ -24,14 +72,10 @@ class IngredientStockController extends Controller
         if ($request->end_date) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
-        if ($request->ingredient_id) {
-            $query->where('ingredient_id', $request->ingredient_id);
-        }
 
-        $logs = $query->paginate(20);
-        $ingredients = Ingredient::all();
+        $logs = $query->paginate(20)->appends($request->query());
 
-        return view('admin.ingredient_stock.index', compact('logs', 'ingredients'));
+        return view('admin.ingredient_stock.history', compact('ingredient', 'logs'));
     }
 
     public function create()
@@ -168,34 +212,91 @@ class IngredientStockController extends Controller
 
     public function exportCsv(Request $request)
     {
-        $logs = IngredientStockLog::with('ingredient', 'user')
-            ->when(in_array($request->get('type'), ['in', 'out']), fn ($q) => $q->where('type', $request->get('type')))
-            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->ingredient_id, fn ($q) => $q->where('ingredient_id', $request->ingredient_id))
-            ->latest()
+        if ($request->ingredient_id) {
+            $logs = IngredientStockLog::with('ingredient', 'user')
+                ->where('ingredient_id', $request->ingredient_id)
+                ->when(in_array($request->get('type'), ['in', 'out']), fn ($q) => $q->where('type', $request->get('type')))
+                ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
+                ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
+                ->latest()
+                ->get();
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="ingredient_stock_logs.csv"',
+            ];
+
+            $callback = function () use ($logs) {
+                $out = fopen('php://output', 'w');
+                echo chr(0xEF) . chr(0xBB) . chr(0xBF); // UTF-8 BOM
+                fputcsv($out, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Current Stock', 'Note', 'User', 'Date']);
+                foreach ($logs as $log) {
+                    fputcsv($out, [
+                        $log->ingredient->id,
+                        $log->ingredient->name,
+                        strtoupper($log->type),
+                        $log->quantity,
+                        $log->ingredient->unit,
+                        $log->stock_after . ' ' . $log->ingredient->unit,
+                        $log->note,
+                        $log->user->name,
+                        $log->created_at->format('d/m/Y H:i'),
+                    ]);
+                }
+                fclose($out);
+            };
+
+            return new StreamedResponse($callback, 200, $headers);
+        }
+
+        $items = Ingredient::query()
+            ->select('id', 'name', 'unit', 'stock')
+            ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
+                if ($request->start_date) {
+                    $q->whereDate('created_at', '>=', $request->start_date);
+                }
+                if ($request->end_date) {
+                    $q->whereDate('created_at', '<=', $request->end_date);
+                }
+                $q->where('type', 'in');
+            }], 'quantity')
+            ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
+                if ($request->start_date) {
+                    $q->whereDate('created_at', '>=', $request->start_date);
+                }
+                if ($request->end_date) {
+                    $q->whereDate('created_at', '<=', $request->end_date);
+                }
+                $q->where('type', 'out');
+            }], 'quantity')
+            ->withMax(['stockLogs as last_at' => function ($q) use ($request) {
+                if ($request->start_date) {
+                    $q->whereDate('created_at', '>=', $request->start_date);
+                }
+                if ($request->end_date) {
+                    $q->whereDate('created_at', '<=', $request->end_date);
+                }
+            }], 'created_at')
+            ->orderBy('name')
             ->get();
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="ingredient_stock_logs.csv"',
+            'Content-Disposition' => 'attachment; filename="ingredient_stock_summary.csv"',
         ];
 
-        $callback = function () use ($logs) {
+        $callback = function () use ($items) {
             $out = fopen('php://output', 'w');
-            echo chr(0xEF) . chr(0xBB) . chr(0xBF); // UTF-8 BOM
-            fputcsv($out, ['ID', 'Ingredient', 'Type', 'Quantity', 'Unit', 'Current Stock', 'Note', 'User', 'Date']);
-            foreach ($logs as $log) {
+            echo chr(0xEF) . chr(0xBB) . chr(0xBF);
+            fputcsv($out, ['ID', 'Ingredient', 'Total In', 'Total Out', 'Current Stock', 'Last Movement']);
+            foreach ($items as $row) {
                 fputcsv($out, [
-                    $log->ingredient->id,
-                    $log->ingredient->name,
-                    strtoupper($log->type),
-                    $log->quantity,
-                    $log->ingredient->unit,
-                    $log->stock_after . ' ' . $log->ingredient->unit,
-                    $log->note,
-                    $log->user->name,
-                    $log->created_at->format('d/m/Y H:i'),
+                    $row->id,
+                    $row->name,
+                    $row->total_in ?? 0,
+                    $row->total_out ?? 0,
+                    $row->stock . ' ' . $row->unit,
+                    optional($row->last_at)->format('d/m/Y H:i'),
                 ]);
             }
             fclose($out);
@@ -206,15 +307,50 @@ class IngredientStockController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $logs = IngredientStockLog::with('ingredient', 'user')
-            ->when(in_array($request->get('type'), ['in', 'out']), fn ($q) => $q->where('type', $request->get('type')))
-            ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->ingredient_id, fn ($q) => $q->where('ingredient_id', $request->ingredient_id))
-            ->latest()
-            ->get();
+        if ($request->ingredient_id) {
+            $logs = IngredientStockLog::with('ingredient', 'user')
+                ->where('ingredient_id', $request->ingredient_id)
+                ->when(in_array($request->get('type'), ['in', 'out']), fn ($q) => $q->where('type', $request->get('type')))
+                ->when($request->start_date, fn ($q) => $q->whereDate('created_at', '>=', $request->start_date))
+                ->when($request->end_date, fn ($q) => $q->whereDate('created_at', '<=', $request->end_date))
+                ->latest()
+                ->get();
 
-        $html = view('admin.ingredient_stock.pdf', ['logs' => $logs])->render();
+            $html = view('admin.ingredient_stock.pdf', ['logs' => $logs])->render();
+        } else {
+            $items = Ingredient::query()
+                ->select('id', 'name', 'unit', 'stock')
+                ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
+                    if ($request->start_date) {
+                        $q->whereDate('created_at', '>=', $request->start_date);
+                    }
+                    if ($request->end_date) {
+                        $q->whereDate('created_at', '<=', $request->end_date);
+                    }
+                    $q->where('type', 'in');
+                }], 'quantity')
+                ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
+                    if ($request->start_date) {
+                        $q->whereDate('created_at', '>=', $request->start_date);
+                    }
+                    if ($request->end_date) {
+                        $q->whereDate('created_at', '<=', $request->end_date);
+                    }
+                    $q->where('type', 'out');
+                }], 'quantity')
+                ->withMax(['stockLogs as last_at' => function ($q) use ($request) {
+                    if ($request->start_date) {
+                        $q->whereDate('created_at', '>=', $request->start_date);
+                    }
+                    if ($request->end_date) {
+                        $q->whereDate('created_at', '<=', $request->end_date);
+                    }
+                }], 'created_at')
+                ->orderBy('name')
+                ->get();
+
+            $html = view('admin.ingredient_stock.pdf', ['summary' => $items])->render();
+        }
 
         return SnappyPdf::loadHTML($html)
             ->setOption('encoding', 'UTF-8')

@@ -36,32 +36,52 @@ class StockLogController extends Controller
             }
         }
 
-        $query = StockLog::with('product.category', 'user')->latest();
+        $logFilters = function ($q) use ($request, $startDate, $endDate) {
+            if (in_array($request->get('type'), ['in', 'out'])) {
+                $q->where('type', $request->get('type'));
+            }
+            if ($startDate) {
+                $q->whereDate('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $q->whereDate('created_at', '<=', $endDate);
+            }
+        };
 
-        if (in_array($request->get('type'), ['in', 'out'])) {
-            $query->where('type', $request->get('type'));
-        }
+        $products = Product::with('category')
+            ->with(['logs' => function ($q) use ($logFilters) {
+                $logFilters($q);
+                $q->latest();
+            }])
+            ->withSum(['logs as total_in' => function ($q) use ($startDate, $endDate) {
+                $q->where('type', 'in');
+                if ($startDate) {
+                    $q->whereDate('created_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('created_at', '<=', $endDate);
+                }
+            }], 'quantity')
+            ->withSum(['logs as total_out' => function ($q) use ($startDate, $endDate) {
+                $q->where('type', 'out');
+                if ($startDate) {
+                    $q->whereDate('created_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('created_at', '<=', $endDate);
+                }
+            }], 'quantity')
+            ->withMax(['logs as last_at' => $logFilters], 'created_at')
+            ->whereHas('logs', $logFilters)
+            ->when($request->category_id, function ($q) use ($request) {
+                $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+                $q->whereIn('category_id', $ids);
+            })
+            ->paginate(20);
 
-        if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
-        }
-
-        if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
-        }
-
-        if ($request->category_id) {
-            $ids = Category::descendantsAndSelfIds((int) $request->category_id);
-            // ✅ Arrow functions cannot use `use (...)` 
-            $query->whereHas('product', function ($q) use ($ids) {
-    $q->whereIn('category_id', $ids);
-});
-        }
-
-        $logs = $query->paginate(20);
         $categories = Category::with('childrenRecursive')->whereNull('parent_id')->get();
 
-        return view('admin.stock_logs.index', compact('logs', 'categories'));
+        return view('admin.stock_logs.index', compact('products', 'categories'));
     }
 
     public function create(Request $request)
@@ -111,6 +131,42 @@ class StockLogController extends Controller
         );
     }
 
+    public function history(Request $request, Product $product)
+    {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        if ($preset = $request->get('preset')) {
+            $now = Carbon::now();
+            switch ($preset) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay()->toDateString();
+                    $endDate = $now->copy()->endOfDay()->toDateString();
+                    break;
+                case 'this_week':
+                    $startDate = $now->copy()->startOfWeek()->toDateString();
+                    $endDate = $now->copy()->endOfWeek()->toDateString();
+                    break;
+                case 'this_month':
+                    $startDate = $now->copy()->startOfMonth()->toDateString();
+                    $endDate = $now->copy()->endOfMonth()->toDateString();
+                    break;
+            }
+        }
+
+        $logs = $product->logs()
+            ->with('user')
+            ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
+                $q->where('type', $request->get('type'));
+            })
+            ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->latest()
+            ->get();
+
+        return view('admin.stock_logs.history', compact('product', 'logs'));
+    }
+
     public function exportCsv(Request $request)
     {
         $startDate = $request->start_date;
@@ -134,17 +190,83 @@ class StockLogController extends Controller
             }
         }
 
-        $logs = StockLog::with('product.category', 'user')
-            ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
+        if ($request->product_id) {
+            $logs = StockLog::with('product.category', 'user')
+                ->where('product_id', $request->product_id)
+                ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
+                    $q->where('type', $request->get('type'));
+                })
+                ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
+                ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
+                ->latest()
+                ->get();
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="stock_logs.csv"',
+            ];
+
+            $callback = function () use ($logs) {
+                $file = fopen('php://output', 'w');
+                echo chr(0xEF) . chr(0xBB) . chr(0xBF);
+                fputcsv($file, ['ID', 'Category', 'Product', 'Type', 'Quantity', 'Current Stock', 'Note', 'User', 'Date']);
+                foreach ($logs as $log) {
+                    $stockNow = rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.');
+                    fputcsv($file, [
+                        $log->product->id,
+                        $log->product->category->name,
+                        $log->product->name,
+                        strtoupper($log->type),
+                        $log->quantity,
+                        $stockNow,
+                        $log->note,
+                        $log->user->name,
+                        $log->created_at->format('d/m/Y H:i'),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return new StreamedResponse($callback, 200, $headers);
+        }
+
+        $logFilters = function ($q) use ($request, $startDate, $endDate) {
+            if (in_array($request->get('type'), ['in', 'out'])) {
                 $q->where('type', $request->get('type'));
-            })
-            ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
-            ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
+            }
+            if ($startDate) {
+                $q->whereDate('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $q->whereDate('created_at', '<=', $endDate);
+            }
+        };
+
+        $products = Product::with('category')
+            ->withSum(['logs as total_in' => function ($q) use ($startDate, $endDate) {
+                $q->where('type', 'in');
+                if ($startDate) {
+                    $q->whereDate('created_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('created_at', '<=', $endDate);
+                }
+            }], 'quantity')
+            ->withSum(['logs as total_out' => function ($q) use ($startDate, $endDate) {
+                $q->where('type', 'out');
+                if ($startDate) {
+                    $q->whereDate('created_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('created_at', '<=', $endDate);
+                }
+            }], 'quantity')
+            ->withMax(['logs as last_at' => $logFilters], 'created_at')
+            ->whereHas('logs', $logFilters)
             ->when($request->category_id, function ($q) use ($request) {
                 $ids = Category::descendantsAndSelfIds((int) $request->category_id);
-                $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));
+                $q->whereIn('category_id', $ids);
             })
-            ->latest()
             ->get();
 
         $headers = [
@@ -152,22 +274,20 @@ class StockLogController extends Controller
             'Content-Disposition' => 'attachment; filename="stock_logs.csv"',
         ];
 
-        $callback = function () use ($logs) {
+        $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
             echo chr(0xEF) . chr(0xBB) . chr(0xBF);
-            fputcsv($file, ['ID', 'Category', 'Product', 'Type', 'Quantity', 'Current Stock', 'Note', 'User', 'Date']);
-            foreach ($logs as $log) {
-                $stockNow = rtrim(rtrim(number_format($log->product->stock, 2, '.', ''), '0'), '.');
+            fputcsv($file, ['ID', 'Category', 'Product', 'Total In', 'Total Out', 'Current Stock', 'Last Transaction']);
+            foreach ($products as $product) {
+                $stockNow = rtrim(rtrim(number_format($product->stock, 2, '.', ''), '0'), '.');
                 fputcsv($file, [
-                    $log->product->id,
-                    $log->product->category->name,
-                    $log->product->name,
-                    strtoupper($log->type),
-                    $log->quantity,
+                    $product->id,
+                    $product->category->name ?? '',
+                    $product->name,
+                    $product->total_in ?? 0,
+                    $product->total_out ?? 0,
                     $stockNow,
-                    $log->note,
-                    $log->user->name,
-                    $log->created_at->format('d/m/Y H:i'),
+                    optional($product->last_at)->format('d/m/Y H:i'),
                 ]);
             }
             fclose($file);
@@ -199,20 +319,60 @@ class StockLogController extends Controller
             }
         }
 
-        $logs = StockLog::with('product.category', 'user')
-            ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
-                $q->where('type', $request->get('type'));
-            })
-            ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
-            ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
-            ->when($request->category_id, function ($q) use ($request) {
-                $ids = Category::descendantsAndSelfIds((int) $request->category_id);
-                $q->whereHas('product', fn ($p) => $p->whereIn('category_id', $ids));
-            })
-            ->latest()
-            ->get();
+        if ($request->product_id) {
+            $logs = StockLog::with('product.category', 'user')
+                ->where('product_id', $request->product_id)
+                ->when(in_array($request->get('type'), ['in', 'out']), function ($q) use ($request) {
+                    $q->where('type', $request->get('type'));
+                })
+                ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
+                ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
+                ->latest()
+                ->get();
 
-        $html = view('admin.stock_logs.pdf', ['logs' => $logs])->render();
+            $html = view('admin.stock_logs.pdf', ['logs' => $logs])->render();
+        } else {
+            $logFilters = function ($q) use ($request, $startDate, $endDate) {
+                if (in_array($request->get('type'), ['in', 'out'])) {
+                    $q->where('type', $request->get('type'));
+                }
+                if ($startDate) {
+                    $q->whereDate('created_at', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('created_at', '<=', $endDate);
+                }
+            };
+
+        $products = Product::with('category')
+                ->withSum(['logs as total_in' => function ($q) use ($startDate, $endDate) {
+                    $q->where('type', 'in');
+                    if ($startDate) {
+                        $q->whereDate('created_at', '>=', $startDate);
+                    }
+                    if ($endDate) {
+                        $q->whereDate('created_at', '<=', $endDate);
+                    }
+                }], 'quantity')
+                ->withSum(['logs as total_out' => function ($q) use ($startDate, $endDate) {
+                    $q->where('type', 'out');
+                    if ($startDate) {
+                        $q->whereDate('created_at', '>=', $startDate);
+                    }
+                    if ($endDate) {
+                        $q->whereDate('created_at', '<=', $endDate);
+                    }
+                }], 'quantity')
+                ->withMax(['logs as last_at' => $logFilters], 'created_at')
+                ->whereHas('logs', $logFilters)
+                ->when($request->category_id, function ($q) use ($request) {
+                    $ids = Category::descendantsAndSelfIds((int) $request->category_id);
+                    $q->whereIn('category_id', $ids);
+                })
+                ->get();
+
+            $html = view('admin.stock_logs.pdf', ['products' => $products])->render();
+        }
 
         return SnappyPdf::loadHTML($html)
             ->setOption('encoding', 'UTF-8')

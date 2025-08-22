@@ -23,34 +23,60 @@
     </style>
 </head>
 <body>
-    <h4 style="text-align:center;">Ingredient Stock Log</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Ingredient</th>
-                <th>{{ __('messages.type') }}</th>
-                <th>{{ __('messages.qty') }}</th>
-                <th>Unit</th>
-                <th>{{ __('messages.current_stock') }}</th>
-                <th>{{ __('messages.Note') }}</th>
-                <th>{{ __('messages.users') }}</th>
-                <th>{{ __('messages.date') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach($logs as $log)
-            <tr>
-                <td>{{ $log->ingredient->name }}</td>
-                <td>{{ strtoupper($log->type) }}</td>
-                <td>{{ $log->quantity }}</td>
-                <td>{{ $log->unit }}</td>
-                <td>{{ $log->ingredient->stock }} {{ $log->unit }}</td>
-                <td>{{ $log->note }}</td>
-                <td>{{ $log->user->name }}</td>
-                <td>{{ $log->created_at->format('d/m/Y H:i') }}</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
+    @if(isset($logs))
+        <h4 style="text-align:center;">Ingredient Stock Log</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th>{{ __('messages.type') }}</th>
+                    <th>{{ __('messages.qty') }}</th>
+                    <th>Unit</th>
+                    <th>{{ __('messages.current_stock') }}</th>
+                    <th>{{ __('messages.Note') }}</th>
+                    <th>{{ __('messages.users') }}</th>
+                    <th>{{ __('messages.date') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($logs as $log)
+                <tr>
+                    <td>{{ $log->ingredient->name }}</td>
+                    <td>{{ strtoupper($log->type) }}</td>
+                    <td>{{ $log->quantity }}</td>
+                    <td>{{ $log->unit }}</td>
+                    <td>{{ $log->ingredient->stock }} {{ $log->unit }}</td>
+                    <td>{{ $log->note }}</td>
+                    <td>{{ $log->user->name }}</td>
+                    <td>{{ $log->created_at->format('d/m/Y H:i') }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    @else
+        <h4 style="text-align:center;">Ingredient Stock Summary</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th>Total In</th>
+                    <th>Total Out</th>
+                    <th>{{ __('messages.current_stock') }}</th>
+                    <th>Last At</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($summary as $row)
+                <tr>
+                    <td>{{ $row->name }}</td>
+                    <td>{{ $row->total_in ?? 0 }}</td>
+                    <td>{{ $row->total_out ?? 0 }}</td>
+                    <td>{{ $row->stock }} {{ $row->unit }}</td>
+                    <td>{{ optional($row->last_at)->format('d/m/Y H:i') }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    @endif
 </body>
 </html>

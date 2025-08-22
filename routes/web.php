@@ -97,8 +97,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::patch('products/{product}/deactivate', [ProductController::class, 'deactivate'])->name('products.deactivate');
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
+    Route::get('stock-logs/{product}/history', [\App\Http\Controllers\Admin\StockLogController::class, 'history'])->name('stock-logs.history');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
+    Route::get('ingredient-stock/{ingredient}/history', [IngredientStockController::class, 'history'])->name('ingredient-stock.history');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
     Route::resource('users', SuperAdminUserController::class);
@@ -204,10 +206,12 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
     
     Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
     Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
+    Route::get('stock-logs/{product}/history', [\App\Http\Controllers\Admin\StockLogController::class, 'history'])->name('stock-logs.history');
     Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
+    Route::get('ingredient-stock/{ingredient}/history', [IngredientStockController::class, 'history'])->name('ingredient-stock.history');
 
 });
 
@@ -240,6 +244,7 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
+    Route::get('ingredient-stock/{ingredient}/history', [IngredientStockController::class, 'history'])->name('ingredient-stock.history');
 
     // AI Assistant chat endpoint for cashiers
     Route::post('ai-chat', [\App\Http\Controllers\AIChatController::class, 'ask'])->name('ai.chat');

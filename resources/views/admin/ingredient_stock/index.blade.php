@@ -94,58 +94,37 @@
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="sticky-top">
                         <tr>
+                            <th class="text-center">Details</th>
                             <th class="text-center">Ingredient</th>
-                            <th class="text-center">{{ __('messages.type') }}</th>
-                            <th class="text-center">{{ __('messages.qty') }}</th>
-                            <th class="text-center">Unit</th>
+                            <th class="text-center">Total In</th>
+                            <th class="text-center">Total Out</th>
                             <th class="text-center">{{ __('messages.current_stock') }}</th>
-                            <th class="text-center">{{ __('messages.Note') }}</th>
-                            <th class="text-center">{{ __('messages.users') }}</th>
-                            <th class="text-center">{{ __('messages.date') }}</th>
+                            <th class="text-center">Last At</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            // Fallback running balance per ingredient if some rows miss stock_after
-                            $running = [];
-                        @endphp
-
-                        @forelse($logs as $log)
+                        @forelse($items as $item)
                             @php
-                                $qty  = rtrim(rtrim(number_format($log->quantity, 2, '.', ''), '0'), '.');
-                                $unit = $log->ingredient->unit;
-
-                                if (!is_null($log->stock_after)) {
-                                    $after = (float) $log->stock_after;
-                                } else {
-                                    $id = $log->ingredient_id;
-                                    if (!array_key_exists($id, $running)) {
-                                        $running[$id] = (float) $log->ingredient->stock;
-                                    }
-                                    $after = $running[$id];
-                                    $delta = ($log->type === 'in') ? (float)$log->quantity : -(float)$log->quantity;
-                                    $running[$id] = $running[$id] - $delta;
-                                }
-
-                                $afterFmt = rtrim(rtrim(number_format($after, 2, '.', ''), '0'), '.');
+                                $in  = rtrim(rtrim(number_format($item->total_in ?? 0, 2, '.', ''), '0'), '.');
+                                $out = rtrim(rtrim(number_format($item->total_out ?? 0, 2, '.', ''), '0'), '.');
+                                $stock = rtrim(rtrim(number_format($item->stock, 2, '.', ''), '0'), '.');
                             @endphp
                             <tr>
-                                <td class="text-center">{{ $log->ingredient->name }}</td>
                                 <td class="text-center">
-                                    <span class="badge fw-normal badge-type {{ strtolower($log->type) === 'in' ? 'bg-success' : 'bg-danger' }}">
-                                        {{ strtoupper($log->type) }}
-                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary toggle-history" data-id="{{ $item->id }}">Details</button>
                                 </td>
-                                <td class="text-center">{{ $qty }}</td>
-                                <td class="text-center">{{ $unit }}</td>
-                                <td class="text-center">{{ $afterFmt }} {{ $unit }}</td>
-                                <td class="text-center">{{ $log->note }}</td>
-                                <td class="text-center">{{ $log->user->name }}</td>
-                                <td class="text-center">{{ $log->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="text-center">{{ $item->name }}</td>
+                                <td class="text-center">{{ $in }}</td>
+                                <td class="text-center">{{ $out }}</td>
+                                <td class="text-center">{{ $stock }} {{ $item->unit }}</td>
+                                <td class="text-center">{{ optional($item->last_at)->format('d/m/Y H:i') }}</td>
+                            </tr>
+                            <tr id="history-row-{{ $item->id }}" class="history-row" style="display:none;">
+                                <td colspan="6" class="p-0"><div class="history-content"></div></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center">{{ __('messages.no_stock_logs') }}</td>
+                                <td colspan="6" class="text-center">{{ __('messages.no_stock_logs') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -153,7 +132,7 @@
             </div>
 
             <div class="mt-3 d-flex justify-content-center">
-                {{ $logs->appends(request()->query())->links('pagination::bootstrap-5') }}
+                {{ $items->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
@@ -192,6 +171,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // enable Bootstrap tooltips on the switcher
     const tts = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tts.forEach(el => new bootstrap.Tooltip(el));
+    
+    document.querySelectorAll('.toggle-history').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const id = this.getAttribute('data-id');
+            const row = document.getElementById(`history-row-${id}`);
+            if (row.style.display === 'none') {
+                if (!row.dataset.loaded) {
+                    const base = '{{ $isSuper ? url('superadmin/ingredient-stock') : url('admin/ingredient-stock') }}';
+                    const res = await fetch(`${base}/${id}/history${window.location.search}`);
+                    row.querySelector('.history-content').innerHTML = await res.text();
+                    row.dataset.loaded = 'true';
+                }
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 });
 </script>
 @endpush
