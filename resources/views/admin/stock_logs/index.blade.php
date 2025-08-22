@@ -6,7 +6,7 @@
 
         @php
             $isSuper = auth()->user()->role === 'superadmin';
-            $productIndex    = $isSuper ? route('superadmin.stock-logs.index')      : route('admin.stock-logs.index');
+            $productIndex    = $isSuper ? route('superadmin.stock-logs.index')       : route('admin.stock-logs.index');
             $ingredientIndex = $isSuper ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index');
             $onProducts = request()->routeIs('superadmin.stock-logs.*') || request()->routeIs('admin.stock-logs.*');
         @endphp
@@ -15,7 +15,6 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <h5 class="mb-0 fw-bold">📋 {{ __('messages.stock_history') }}</h5>
 
-                {{-- Pretty segment switch: Products | Ingredients --}}
                 <div class="btn-group btn-group-sm btn-switch" role="group" aria-label="Switch section">
                     <a href="{{ $productIndex }}"
                        class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
@@ -65,6 +64,7 @@
                 </div>
             @endif
 
+            {{-- Auto-apply filters --}}
             <form method="GET" id="stock-log-filter-form" class="mb-3 d-flex gap-2 flex-wrap">
                 <select name="type" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="">{{ __('messages.all') }}</option>
@@ -77,17 +77,11 @@
                     {!! render_category_options($categories, request('category_id')) !!}
                 </select>
 
-                <select name="preset" class="form-select w-auto" onchange="this.form.submit()">
-                    <option value="">{{ __('messages.all_day') }}</option>
-                    <option value="today"      {{ request('preset') == 'today' ? 'selected' : '' }}>{{ __('messages.today') }}</option>
-                    <option value="this_week"  {{ request('preset') == 'this_week' ? 'selected' : '' }}>{{ __('messages.this_week') }}</option>
-                    <option value="this_month" {{ request('preset') == 'this_month' ? 'selected' : '' }}>{{ __('messages.this_month') }}</option>
-                </select>
-
                 <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}" onchange="this.form.submit()">
                 <input type="date" name="end_date"   class="form-control w-auto" value="{{ request('end_date') }}" onchange="this.form.submit()">
             </form>
 
+            {{-- Summary-by-product --}}
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="sticky-top" style="top: 0; z-index: 5; background-color: #dbeafe;">
@@ -98,41 +92,43 @@
                             <th class="text-center">{{ __('messages.stock_in') }}</th>
                             <th class="text-center">{{ __('messages.stock_out') }}</th>
                             <th class="text-center">{{ __('messages.current_stock') }}</th>
-                            <th class="text-center">{{ __('messages.date') }}</th>
+                            <th class="text-center">{{ __('messages.last at') }}</th>
                             <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($products as $product)
-                            @php
-                                $stockNow = rtrim(rtrim(number_format($product->stock, 2, '.', ''), '0'), '.');
-                                $historyRoute = ($isSuper ? route('superadmin.stock-logs.history', $product) : route('admin.stock-logs.history', $product)) . (request()->getQueryString() ? '?' . request()->getQueryString() : '');
-                            @endphp
-                            <tr>
-                                <td class="text-center">{{ $product->id }}</td>
-                                <td class="text-start">{{ $product->category->name ?? '' }}</td>
-                                <td class="text-start">{{ $product->name }}</td>
-                                <td class="text-center">{{ $product->total_in ?? 0 }}</td>
-                                <td class="text-center">{{ $product->total_out ?? 0 }}</td>
-                                <td class="text-center">{{ $stockNow }}</td>
-                                <td class="text-center">{{ optional($product->last_at)->format('d/m/Y H:i') }}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#history-{{ $product->id }}" aria-expanded="false" aria-controls="history-{{ $product->id }}">
-                                        ▶ Details
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="collapse" id="history-{{ $product->id }}">
-                                <td colspan="8">
-                                    <div hx-get="{{ $historyRoute }}" hx-trigger="revealed" hx-swap="innerHTML" class="p-2"></div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center">{{ __('messages.no_stock_logs') }}</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+    @forelse($products as $product)
+        @php
+            $stockNow = rtrim(rtrim(number_format($product->stock, 2, '.', ''), '0'), '.');
+            $historyRoute = ($isSuper ? route('superadmin.stock-logs.history', $product) : route('admin.stock-logs.history', $product)) . (request()->getQueryString() ? '?' . request()->getQueryString() : '');
+        @endphp
+        <tr>
+            <td class="text-center">{{ $product->id }}</td>
+            <td class="text-start">{{ $product->category->name ?? '' }}</td>
+            <td class="text-start">{{ $product->name }}</td>
+            <td class="text-center">{{ $product->total_in ?? 0 }}</td>
+            <td class="text-center">{{ $product->total_out ?? 0 }}</td>
+            <td class="text-center">{{ $stockNow }}</td>
+            <td class="text-center">
+                {{ $product->last_at ? \Carbon\Carbon::parse($product->last_at)->format('d/m/Y H:i') : '-' }}
+            </td>
+            <td class="text-center">
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary view-history-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#historyModal"
+                        data-title="{{ $product->name }}"
+                        data-url="{{ $historyRoute }}">
+                    <i class="bi bi-clock-history me-1"></i> Details
+                </button>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="8" class="text-center">{{ __('messages.no_stock_logs') }}</td>
+        </tr>
+    @endforelse
+</tbody>
                 </table>
             </div>
 
@@ -141,6 +137,24 @@
             </div>
         </div>
     </div>
+</div>
+
+{{-- Reusable modal for history --}}
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel">History</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="historyModalBody">
+        <div class="py-5 text-center text-muted">
+            <div class="spinner-border me-2" role="status" aria-hidden="true"></div>
+            Loading…
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 @endsection
 
@@ -154,8 +168,6 @@
     .btn-outline-success:hover{background:#198754;color:#fff}
     .btn-outline-danger:hover{background:#dc3545;color:#fff}
     .table td,.table th{vertical-align:middle}
-
-    /* Switcher polish */
     .btn-switch .btn{border-radius:999px}
     .btn-switch .btn + .btn{margin-left:6px}
 </style>
@@ -172,9 +184,26 @@ document.addEventListener('DOMContentLoaded', function(){
                          setTimeout(()=>toast.remove(), 800);
         }, 2000);
     }
-    // Enable Bootstrap tooltips for the switcher
+    // Tooltips
     const tts = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tts.forEach(el => new bootstrap.Tooltip(el));
+
+    // Modal detail loader (delegated)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.view-history-btn');
+        if (!btn) return;
+        const title = btn.dataset.title || 'History';
+        const url   = btn.dataset.url;
+
+        document.getElementById('historyModalLabel').textContent = `${title} — {{ __('messages.stock_history') }}`;
+        const body = document.getElementById('historyModalBody');
+        body.innerHTML = `<div class="py-5 text-center text-muted">
+            <div class="spinner-border me-2" role="status"></div> Loading…
+        </div>`;
+
+        // Load detail with HTMX into the modal body
+        htmx.ajax('GET', url, { target: '#historyModalBody', swap: 'innerHTML' });
+    });
 });
 </script>
 @endpush

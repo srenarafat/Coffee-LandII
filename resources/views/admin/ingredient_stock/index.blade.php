@@ -13,20 +13,17 @@
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <h5 class="mb-0 fw-bold">📋 Ingredient Stock History</h5>
+                <h5 class="mb-0 fw-bold">🥕 Ingredient Stock History</h5>
 
-                {{-- Segmented switch: Products | Ingredients --}}
                 <div class="btn-group btn-group-sm btn-switch" role="group" aria-label="Switch section">
                     <a href="{{ $productIndex }}"
                        class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
-                       data-bs-toggle="tooltip" data-bs-placement="bottom"
-                       title="Product stock history">
+                       data-bs-toggle="tooltip" title="Product stock history">
                         <i class="bi bi-box-seam me-1"></i> Products
                     </a>
                     <a href="{{ $ingredientIndex }}"
                        class="btn {{ $onProducts ? 'btn-outline-secondary' : 'btn-primary text-white' }}"
-                       data-bs-toggle="tooltip" data-bs-placement="bottom"
-                       title="Ingredient stock ledger">
+                       data-bs-toggle="tooltip" title="Ingredient stock ledger">
                         <span class="me-1" aria-hidden="true">🥕</span> Ingredients
                     </a>
                 </div>
@@ -34,28 +31,27 @@
 
             <div class="d-flex gap-2">
                 <a href="{{ $isSuper
-                            ? route('superadmin.ingredient-stock.export', ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')])
-                            : route('admin.ingredient-stock.export',       ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')]) }}"
-                   class="btn btn-outline-success btn-sm d-print-none">
+                            ? route('superadmin.ingredient-stock.export', request()->all())
+                            : route('admin.ingredient-stock.export', request()->all()) }}"
+                   class="btn btn-outline-success btn-sm">
                     <i class="bi bi-filetype-csv me-1"></i>{{ __('messages.export_csv') }}
                 </a>
 
                 <a href="{{ $isSuper
-                            ? route('superadmin.ingredient-stock.pdf', ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')])
-                            : route('admin.ingredient-stock.pdf',       ['type'=>request('type'), 'start_date'=>request('start_date'), 'end_date'=>request('end_date'), 'ingredient_id'=>request('ingredient_id')]) }}"
-                   class="btn btn-outline-primary btn-sm d-print-none">
+                            ? route('superadmin.ingredient-stock.pdf', request()->all())
+                            : route('admin.ingredient-stock.pdf', request()->all()) }}"
+                   class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-printer me-1"></i>{{ __('messages.print') }}
                 </a>
 
                 <a href="{{ $isSuper ? route('superadmin.ingredient-stock.create') : route('admin.ingredient-stock.create') }}"
-                   class="btn btn-primary btn-sm d-print-none">
+                   class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i>{{ __('messages.stock_adjustment') }}
                 </a>
             </div>
         </div>
 
         <div class="card-body position-relative">
-
             @if(session('success'))
                 <div id="successToast"
                      class="alert alert-success d-flex align-items-center justify-content-between shadow-sm px-4 py-2 animate__animated animate__fadeInDown"
@@ -83,23 +79,20 @@
 
                 <input type="date" name="start_date" class="form-control w-auto" value="{{ request('start_date') }}" onchange="this.form.submit()">
                 <input type="date" name="end_date" class="form-control w-auto" value="{{ request('end_date') }}" onchange="this.form.submit()">
-
-                @if(request()->hasAny(['type','ingredient_id','start_date','end_date']))
-                    <a href="{{ $ingredientIndex }}" class="btn btn-outline-secondary">Reset</a>
-                @endif
             </form>
 
             {{-- Table --}}
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead class="sticky-top">
+                    <thead class="sticky-top" style="top: 0; z-index: 5; background-color: #dbeafe;">
                         <tr>
-                            <th class="text-center">Details</th>
+                            <th class="text-center">{{ __('messages.ingredient_id') }}</th>
                             <th class="text-center">Ingredient</th>
                             <th class="text-center">Total In</th>
                             <th class="text-center">Total Out</th>
                             <th class="text-center">{{ __('messages.current_stock') }}</th>
                             <th class="text-center">Last At</th>
+                            <th class="text-center"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -108,23 +101,31 @@
                                 $in  = rtrim(rtrim(number_format($item->total_in ?? 0, 2, '.', ''), '0'), '.');
                                 $out = rtrim(rtrim(number_format($item->total_out ?? 0, 2, '.', ''), '0'), '.');
                                 $stock = rtrim(rtrim(number_format($item->stock, 2, '.', ''), '0'), '.');
+                                $historyRoute = ($isSuper ? route('superadmin.ingredient-stock.history', $item) : route('admin.ingredient-stock.history', $item)) . (request()->getQueryString() ? '?' . request()->getQueryString() : '');
                             @endphp
                             <tr>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary toggle-history" data-id="{{ $item->id }}">Details</button>
-                                </td>
-                                <td class="text-center">{{ $item->name }}</td>
+                                <td class="text-center">{{ $item->id }}</td>
+                                <td class="text-start">{{ $item->name }}</td>
                                 <td class="text-center">{{ $in }}</td>
                                 <td class="text-center">{{ $out }}</td>
                                 <td class="text-center">{{ $stock }} {{ $item->unit }}</td>
-                                <td class="text-center">{{ optional($item->last_at)->format('d/m/Y H:i') }}</td>
-                            </tr>
-                            <tr id="history-row-{{ $item->id }}" class="history-row" style="display:none;">
-                                <td colspan="6" class="p-0"><div class="history-content"></div></td>
+                                <td class="text-center">
+    {{ $item->stockLogs->first() ? $item->stockLogs->first()->created_at->format('d/m/Y H:i') : '-' }}
+</td>
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary view-history-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#historyModal"
+                                            data-title="{{ $item->name }}"
+                                            data-url="{{ $historyRoute }}">
+                                        <i class="bi bi-clock-history me-1"></i> Details
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center">{{ __('messages.no_stock_logs') }}</td>
+                                <td colspan="7" class="text-center">{{ __('messages.no_stock_logs') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -137,57 +138,70 @@
         </div>
     </div>
 </div>
+
+{{-- Modal (same as products) --}}
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel">History</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="historyModalBody">
+        <div class="py-5 text-center text-muted">
+            <div class="spinner-border me-2" role="status" aria-hidden="true"></div>
+            Loading…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <style>
     #successToast{border-left:6px solid #198754;background:#d1e7dd;font-size:14px;border-radius:6px;z-index:1050}
-    thead.sticky-top{top:0;z-index:5;background-color:#dbeafe!important}
     thead.sticky-top th{background-color:#dbeafe!important;color:#000;font-weight:bold;border-bottom:1px solid #ccc}
-    .badge-type{font-size:.75rem}
+    .badge-type{font-size:.85rem}
     .btn-outline-primary:hover{background:#0d6efd;color:#fff}
     .btn-outline-success:hover{background:#198754;color:#fff}
     .btn-outline-danger:hover{background:#dc3545;color:#fff}
     .table td,.table th{vertical-align:middle}
-
-    /* Segmented switch styling (same as product page) */
     .btn-switch .btn{border-radius:999px}
     .btn-switch .btn + .btn{margin-left:6px}
 </style>
 @endpush
 
 @push('scripts')
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function(){
     const toast = document.getElementById('successToast');
-    if (toast) {
-        setTimeout(() => {
-            toast.classList.remove('animate__fadeInDown');
-            toast.classList.add('animate__fadeOutUp');
-            setTimeout(() => toast.remove(), 800);
+    if (toast){
+        setTimeout(()=>{ toast.classList.remove('animate__fadeInDown');
+                         toast.classList.add('animate__fadeOutUp');
+                         setTimeout(()=>toast.remove(), 800);
         }, 2000);
     }
-    // enable Bootstrap tooltips on the switcher
+
     const tts = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tts.forEach(el => new bootstrap.Tooltip(el));
-    
-    document.querySelectorAll('.toggle-history').forEach(btn => {
-        btn.addEventListener('click', async function () {
-            const id = this.getAttribute('data-id');
-            const row = document.getElementById(`history-row-${id}`);
-            if (row.style.display === 'none') {
-                if (!row.dataset.loaded) {
-                    const base = '{{ $isSuper ? url('superadmin/ingredient-stock') : url('admin/ingredient-stock') }}';
-                    const res = await fetch(`${base}/${id}/history${window.location.search}`);
-                    row.querySelector('.history-content').innerHTML = await res.text();
-                    row.dataset.loaded = 'true';
-                }
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
+
+    // Modal detail loader
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.view-history-btn');
+        if (!btn) return;
+        const title = btn.dataset.title || 'History';
+        const url   = btn.dataset.url;
+
+        document.getElementById('historyModalLabel').textContent = `${title} — {{ __('messages.stock_history') }}`;
+        const body = document.getElementById('historyModalBody');
+        body.innerHTML = `<div class="py-5 text-center text-muted">
+            <div class="spinner-border me-2" role="status"></div> Loading…
+        </div>`;
+
+        htmx.ajax('GET', url, { target: '#historyModalBody', swap: 'innerHTML' });
     });
 });
 </script>

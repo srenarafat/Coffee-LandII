@@ -1,3 +1,18 @@
+{{-- resources/views/admin/ingredient-stock/history.blade.php --}}
+
+{{-- ✅ Export / Print toolbar --}}
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <a class="btn btn-outline-success btn-sm"
+       href="{{ route('admin.ingredient-stock.export', ['ingredient_id' => $ingredient->id]) }}">
+       ⬇️ {{ __('messages.export_csv') }}
+    </a>
+    <a class="btn btn-outline-primary btn-sm"
+       href="{{ route('admin.ingredient-stock.pdf', ['ingredient_id' => $ingredient->id]) }}">
+       🖨️ {{ __('messages.print') }}
+    </a>
+</div>
+
+{{-- ✅ Table --}}
 <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover align-middle mb-0">
         <thead class="table-light">
@@ -17,14 +32,18 @@
                 @php
                     $qty  = rtrim(rtrim(number_format($log->quantity, 2, '.', ''), '0'), '.');
                     $unit = $log->unit ?? $ingredient->unit;
+
                     if (!is_null($log->stock_after)) {
                         $after = (float) $log->stock_after;
                     } else {
-                        if ($running === null) { $running = (float) $ingredient->stock; }
+                        if ($running === null) { 
+                            $running = (float) $ingredient->stock; 
+                        }
                         $after = $running;
                         $delta = ($log->type === 'in') ? (float)$log->quantity : -(float)$log->quantity;
                         $running -= $delta;
                     }
+
                     $afterFmt = rtrim(rtrim(number_format($after, 2, '.', ''), '0'), '.');
                 @endphp
                 <tr>
@@ -47,6 +66,8 @@
             @endforelse
         </tbody>
     </table>
+
+    {{-- ✅ Pagination --}}
     <div class="mt-2 d-flex justify-content-center">
         {{ $logs->links('pagination::bootstrap-5') }}
     </div>

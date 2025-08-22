@@ -100,6 +100,7 @@ return [
     'sales_earnings' => 'ការលក់ និងចំណូល',
     'recent_transactions' => 'ប្រតិបត្តិការថ្មីៗ',
     'date' => 'ថ្ងៃ',
+    'last at' => 'ចុងក្រោយ',
     'cashier' => 'អ្នកគិតលុយ',
     'amount' => 'ចំនួនទឹកប្រាក់',
     'discount' => 'បញ្ចុះតម្លៃ',

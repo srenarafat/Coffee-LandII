@@ -100,6 +100,7 @@ return [
     'sales_earnings' => 'Sales & Earnings',
     'recent_transactions' => 'Recent Transactions',
     'date' => 'Date',
+    'last at' => 'last at',
     'cashier' => 'Cashier',
     'amount' => 'Amount',
     'discount' => 'Discount',
