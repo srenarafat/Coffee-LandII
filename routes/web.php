@@ -107,7 +107,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     // POS Routes for Super Admin
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
-    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
     Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
     Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
@@ -160,7 +160,7 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
 
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
-    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
     Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
     Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');
@@ -214,7 +214,7 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
 
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('pos/add', [PosController::class, 'addToCart'])->name('pos.add');
-    Route::get('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
+    Route::post('pos/remove/{id}', [PosController::class, 'removeItem'])->name('pos.remove');
     Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::post('pos/update', [PosController::class, 'updateQuantity'])->name('pos.update');
     Route::get('pos/live-search', [PosController::class, 'liveSearch'])->name('pos.liveSearch');

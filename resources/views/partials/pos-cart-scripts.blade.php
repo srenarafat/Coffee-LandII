@@ -125,13 +125,19 @@
             });
         });
 
-        document.querySelectorAll('.remove-item').forEach(link => {
-            if (link.dataset.listener) return;
-            link.dataset.listener = 'true';
-            link.addEventListener('click', function(e) {
+        document.querySelectorAll('.remove-item-form').forEach(form => {
+            if (form.dataset.listener) return;
+            form.dataset.listener = 'true';
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                fetch(link.href, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                fetch(form.action, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
                 })
                 .then(res => {
                     if (!res.ok) {
@@ -143,6 +149,7 @@
                         if (data.cart) {
                             cartContainer.innerHTML = data.cart;
                             attachCartFormHandlers();
+                           
                             
                         } else {
                             console.error("Cart data missing in response", data);

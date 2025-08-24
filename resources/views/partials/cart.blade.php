@@ -90,8 +90,10 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route($routePrefix . '.pos.remove', $id) }}"
-                                       class="btn btn-sm btn-outline-danger remove-item">&times;</a>
+                                    <form method="POST" action="{{ route($routePrefix . '.pos.remove', $id) }}" class="d-inline remove-item-form">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">&times;</button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -333,8 +335,7 @@
           return;
         }
         // update UI from server when available; else update locally
-        const newQty = Number(j2?.item?.quantity ?? (step==='increase'? workingQty+1 : Math.max(0, workingQty-1)));
-        if (newQty <= 0){ row.remove(); recalcTotals(); checkEmptyCart(); return; }
+        const newQty = Number(j2?.item?.quantity ?? (step==='increase'? workingQty+1 : Math.max(1, workingQty-1)));
         workingQty = newQty;
         setQty(row, newQty, true);
         if (j2?.item?.line_total != null) $('.row-price', row).textContent = fmt(j2.item.line_total);
@@ -374,7 +375,7 @@
     const removeNoteBtn = e.target.closest('.remove-note');
     const plus = e.target.closest('.increase-btn');
     const minus = e.target.closest('.decrease-btn');
-    const remove = e.target.closest('.remove-item');
+    const removeForm = e.target.closest('.remove-item-form');
 
     if(openTable){
       bootstrap.Modal.getOrCreateInstance($('#tableModal')).show();
@@ -462,15 +463,23 @@
       return;
     }
 
-    if (remove){
+    if (removeForm){
       e.preventDefault();
-      const row = rowOf(remove);
+      const row = rowOf(removeForm);
+      const action = removeForm.getAttribute('action');
+      const fd = new FormData(removeForm);
       // optimistic: drop the row, recalc, then request
-      const href = remove.getAttribute('href');
       row.remove();
       recalcTotals();
       checkEmptyCart();
-      fetch(href, { method:'GET' }).catch(()=>{}); // fire-and-forget
+      fetch(action, {
+        method:'POST',
+        headers:{
+          'X-Requested-With':'XMLHttpRequest',
+          'X-CSRF-TOKEN': getCsrf()
+        },
+        body:fd
+      }).catch(()=>{}); // fire-and-forget
       return;
     }
 
@@ -483,22 +492,13 @@
       showToast(`❌ Out of Stock: Only ${stock} left`);
       return;
     }
-    const qNew = Math.max(0, qNow + (plus ? 1 : -1));
+    const qNew = Math.max(1, qNow + (plus ? 1 : -1));
 
     // optimistic UI
-    if (qNew === 0){
-      setQty(row, 0);
-      scheduleSync(row);
-      row.remove();
-      recalcTotals();
-      checkEmptyCart();
-    } else {
-      setQty(row, qNew);
-      lineTotal(row);
-      recalcTotals();
-      checkEmptyCart();
-      scheduleSync(row);
-    }
+    setQty(row, qNew);
+    lineTotal(row);
+    recalcTotals();
+    scheduleSync(row);
   });
   
   document.addEventListener('submit', async (e)=>{

@@ -139,13 +139,17 @@ class SaleController extends Controller
         return back()->with('success', $product->name . ' added to cart.');
     }
 
-    public function removeItem($id)
+    public function removeItem(Request $request, $id)
     {
+        $request->validate([
+            '_token' => 'required|in:' . csrf_token(),
+        ]);
+
         $cart = session()->get('cart', []);
         unset($cart[$id]);
         session()->put('cart', $cart);
 
-        if (request()->ajax()) {
+        if ($request->ajax()) {
             $prefix = auth()->user()->role === 'superadmin'
                 ? 'superadmin'
                 : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
@@ -169,20 +173,15 @@ class SaleController extends Controller
 
             // Guard again here, in case category was deactivated while item in cart
             if (!$product || !$product->is_active || !$product->isSellable()) {      // ⬅️ guard
-                unset($cart[$id]);
                 $error = 'This product’s category is inactive.';
             } else {
                 if ($action === 'set_quantity') {
-                    $qty = max(0, (int) $request->input('quantity', 0));
-                    if ($qty === 0) {
-                        unset($cart[$id]);
-                    } else {
-                        if ($product && $qty > $product->stock) {
-                            $qty   = $product->stock;
-                            $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
-                        }
-                        $cart[$id]['quantity'] = $qty;
+                    $qty = max(1, (int) $request->input('quantity', 1));
+                    if ($product && $qty > $product->stock) {
+                        $qty   = $product->stock;
+                        $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
                     }
+                    $cart[$id]['quantity'] = $qty;
                 } elseif ($action === 'increase') {
                     if ($product && $cart[$id]['quantity'] < $product->stock) {
                         $cart[$id]['quantity']++;
@@ -190,10 +189,7 @@ class SaleController extends Controller
                         $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
                     }
                 } elseif ($action === 'decrease') {
-                    $cart[$id]['quantity']--;
-                    if ($cart[$id]['quantity'] <= 0) {
-                        unset($cart[$id]);
-                    }
+                    $cart[$id]['quantity'] = max(1, $cart[$id]['quantity'] - 1);
                 }
             }
         }
