@@ -25,14 +25,15 @@ class CartQuantityStockTest extends TestCase
 
         $this->actingAs($user);
         $this->post('/cashier/pos/add', ['product_id' => $product->id, 'quantity' => 5]);
+        $key = array_key_first(session('cart'));
 
         $response = $this->post('/cashier/pos/update', [
-            'product_id' => $product->id,
+            'cart_key' => $key,
             'action' => 'increase',
         ]);
 
         $response->assertStatus(200);
-        $this->assertEquals(6, session('cart')[$product->id]['quantity']);
+        $this->assertEquals(6, session('cart')[$key]['quantity']);
     }
 
     public function test_ajax_increment_beyond_stock_succeeds()
@@ -50,14 +51,15 @@ class CartQuantityStockTest extends TestCase
 
         $this->actingAs($user);
         $this->post('/cashier/pos/add', ['product_id' => $product->id, 'quantity' => 5]);
+        $key = array_key_first(session('cart'));
 
         $response = $this->withHeader('X-Requested-With', 'XMLHttpRequest')
             ->post('/cashier/pos/update', [
-                'product_id' => $product->id,
+                'cart_key' => $key,
                 'action' => 'increase',
             ]);
 
         $response->assertStatus(200);
-        $this->assertEquals(6, session('cart')[$product->id]['quantity']);
+        $this->assertEquals(6, session('cart')[$key]['quantity']);
     }
 }

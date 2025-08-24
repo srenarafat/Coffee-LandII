@@ -23,18 +23,20 @@ class SetQuantityTest extends TestCase
             'stock' => 10,
         ]);
 
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 1,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 1,
             ],
         ];
 
         $this->actingAs($user)
             ->withSession(['cart' => $cart])
             ->post('/cashier/pos/update', [
-                'product_id' => $product->id,
+                'cart_key' => $key,
                 'action' => 'set_quantity',
                 'quantity' => 4,
             ], ['HTTP_X-Requested-With' => 'XMLHttpRequest'])
@@ -65,18 +67,20 @@ class SetQuantityTest extends TestCase
             'stock' => 5,
         ]);
 
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 2,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 2,
             ],
         ];
 
         $this->actingAs($user)
             ->withSession(['cart' => $cart])
             ->post('/cashier/pos/update', [
-                'product_id' => $product->id,
+                'cart_key' => $key,
                 'action' => 'set_quantity',
                 'quantity' => 10,
             ], ['HTTP_X-Requested-With' => 'XMLHttpRequest'])

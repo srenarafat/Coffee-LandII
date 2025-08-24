@@ -13,12 +13,12 @@ class SaleItem extends Model
         'price',
         'total',
         'note',
-        'notes'
+        'size',
+        'sugar_level',
+        'ice_option',
     ];
 
-    protected $casts = [
-        'notes' => 'array',
-    ];
+    protected $casts = [];
 
     public function sale()
     {

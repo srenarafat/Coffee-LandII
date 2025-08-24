@@ -198,11 +198,12 @@
       <div id="cart-container">
         @include('partials.cart', ['routePrefix' => 'cashier', 'comments' => $comments])
       </div>
-    </div>
   </div>
+</div>
 </div>
 
 {{-- 🔔 Toasts / scripts --}}
+@include('partials.product-customizer')
 @include('partials.toast')
 @include('partials.pos-cart-scripts', ['routePrefix' => 'cashier'])
 @endsection

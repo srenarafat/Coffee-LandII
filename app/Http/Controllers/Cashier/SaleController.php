@@ -85,7 +85,16 @@ class SaleController extends Controller
     // Add item to cart
     public function addToCart(Request $request)
     {
-        $product  = Product::with('category.parent')->findOrFail($request->product_id);
+        $data = $request->validate([
+            'product_id'   => 'required|integer|exists:products,id',
+            'quantity'     => 'nullable|integer|min:1',
+            'size'         => 'nullable|string',
+            'sugar_level'  => 'nullable|integer|min:0|max:100',
+            'ice_option'   => 'nullable|string',
+            'note'         => 'nullable|string',
+        ]);
+
+        $product  = Product::with('category.parent')->findOrFail($data['product_id']);
 
         // Block adding if product or its category tree is inactive
         if (!$product->is_active || !$product->isSellable()) {           // ⬅️ important guard
@@ -95,30 +104,31 @@ class SaleController extends Controller
                 : back()->with('error', $msg);
         }
 
-        $quantity = (int) ($request->quantity ?? 1);
-        $note     = trim($request->note ?? '');
+        $quantity    = (int) ($data['quantity'] ?? 1);
+        $size        = $data['size'] ?? '';
+        $sugar       = $data['sugar_level'] ?? null;
+        $ice         = $data['ice_option'] ?? '';
+        $note        = trim($data['note'] ?? '');
 
         $cart = session()->get('cart', []);
 
-        // Existing quantity in cart
-        $currentQtyInCart = $cart[$product->id]['quantity'] ?? 0;
-        $totalAfterAdd    = $currentQtyInCart + $quantity;
+        $key = $this->makeCartKey($product->id, $size, $sugar, $ice, $note);
 
-        // Allow adding regardless of inventory
-
-        // Update cart item
-        $notes = $cart[$product->id]['notes'] ?? [];
-        if ($note !== '' && !in_array($note, $notes)) {
-            $notes[] = $note;
+        if (isset($cart[$key])) {
+            $cart[$key]['quantity'] += $quantity;
+        } else {
+            $cart[$key] = [
+                'product_id'  => $product->id,
+                'name'        => $product->name,
+                'price'       => $product->price,
+                'quantity'    => $quantity,
+                'image'       => $product->image, // keep image for UI
+                'size'        => $size,
+                'sugar_level' => $sugar,
+                'ice_option'  => $ice,
+                'note'        => $note,
+            ];
         }
-
-        $cart[$product->id] = [
-            'name'     => $product->name,
-            'price'    => $product->price,
-            'quantity' => $totalAfterAdd,
-            'image'    => $product->image, // keep image for UI
-            'notes'    => $notes,
-        ];
 
         session()->put('cart', $cart);
 
@@ -131,6 +141,11 @@ class SaleController extends Controller
         }
 
         return back()->with('success', $product->name . ' added to cart.');
+    }
+
+    private function makeCartKey($productId, $size, $sugar, $ice, $note)
+    {
+        return md5($productId . '|' . $size . '|' . ($sugar ?? '') . '|' . $ice . '|' . $note);
     }
 
     public function removeItem(Request $request, $id)
@@ -156,14 +171,15 @@ class SaleController extends Controller
 
     public function updateQuantity(Request $request)
     {
-        $id     = $request->input('product_id');
+        $id     = $request->input('cart_key');
         $action = $request->input('action');
 
         $cart  = session()->get('cart', []);
         $error = null;
 
         if (isset($cart[$id])) {
-            $product = Product::with('category.parent')->find($id);
+            $productId = $cart[$id]['product_id'];
+            $product   = Product::with('category.parent')->find($productId);
 
             // Guard again here, in case category was deactivated while item in cart
             if (!$product || !$product->is_active || !$product->isSellable()) {      // ⬅️ guard
@@ -221,17 +237,16 @@ class SaleController extends Controller
 
     public function updateNote(Request $request)
     {
-        $id     = $request->input('product_id');
+        $id     = $request->input('cart_key');
         $note   = trim($request->input('note', ''));
         $remove = trim($request->input('remove_note', ''));
 
         $cart = session()->get('cart', []);
         if (isset($cart[$id])) {
-            $cart[$id]['notes'] = $cart[$id]['notes'] ?? [];
             if ($remove !== '') {
-                $cart[$id]['notes'] = array_values(array_filter($cart[$id]['notes'], fn($n) => $n !== $remove));
-            } elseif ($note !== '' && !in_array($note, $cart[$id]['notes'])) {
-                $cart[$id]['notes'][] = $note;
+                $cart[$id]['note'] = '';
+            } else {
+                $cart[$id]['note'] = $note;
             }
         }
 
@@ -277,8 +292,8 @@ class SaleController extends Controller
         }
 
         // Validate all items again: category activity
-        foreach ($cart as $productId => $item) {
-            $product = Product::with('category.parent')->find($productId);
+        foreach ($cart as $item) {
+            $product = Product::with('category.parent')->find($item['product_id']);
 
             if (!$product || !$product->is_active || !$product->isSellable()) {     // ⬅️ guard
                 return back()->with('error', 'Some items belong to an inactive category.');
@@ -327,14 +342,17 @@ class SaleController extends Controller
                 'invoice_no' => 'INV-' . str_pad($sale->id, 5, '0', STR_PAD_LEFT),
             ]);
 
-            foreach ($cart as $productId => $item) {
+            foreach ($cart as $item) {
                 SaleItem::create([
-                    'sale_id'    => $sale->id,
-                    'product_id' => $productId,
-                    'quantity'   => $item['quantity'],
-                    'price'      => $item['price'],
-                    'total'      => $item['price'] * $item['quantity'],
-                    'notes'      => $item['notes'] ?? [],
+                    'sale_id'     => $sale->id,
+                    'product_id'  => $item['product_id'],
+                    'quantity'    => $item['quantity'],
+                    'price'       => $item['price'],
+                    'total'       => $item['price'] * $item['quantity'],
+                    'note'        => $item['note'] ?? null,
+                    'size'        => $item['size'] ?? null,
+                    'sugar_level' => $item['sugar_level'] ?? null,
+                    'ice_option'  => $item['ice_option'] ?? null,
                 ]);
             }
 

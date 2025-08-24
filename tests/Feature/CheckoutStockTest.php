@@ -24,11 +24,13 @@ class CheckoutStockTest extends TestCase
         ]);
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0, 'exchange_rate' => 4000]);
 
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 3,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 3,
             ],
         ];
 
@@ -63,11 +65,13 @@ class CheckoutStockTest extends TestCase
         ]);
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0, 'exchange_rate' => 4000]);
 
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 3,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 3,
             ],
         ];
 

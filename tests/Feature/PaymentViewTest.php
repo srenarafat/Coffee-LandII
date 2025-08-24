@@ -18,7 +18,14 @@ class PaymentViewTest extends TestCase
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0]);
 
         // Simulate cart in session so the payment page loads
-        $cart = [1 => ['price' => 10, 'quantity' => 1]];
+        $cart = [
+            'key' => [
+                'product_id' => 1,
+                'price'      => 10,
+                'quantity'   => 1,
+                'name'       => 'P',
+            ],
+        ];
 
         $response = $this->actingAs($user)
             ->withSession(['cart' => $cart])

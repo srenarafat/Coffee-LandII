@@ -264,5 +264,15 @@ return [
     'items_sold' => 'Items Sold',
     'average_order_value' => 'Average Order Value',
     'low_stock' => 'Low Ingredient Stock',
+    'drink_size' => 'Drink Size',
+    'sugar_level' => 'Sugar Level',
+    'ice' => 'Ice',
+    'small' => 'Small',
+    'medium' => 'Medium',
+    'large' => 'Large',
+    'ice_normal' => 'Normal Ice',
+    'ice_less' => 'Less Ice',
+    'no_ice' => 'No Ice',
+    'add_to_cart' => 'Add to Cart',
 
 ];

@@ -24,22 +24,24 @@ class CartStockLimitTest extends TestCase
         ]);
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0, 'exchange_rate' => 4000]);
 
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 2,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 2,
             ],
         ];
 
         $response = $this->actingAs($user)
             ->withSession(['cart' => $cart])
             ->post('/cashier/pos/update', [
-                'product_id' => $product->id,
+                'cart_key' => $key,
                 'action' => 'increase',
             ], ['HTTP_X-Requested-With' => 'XMLHttpRequest']);
 
         $response->assertStatus(200);
-        $this->assertEquals(3, session('cart')[$product->id]['quantity']);
+        $this->assertEquals(3, session('cart')[$key]['quantity']);
     }
 }

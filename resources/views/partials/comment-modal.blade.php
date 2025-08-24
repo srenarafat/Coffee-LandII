@@ -3,7 +3,7 @@
         <div class="modal-content">
             <form id="commentForm" action="{{ route($routePrefix . '.pos.note') }}" method="POST">
                 @csrf
-                <input type="hidden" name="product_id" id="commentProductId">
+                <input type="hidden" name="cart_key" id="commentCartKey">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ __('messages.Note') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

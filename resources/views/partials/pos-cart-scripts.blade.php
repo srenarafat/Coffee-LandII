@@ -3,6 +3,68 @@
     const cartContainer = document.getElementById('cart-container');
     let selectedTableNumber = @json(session('table_number'));
 
+    function attachCustomizerButtons() {
+        document.querySelectorAll('.open-customizer').forEach(btn => {
+            if (btn.dataset.listener) return;
+            btn.dataset.listener = 'true';
+            btn.addEventListener('click', function () {
+                document.getElementById('customizerProductId').value = this.dataset.id;
+                document.getElementById('customizerQty').value = 1;
+                document.getElementById('customizerImage').src = this.dataset.image;
+                document.getElementById('customizerSugar').value = 0;
+                document.getElementById('sugarValue').textContent = 0;
+                document.getElementById('customizerNote').value = '';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
+            });
+        });
+    }
+
+    function attachCustomizerForm() {
+        const form = document.getElementById('customizerForm');
+        if (form && !form.dataset.listener) {
+            form.dataset.listener = 'true';
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                })
+                .then(res => res.ok ? res.json() : Promise.reject(res))
+                .then(data => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('customizerModal'));
+                    if (modal) modal.hide();
+                    if (data.cart) {
+                        cartContainer.innerHTML = data.cart;
+                        attachCartFormHandlers();
+                        scrollCartToBottom();
+                    }
+                });
+            });
+        }
+
+        const qtyInput = document.getElementById('customizerQty');
+        if (qtyInput && !qtyInput.dataset.listener) {
+            qtyInput.dataset.listener = 'true';
+            qtyInput.addEventListener('input', function () {
+                if (this.value < 1) this.value = 1;
+            });
+        }
+
+        const sugarInput = document.getElementById('customizerSugar');
+        if (sugarInput && !sugarInput.dataset.listener) {
+            sugarInput.dataset.listener = 'true';
+            sugarInput.addEventListener('input', function () {
+                document.getElementById('sugarValue').textContent = this.value;
+            });
+        }
+    }
+
     function scrollCartToBottom() {
         const cartPanel = cartContainer.querySelector('.cart-panel');
         if (cartPanel) {
@@ -45,10 +107,10 @@
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
-                const productId = document.getElementById('commentProductId').value;
+                const cartKey = document.getElementById('commentCartKey').value;
                 const note = btn.dataset.note;
                 const formData = new FormData();
-                formData.append('product_id', productId);
+                formData.append('cart_key', cartKey);
                 formData.append('remove_note', note);
                 fetch('{{ route($routePrefix . '.pos.note') }}', {
                     method: 'POST',
@@ -68,7 +130,7 @@
                         cartContainer.innerHTML = data.cart;
                         attachCartFormHandlers();
                         scrollCartToBottom();
-                        const notes = JSON.parse(document.querySelector(`[data-product-id="${productId}"]`).dataset.notes || '[]');
+                        const notes = JSON.parse(document.querySelector(`[data-cart-key="${cartKey}"]`).dataset.notes || '[]');
                         renderNotes(notes);
                     }
                 });
@@ -171,9 +233,9 @@
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
-                const productId = btn.dataset.productId;
+                const cartKey = btn.dataset.cartKey;
                 const notes = JSON.parse(btn.dataset.notes || '[]');
-                document.getElementById('commentProductId').value = productId;
+                document.getElementById('commentCartKey').value = cartKey;
                 document.getElementById('commentInput').value = '';
                 renderNotes(notes);
                 const modal = new bootstrap.Modal(document.getElementById('commentModal'));
@@ -265,8 +327,8 @@
                         cartContainer.innerHTML = data.cart;
                         attachCartFormHandlers();
                         scrollCartToBottom();
-                        const productId = document.getElementById('commentProductId').value;
-                        const btn = document.querySelector(`[data-product-id="${productId}"]`);
+                        const cartKey = document.getElementById('commentCartKey').value;
+                        const btn = document.querySelector(`[data-cart-key="${cartKey}"]`);
                         const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
                         renderNotes(notes);
                     }
@@ -286,6 +348,8 @@
         
         attachSaveCommentHandler();
     }
+    attachCustomizerButtons();
+    attachCustomizerForm();
     attachCartFormHandlers();
     if (selectedTableNumber) {
         highlightTableButtons(selectedTableNumber);
@@ -355,6 +419,7 @@
             .then(response => response.text())
             .then(html => {
                 document.getElementById('product-grid').innerHTML = html;
+                attachCustomizerButtons();
                 attachCartFormHandlers();
             });
     });

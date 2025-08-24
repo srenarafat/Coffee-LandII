@@ -23,12 +23,22 @@ class NotesTest extends TestCase
             'stock' => 10
         ]);
 
+        $key1 = $this->cartKey($product->id, '', null, '', 'Hot');
+        $key2 = $this->cartKey($product->id, '', null, '', 'Takeaway');
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 1,
-                'notes' => ['Hot', 'Takeaway'],
+            $key1 => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 1,
+                'note'       => 'Hot',
+            ],
+            $key2 => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 1,
+                'note'       => 'Takeaway',
             ],
         ];
 
@@ -41,7 +51,11 @@ class NotesTest extends TestCase
 
         $this->assertDatabaseHas('sale_items', [
             'product_id' => $product->id,
-            'notes' => json_encode(['Hot', 'Takeaway']),
+            'note'       => 'Hot',
+        ]);
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $product->id,
+            'note'       => 'Takeaway',
         ]);
     }
 
@@ -61,11 +75,12 @@ class NotesTest extends TestCase
         $this->actingAs($user)
             ->post('/cashier/pos/add', ['product_id' => $product->id, 'quantity' => 1]);
 
-        $this->post('/cashier/pos/note', ['product_id' => $product->id, 'note' => 'Hot']);
-        $this->post('/cashier/pos/note', ['product_id' => $product->id, 'note' => 'Hot']);
-        $this->post('/cashier/pos/note', ['product_id' => $product->id, 'note' => 'Takeaway']);
+        $key = array_key_first(session('cart'));
+
+        $this->post('/cashier/pos/note', ['cart_key' => $key, 'note' => 'Hot']);
+        $this->post('/cashier/pos/note', ['cart_key' => $key, 'note' => 'Takeaway']);
 
         $cart = session('cart');
-        $this->assertEquals(['Hot', 'Takeaway'], $cart[$product->id]['notes']);
+        $this->assertEquals('Takeaway', $cart[$key]['note']);
     }
 }

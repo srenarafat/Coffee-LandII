@@ -36,29 +36,37 @@
                     </thead>
                     <tbody id="cartBody">
                         @php $total = 0; $itemCount = 0; @endphp
-                        @foreach(session('cart', []) as $id => $item)
+                        @foreach(session('cart', []) as $key => $item)
                             @php
                                 $lineTotal  = $item['price'] * $item['quantity'];
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
+                                $options    = array_filter([
+                                    $item['size'] ?? null,
+                                    $item['sugar'] ?? null,
+                                    $item['ice'] ?? null,
+                                ]);
                             @endphp
-                            <tr data-row-id="{{ $id }}">
+                            <tr data-row-id="{{ $key }}">
                                 <td style="min-width: 140px;">
                                     <div class="fw-semibold">{{ $item['name'] }}</div>
-                                    @if(!empty($item['notes']))
-                                        <div class="small text-muted mt-1">
-                                            @foreach($item['notes'] as $note)
-                                                <div class="ms-2">&ndash; {{ $note }}</div>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                    @if($options || !empty($item['notes']))
+                                        <div class="cart-options mt-1">
+                                            @if($options)
+                                                <div>{{ implode(' • ', $options) }}</div>
+                                            @endif
+                                            @if(!empty($item['notes']))
+                                                @foreach($item['notes'] as $note)
+                                                    <div>&ndash; {{ $note }}</div>
+                                                @endforeach
+                                            @endif
                                 </td>
 
 
                                 <td class="text-center">
                                     <form method="POST" class="d-inline update-quantity-form">
                                         @csrf
-                                        <input type="hidden" name="product_id" value="{{ $id }}">
+                                        <input type="hidden" name="cart_key" value="{{ $key }}">
                                         <input type="hidden" name="action" value="">
                                         <input type="hidden" class="update-url" value="{{ route($routePrefix . '.pos.update') }}">
                                         <div class="d-flex align-items-center justify-content-center gap-1">
@@ -73,8 +81,8 @@
 
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-secondary note-btn"
-                                            data-product-id="{{ $id }}"
-                                            data-notes='@json($item['notes'] ?? [])'>
+                                            data-cart-key="{{ $key }}"
+                                            data-notes='@json($item['note'] ? [$item['note']] : [])'>
                                         {{ __('messages.edit') }}
                                     </button>
                                 </td>
@@ -89,7 +97,7 @@
                                 </td>
 
                                 <td>
-                                    <form method="POST" action="{{ route($routePrefix . '.pos.remove', $id) }}" class="d-inline remove-item-form">
+                                    <form method="POST" action="{{ route($routePrefix . '.pos.remove', $key) }}" class="d-inline remove-item-form">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-danger">&times;</button>
                                     </form>
@@ -138,6 +146,14 @@
         background-color: #d8eaff !important;
         color: #000 !important;
         font-weight: bold;
+    }
+    .cart-options {
+        font-size: 0.8rem;
+        line-height: 1.2;
+        color: #6c757d;
+    }
+    .cart-options div + div {
+        margin-top: 2px;
     }
     @media (max-width: 768px) {
         .cart-header th, .table td { font-size: 13px; padding: 0.4rem; }
@@ -240,35 +256,35 @@
 
   // ---- optimistic update core ---------------------------------------------
   // Per-row state: debounce timer + abort controller
-  const pending = new Map(); // productId -> {timer, controller}
+  const pending = new Map(); // cartKey -> {timer, controller}
 
   function getIds(row){
-    const productId = row.getAttribute('data-row-id')
-      || $('input[name=product_id]', row)?.value;
+    const cartKey = row.getAttribute('data-row-id')
+      || $('input[name=cart_key]', row)?.value;
     const url = $('.update-url', row)?.value;
     const token = $('input[name=_token]', row)?.value;
-    return { productId, url, token };
+    return { cartKey, url, token };
   }
 
   // Try to send "set quantity" (preferred). If your backend only supports
   // increase/decrease, it falls back to sending deltas repeatedly.
   async function syncQuantity(row, targetQty){
-    const { productId, url, token } = getIds(row);
-    if(!productId || !url || !token) return;
+    const { cartKey, url, token } = getIds(row);
+    if(!cartKey || !url || !token) return;
 
     const confirmedQty = Number(qtyEl(row).dataset.confirmed || 0);
 
     // cancel any in-flight request for this row
-    if (pending.get(productId)?.controller) {
-      pending.get(productId).controller.abort();
+    if (pending.get(cartKey)?.controller) {
+      pending.get(cartKey).controller.abort();
     }
     const controller = new AbortController();
-    pending.set(productId, { controller, timer:null });
+    pending.set(cartKey, { controller, timer:null });
 
     // Preferred payload: set exact quantity
     const fd = new FormData();
     fd.append('_token', token);
-    fd.append('product_id', productId);
+    fd.append('cart_key', cartKey);
     fd.append('action', 'set_quantity'); // ✅ implement in backend if possible
     fd.append('quantity', String(targetQty));
 
@@ -321,7 +337,7 @@
       const step = delta > 0 ? 'increase' : 'decrease';
       const body2 = new FormData();
       body2.append('_token', token);
-      body2.append('product_id', productId);
+      body2.append('cart_key', cartKey);
       body2.append('action', step);
       try{
         const res2 = await fetch(url, { method:'POST', body:body2, signal:controller.signal });
@@ -357,12 +373,12 @@
 
   // Debounced scheduling: coalesce rapid clicks into one syncQuantity call
   function scheduleSync(row){
-    const { productId } = getIds(row);
-    const state = pending.get(productId) || {};
+    const { cartKey } = getIds(row);
+    const state = pending.get(cartKey) || {};
     if (state.timer) clearTimeout(state.timer);
     const target = Number(qtyEl(row).dataset.qty || 0);
     state.timer = setTimeout(()=> syncQuantity(row, target), 200);
-    pending.set(productId, state);
+    pending.set(cartKey, state);
   }
 
   // ---- event handlers ------------------------------------------------------
@@ -426,9 +442,9 @@
     }
 
      if (noteBtn){
-      const productId = noteBtn.dataset.productId;
+      const cartKey = noteBtn.dataset.cartKey;
       const notes = JSON.parse(noteBtn.dataset.notes || '[]');
-      $('#commentProductId').value = productId;
+      $('#commentCartKey').value = cartKey;
       $('#commentInput').value = '';
       renderNotes(notes);
       bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
@@ -436,10 +452,10 @@
     }
 
     if (removeNoteBtn){
-      const productId = $('#commentProductId').value;
+      const cartKey = $('#commentCartKey').value;
       const fd = new FormData();
       fd.append('_token', getCsrf());
-      fd.append('product_id', productId);
+      fd.append('cart_key', cartKey);
       fd.append('remove_note', removeNoteBtn.dataset.note || '');
       try{
         const res = await fetch(noteUrl, {
@@ -452,7 +468,7 @@
           const modal = bootstrap.Modal.getInstance($('#commentModal'));
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
-          const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
+          const btn = cartContainer.querySelector(`[data-cart-key="${cartKey}"]`);
           if(btn){
             const newNotes = JSON.parse(btn.dataset.notes || '[]');
             btn.dataset.notes = JSON.stringify(newNotes);
@@ -499,7 +515,7 @@
     if(e.target.matches('#commentForm')){
       e.preventDefault();
       const form = e.target;
-      const productId = $('#commentProductId').value;
+      const cartKey = $('#commentCartKey').value;
       const fd = new FormData(form);
       try{
         const res = await fetch(noteUrl, {
@@ -512,7 +528,7 @@
           const modal = bootstrap.Modal.getInstance($('#commentModal'));
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
-          const btn = cartContainer.querySelector(`[data-product-id="${productId}"]`);
+          const btn = cartContainer.querySelector(`[data-cart-key="${cartKey}"]`);
           if(btn){
             const notes = JSON.parse(btn.dataset.notes || '[]');
             btn.dataset.notes = JSON.stringify(notes);

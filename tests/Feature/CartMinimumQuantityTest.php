@@ -22,25 +22,27 @@ class CartMinimumQuantityTest extends TestCase
             'shop_id' => $shop->id,
             'stock' => 10,
         ]);
-
+        
+        $key  = $this->cartKey($product->id);
         $cart = [
-            $product->id => [
-                'name' => $product->name,
-                'price' => $product->price,
-                'quantity' => 1,
+            $key => [
+                'product_id' => $product->id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'quantity'   => 1,
             ],
         ];
 
         $response = $this->actingAs($user)
             ->withSession(['cart' => $cart])
             ->post('/cashier/pos/update', [
-                'product_id' => $product->id,
+                'cart_key' => $key,
                 'action' => 'decrease',
             ], ['HTTP_X-Requested-With' => 'XMLHttpRequest']);
 
         $response->assertStatus(200);
-        $this->assertArrayHasKey($product->id, session('cart'));
-        $this->assertEquals(1, session('cart')[$product->id]['quantity']);
+        $this->assertArrayHasKey($key, session('cart'));
+        $this->assertEquals(1, session('cart')[$key]['quantity']);
         $response->assertJson([
             'ok' => true,
             'item' => [
