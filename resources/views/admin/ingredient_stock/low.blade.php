@@ -6,7 +6,7 @@
     <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2">
         <h5 class="mb-0 fw-bold">Low Ingredient Stock</h5>
-        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Threshold: {{ \$threshold }}</span>
+        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Threshold: {{ $threshold }}</span>
       </div>
 
       <div class="d-flex gap-2">
@@ -27,23 +27,22 @@
             </tr>
           </thead>
           <tbody>
-            @forelse(\$ingredients as \$ingredient)
+            @forelse($ingredients as $ingredient)
               @php
-                \$stock = (int) (\$ingredient->stock ?? 0);
-                \$pct   = min(100, max(0, round((\$stock / max(1,\$threshold)) * 100)));
+                $stock = (int) ($ingredient->stock ?? 0);
+                $pct   = min(100, max(0, round(($stock / max(1,$threshold)) * 100)));
               @endphp
-              <tr class="{{ \$stock <= 0 ? 'table-danger' : (\$stock <= \$threshold ? 'table-warning' : '') }}">
+              <tr class="{{ $stock <= 0 ? 'table-danger' : ($stock <= $threshold ? 'table-warning' : '') }}">
                 <td class="text-start">
-                  <div class="fw-semibold">{{ \$ingredient->name }}</div>
+                  <div class="fw-semibold">{{ $ingredient->name }}</div>
                   <div class="progress progress-thin mt-1" title="Remaining vs threshold">
-                    <div class="progress-bar {{ \$pct<=25?'bg-danger':(\$pct<=60?'bg-warning':'bg-success') }}" role="progressbar" style="width: {{ \$pct }}%" aria-valuenow="{{ \$pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar {{ $pct<=25?'bg-danger':($pct<=60?'bg-warning':'bg-success') }}" role="progressbar" style="width: {{ $pct }}%" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                   </div>
-                  <small class="text-muted">at {{ \$stock }} / {{ \$threshold }}</small>
+                  <small class="text-muted">at {{ $stock }} / {{ $threshold }}</small>
                 </td>
-                <td class="text-start">{{ \$ingredient->unit }}</td>
+                <td class="text-start">{{ $ingredient->unit }}</td>
                 <td class="text-center">
-                  <span class="badge rounded-pill {{ \$stock<=0?'bg-danger':(\$stock<=\$threshold?'bg-warning text-dark':'bg-success') }}">{{ \$stock }}</span>
-                </td>
+                  <span class="badge rounded-pill {{ $stock<=0?'bg-danger':($stock<=$threshold?'bg-warning text-dark':'bg-success') }}">{{ $stock }}</span>
               </tr>
             @empty
               <tr>
@@ -55,8 +54,8 @@
           </tbody>
         </table>
       </div>
-      @if(method_exists(\$ingredients, 'links'))
-        <div class="mt-3">{{ \$ingredients->links() }}</div>
+      @if(method_exists($ingredients, 'links'))
+        <div class="mt-3">{{ $ingredients->links() }}</div>
       @endif
     </div>
   </div>
