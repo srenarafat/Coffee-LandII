@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
+use App\Models\Ingredient;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ class CashierController extends Controller
         $todayAverageOrderValue = $todayOrderCount ? $todaySalesTotal / $todayOrderCount : 0;
 
         $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
+        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
 
         // Calculate sales for the past 7 days
         $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -69,7 +70,7 @@ class CashierController extends Controller
                                     ->sum('quantity');
         $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
         $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
+        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
 
         $weekAgo = Carbon::now()->subDays(7);
         $topProductsWeekCount = SaleItem::where('created_at', '>=', $weekAgo)

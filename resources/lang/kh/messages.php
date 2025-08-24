@@ -96,7 +96,7 @@ return [
     'orders_today' => 'ការបញ្ជាទិញថ្ងៃនេះ',
     'items_sold_today' => 'ចំនួនទំនិញលក់ថ្ងៃនេះ',
     'avg_order_value' => 'តម្លៃមធ្យមនៃការបញ្ជាទិញ',
-    'low_stock_count' => 'ចំនួនស្តុកទាប',
+    'low_stock_count' => 'ចំនួនស្តុកគ្រឿងផ្សំទាប',
     'sales_earnings' => 'ការលក់ និងចំណូល',
     'recent_transactions' => 'ប្រតិបត្តិការថ្មីៗ',
     'date' => 'ថ្ងៃ',
@@ -263,5 +263,5 @@ return [
     'orders' => 'ការបញ្ជាទិញ',
     'items_sold' => 'ចំនួនទំនិញលក់',
     'average_order_value' => 'តម្លៃបញ្ជាទិញមធ្យម',
-    'low_stock' => 'ស្តុកទាប',
+    'low_stock' => 'ស្តុកគ្រឿងផ្សំទាប',
 ];

@@ -65,7 +65,7 @@
         ['href'=>route($routePrefix.'.reports.sales.week'),        'icon'=>'bi-calendar-week',        'title'=>"Weekly Sales",          'desc'=>'Total: <span id="week-sales-total">'.(optional($setting)->currency ?? '$').number_format($weekSalesTotal ?? 0, 2).'</span>', 'variant'=>'teal'],
         ['href'=>route($routePrefix.'.reports.zreport'),           'icon'=>'bi-receipt',              'title'=>'Z Report',              'desc'=>'Printable cash summary',                                            'variant'=>'slate'],
         ['href'=>route($routePrefix.'.reports.sales.export'),      'icon'=>'bi-filetype-csv',         'title'=>'Export / Print Sales',  'desc'=>'CSV & print with filters',                                         'variant'=>'emerald'],
-        ['href'=>route($routePrefix.'.stock.low'),                 'icon'=>'bi-exclamation-triangle', 'title'=>'Low Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
+        ['href'=>route($routePrefix.'.ingredient-stock.low'),      'icon'=>'bi-exclamation-triangle', 'title'=>'Low Ingredient Stock',             'desc'=>'Below threshold', 'badge'=>$lowStockCount,                      'variant'=>'amber'],
 
         // Top Products (Week) with count badge (only if > 0)
         ['href'=>route($routePrefix.'.reports.top-products.week'),

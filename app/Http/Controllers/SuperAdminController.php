@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
+use App\Models\Ingredient;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class SuperAdminController extends Controller
         $weekSalesTotal = Sale::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->sum('total');
 
         $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
+        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
         // Calculate sales stats for the current week
         $startDate = Carbon::now()->startOfWeek();
         $endDate = Carbon::now()->endOfWeek();
@@ -67,7 +68,7 @@ class SuperAdminController extends Controller
                                     ->sum('quantity');
         $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
         $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Product::where('stock', '<=', $threshold)->count();
+        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
 
 
         $weekAgo = Carbon::now()->subDays(7);

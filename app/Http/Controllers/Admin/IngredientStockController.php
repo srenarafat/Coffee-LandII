@@ -6,11 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Ingredient;
 use App\Models\IngredientStockLog;
+use App\Models\Setting;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 
 class IngredientStockController extends Controller
 {
+    public function low()
+    {
+        $threshold = Setting::value('low_stock_threshold') ?? 5;
+        $ingredients = Ingredient::where('stock', '<=', $threshold)->orderBy('name')->get();
+
+        return view('admin.ingredient_stock.low', compact('ingredients', 'threshold'));
+    }
+
     public function index(Request $request)
     {
         $logFilter = function ($q) use ($request) {

@@ -96,7 +96,7 @@ return [
     'orders_today' => 'Orders Today',
     'items_sold_today' => 'Items Sold Today',
     'avg_order_value' => 'Avg Order Value',
-    'low_stock_count' => 'Low Stock Count',
+    'low_stock_count' => 'Low Ingredient Stock Count',
     'sales_earnings' => 'Sales & Earnings',
     'recent_transactions' => 'Recent Transactions',
     'date' => 'Date',
@@ -263,5 +263,6 @@ return [
     'orders' => 'Orders',
     'items_sold' => 'Items Sold',
     'average_order_value' => 'Average Order Value',
-    'low_stock' => 'Low Stock',
+    'low_stock' => 'Low Ingredient Stock',
+
 ];

@@ -13,8 +13,7 @@ use App\Http\Controllers\Admin\TopProductsController;
 use App\Http\Controllers\Admin\SlowProductController;
 use App\Http\Controllers\Admin\ZReportController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\UserController;  
 use App\Http\Controllers\Admin\IngredientStockController;
 use App\Http\Controllers\Cashier\SaleController as PosController;
 use App\Http\Controllers\Cashier\InvoiceController;
@@ -123,7 +122,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
     Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
-    Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
+    Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
     Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
@@ -183,7 +182,7 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
 
     
-    Route::get('stock/low', [InventoryController::class, 'lowStock'])->name('stock.low');
+    Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
 
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
     Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');
