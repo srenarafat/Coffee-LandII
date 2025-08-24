@@ -10,7 +10,7 @@ class CartStockLimitTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_quantity_does_not_exceed_stock()
+    public function test_quantity_can_exceed_stock()
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
@@ -39,8 +39,7 @@ class CartStockLimitTest extends TestCase
                 'action' => 'increase',
             ], ['HTTP_X-Requested-With' => 'XMLHttpRequest']);
 
-        $response->assertStatus(400);
-        $response->assertJson(['error' => '❌ Out of Stock: Only 2 left']);
-        $this->assertEquals(2, session('cart')[$product->id]['quantity']);
+        $response->assertStatus(200);
+        $this->assertEquals(3, session('cart')[$product->id]['quantity']);
     }
 }

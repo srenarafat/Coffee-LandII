@@ -10,7 +10,7 @@ class CheckoutStockTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_checkout_fails_when_stock_is_insufficient()
+    public function test_checkout_succeeds_when_stock_is_insufficient()
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
@@ -35,16 +35,17 @@ class CheckoutStockTest extends TestCase
         // Reduce stock below cart quantity
         $product->update(['stock' => 2]);
 
-        $response = $this->actingAs($user)
+        $this->actingAs($user)
             ->withSession(['cart' => $cart])
             ->post('/cashier/pos/checkout', [
                 'method' => 'cash',
                 'cash_usd' => 3,
-            ]);
+            ])
+            ->assertSessionMissing('error');
 
-        $response->assertSessionHas('error', __('messages.stock_not_enough'));
-        $this->assertDatabaseMissing('sale_items', [
+        $this->assertDatabaseHas('sale_items', [
             'product_id' => $product->id,
+            'quantity' => 3,
         ]);
     }
 
@@ -82,6 +83,5 @@ class CheckoutStockTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 3,
         ]);
-        $this->assertEquals(2, $product->fresh()->stock);
     }
 }

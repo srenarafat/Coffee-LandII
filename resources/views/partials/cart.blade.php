@@ -42,8 +42,7 @@
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
                             @endphp
-                            @php $itemStock = optional(\App\Models\Product::find($id))->stock ?? 0; @endphp
-                            <tr data-row-id="{{ $id }}" data-stock="{{ $itemStock }}">
+                            <tr data-row-id="{{ $id }}">
                                 <td style="min-width: 140px;">
                                     <div class="fw-semibold">{{ $item['name'] }}</div>
                                     @if(!empty($item['notes']))
@@ -487,11 +486,6 @@
 
     const row = rowOf(plus || minus);
     const qNow = Number(qtyEl(row).dataset.qty || 0);
-    const stock = Number(row?.dataset.stock ?? Infinity);
-    if (plus && qNow >= stock) {
-      showToast(`❌ Out of Stock: Only ${stock} left`);
-      return;
-    }
     const qNew = Math.max(1, qNow + (plus ? 1 : -1));
 
     // optimistic UI

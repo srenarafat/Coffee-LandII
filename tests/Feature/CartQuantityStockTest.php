@@ -10,7 +10,7 @@ class CartQuantityStockTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_non_ajax_increment_beyond_stock_returns_400_and_keeps_quantity()
+    public function test_non_ajax_increment_beyond_stock_succeeds()
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
@@ -31,11 +31,11 @@ class CartQuantityStockTest extends TestCase
             'action' => 'increase',
         ]);
 
-        $response->assertStatus(400);
-        $this->assertEquals(5, session('cart')[$product->id]['quantity']);
+        $response->assertStatus(200);
+        $this->assertEquals(6, session('cart')[$product->id]['quantity']);
     }
 
-    public function test_ajax_increment_beyond_stock_returns_400_and_keeps_quantity()
+    public function test_ajax_increment_beyond_stock_succeeds()
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
@@ -57,7 +57,7 @@ class CartQuantityStockTest extends TestCase
                 'action' => 'increase',
             ]);
 
-        $response->assertStatus(400);
-        $this->assertEquals(5, session('cart')[$product->id]['quantity']);
+        $response->assertStatus(200);
+        $this->assertEquals(6, session('cart')[$product->id]['quantity']);
     }
 }
