@@ -5,28 +5,11 @@
     <div class="card shadow-sm border-0 rounded-4 animate__animated">
 
         @php
-            $isSuper = auth()->user()->role === 'superadmin';
-            $productIndex    = $isSuper ? route('superadmin.stock-logs.index')       : route('admin.stock-logs.index');
-            $ingredientIndex = $isSuper ? route('superadmin.ingredient-stock.index') : route('admin.ingredient-stock.index');
-            $onProducts = request()->routeIs('superadmin.stock-logs.*') || request()->routeIs('admin.stock-logs.*');
         @endphp
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <h5 class="mb-0 fw-bold">🥕 {{ __('messages.ingredient_stock_history') }}</h5>
-
-                <div class="btn-group btn-group-sm btn-switch" role="group" aria-label="Switch section">
-                    <a href="{{ $productIndex }}"
-                       class="btn {{ $onProducts ? 'btn-primary text-white' : 'btn-outline-secondary' }}"
-                       data-bs-toggle="tooltip" title="{{ __('messages.product_stock_history') }}">
-                        <i class="bi bi-box-seam me-1"></i> {{ __('messages.products') }}
-                    </a>
-                    <a href="{{ $ingredientIndex }}"
-                       class="btn {{ $onProducts ? 'btn-outline-secondary' : 'btn-primary text-white' }}"
-                       data-bs-toggle="tooltip" title="{{ __('messages.ingredient_stock_ledger') }}">
-                        <span class="me-1" aria-hidden="true">🥕</span> {{ __('messages.ingredients') }}
-                    </a>
-                </div>
             </div>
 
             <div class="d-flex gap-2">

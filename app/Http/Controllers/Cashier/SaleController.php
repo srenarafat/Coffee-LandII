@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Models\Shop;
-use App\Models\StockLog;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -381,13 +380,6 @@ class SaleController extends Controller
                 $product->stock -= $item['quantity'];
                 $product->save();
 
-                StockLog::create([
-                    'product_id' => $productId,
-                    'type'       => 'out',
-                    'quantity'   => $item['quantity'],
-                    'note'       => 'Sold via POS',
-                    'user_id'    => auth()->id(),
-                ]);
             }
 
             SystemLog::create([

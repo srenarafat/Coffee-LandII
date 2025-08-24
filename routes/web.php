@@ -95,10 +95,6 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::patch('categories/{category}/deactivate', [CategoryController::class, 'deactivate'])->name('categories.deactivate');
     Route::patch('products/{product}/activate', [ProductController::class, 'activate'])->name('products.activate');
     Route::patch('products/{product}/deactivate', [ProductController::class, 'deactivate'])->name('products.deactivate');
-    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
-    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
-    Route::get('stock-logs/{product}/history', [\App\Http\Controllers\Admin\StockLogController::class, 'history'])->name('stock-logs.history');
-    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/{ingredient}/history', [IngredientStockController::class, 'history'])->name('ingredient-stock.history');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
@@ -204,10 +200,6 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
     Route::post('products/{product}/promote', [SlowProductController::class, 'promote'])->name('products.promote');
 
     
-    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
-    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
-    Route::get('stock-logs/{product}/history', [\App\Http\Controllers\Admin\StockLogController::class, 'history'])->name('stock-logs.history');
-    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
@@ -238,9 +230,6 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
     Route::get('invoice/{sale}/print', [InvoiceController::class, 'printView'])->name('invoice.print');
     
-    Route::get('stock-logs/export', [\App\Http\Controllers\Admin\StockLogController::class, 'exportCsv'])->name('stock-logs.export');
-    Route::get('stock-logs/pdf', [\App\Http\Controllers\Admin\StockLogController::class, 'exportPdf'])->name('stock-logs.pdf');
-    Route::resource('stock-logs', \App\Http\Controllers\Admin\StockLogController::class)->only(['index', 'create', 'store']);
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);

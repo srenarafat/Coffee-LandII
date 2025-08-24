@@ -80,13 +80,6 @@
 
                 <td class="text-center">
                   <div class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-primary"
-                            data-stockin
-                            data-product="{{ $product->id }}"
-                            data-name="{{ $product->name }}">
-                      @lang('messages.stock_in')
-                    </button>
-
                     <a href="{{ route('admin.products.edit', $product->id) }}"
                        class="btn btn-sm btn-outline-secondary">
                       Edit
@@ -115,31 +108,6 @@
   </div>
 </div>
 
-{{-- Quick Stock‑In Modal (no navigation) --}}
-<div class="modal fade" id="stockInModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header py-2">
-        <h6 class="modal-title">Stock In</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="stockInForm" method="GET">
-        {{-- Using GET keeps your existing create route that expects query params --}}
-        <div class="modal-body">
-          <div class="mb-2 small text-muted" id="stockInProductName"></div>
-          <label class="form-label mb-1">Quantity</label>
-          <input type="number" name="qty" class="form-control" value="1" min="1" required>
-          <input type="hidden" name="type" value="in">
-          <input type="hidden" name="product_id" id="stockInProductId">
-        </div>
-        <div class="modal-footer py-2">
-          <button type="submit" class="btn btn-primary btn-sm">Continue</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 @push('styles')
 <style>
   .progress-thin { height:6px; background:#f1f5f9; }
@@ -160,19 +128,6 @@
     });
   });
 
-  // stock-in modal helpers
-  const stockInModal = new bootstrap.Modal(document.getElementById('stockInModal'));
-  document.querySelectorAll('[data-stockin]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id   = btn.dataset.product;
-      const name = btn.dataset.name;
-      document.getElementById('stockInProductId').value = id;
-      document.getElementById('stockInProductName').textContent = name;
-      const action = @json(route('admin.stock-logs.create'));
-      document.getElementById('stockInForm').action = action;
-      stockInModal.show();
-    });
-  });
 </script>
 @endpush
 @endsection

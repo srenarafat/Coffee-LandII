@@ -257,9 +257,9 @@ html, body {
         </a>
 
 
-        <a href="{{ route('admin.stock-logs.index') }}"
+        <a href="{{ route('admin.ingredient-stock.index') }}"
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
-                  {{ request()->routeIs('admin.stock-logs.*') ? 'active' : '' }}">
+                  {{ request()->routeIs('admin.ingredient-stock.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
             <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
         </a>
@@ -314,9 +314,9 @@ html, body {
         </a>
 
 
-        <a href="{{ route('superadmin.stock-logs.index') }}"
+        <a href="{{ route('superadmin.ingredient-stock.index') }}"
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
-                  {{ request()->routeIs('superadmin.stock-logs.*') ? 'active' : '' }}">
+                  {{ request()->routeIs('superadmin.ingredient-stock.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
             <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
         </a>
