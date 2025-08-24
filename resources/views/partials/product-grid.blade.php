@@ -13,13 +13,6 @@
         {{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}
     </p>
 
-    <!-- Stock Badge -->
-    @if ($product->stock <= 0)
-        <span class="badge bg-danger">Out of Stock</span>
-    @else
-        <span class="badge bg-success">In Stock: {{ $product->stock }}</span>
-    @endif
-
     <!-- Add to Cart Form -->
     @php
         $addRoute = match (Auth::user()->role) {
@@ -36,15 +29,12 @@
                name="quantity"
                value="1"
                min="1"
-               max="{{ $product->stock }}"
                class="form-control form-control-sm me-2 text-center"
-               style="width: 60px; border-radius: 10px;"
-               {{ $product->stock <= 0 ? 'disabled' : '' }}>
+               style="width: 60px; border-radius: 10px;">
 
         <button type="submit"
                 class="btn rounded-circle d-flex align-items-center justify-content-center"
-                style="color: white; width: 36px; height: 36px; background-color: #5f4545;"
-                {{ $product->stock <= 0 ? 'disabled' : '' }}>
+                style="color: white; width: 36px; height: 36px; background-color: #5f4545;">
             <i class="bi bi-plus fs-6"></i>
         </button>
     </form>
