@@ -60,6 +60,8 @@
                                                     <div>&ndash; {{ $note }}</div>
                                                 @endforeach
                                             @endif
+                                        </div>
+                                    @endif
                                 </td>
 
 
