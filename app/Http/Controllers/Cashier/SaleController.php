@@ -104,13 +104,7 @@ class SaleController extends Controller
         $currentQtyInCart = $cart[$product->id]['quantity'] ?? 0;
         $totalAfterAdd    = $currentQtyInCart + $quantity;
 
-        // Stock check
-        if ($product->stock < $totalAfterAdd) {
-            $message = '❌ Out of Stock: Only ' . $product->stock . ' left';
-            return $request->ajax()
-                ? response()->json(['error' => $message], 400)
-                : back()->with('error', $message);
-        }
+        // Allow adding regardless of inventory
 
         // Update cart item
         $notes = $cart[$product->id]['notes'] ?? [];
@@ -177,17 +171,9 @@ class SaleController extends Controller
             } else {
                 if ($action === 'set_quantity') {
                     $qty = max(1, (int) $request->input('quantity', 1));
-                    if ($product && $qty > $product->stock) {
-                        $qty   = $product->stock;
-                        $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
-                    }
                     $cart[$id]['quantity'] = $qty;
                 } elseif ($action === 'increase') {
-                    if ($product && $cart[$id]['quantity'] < $product->stock) {
-                        $cart[$id]['quantity']++;
-                    } elseif ($product && $cart[$id]['quantity'] >= $product->stock) {
-                        $error = '❌ Out of Stock: Only ' . $product->stock . ' left';
-                    }
+                    $cart[$id]['quantity']++;
                 } elseif ($action === 'decrease') {
                     $cart[$id]['quantity'] = max(1, $cart[$id]['quantity'] - 1);
                 }
@@ -290,15 +276,12 @@ class SaleController extends Controller
             return back()->with('error', __('messages.cart_empty'));
         }
 
-        // Validate all items again: category activity + stock
+        // Validate all items again: category activity
         foreach ($cart as $productId => $item) {
             $product = Product::with('category.parent')->find($productId);
 
             if (!$product || !$product->is_active || !$product->isSellable()) {     // ⬅️ guard
                 return back()->with('error', 'Some items belong to an inactive category.');
-            }
-            if ($product->stock < $item['quantity']) {
-                return back()->with('error', __('messages.stock_not_enough'));
             }
         }
 
@@ -325,24 +308,6 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
-            $insufficient = [];
-            $products     = [];
-
-            // Lock rows & re-check stock right before write
-            foreach ($cart as $productId => $item) {
-                $product = Product::where('id', $productId)->lockForUpdate()->first();
-                if (!$product || $product->stock < $item['quantity']) {
-                    $insufficient[] = $product ? $product->name : $productId;
-                } else {
-                    $products[$productId] = $product;
-                }
-            }
-
-            if (!empty($insufficient)) {
-                DB::rollBack();
-                return back()->with('error', 'Insufficient stock for: ' . implode(', ', $insufficient));
-            }
-
             $sale = Sale::create([
                 'user_id'        => auth()->id(),
                 'shop_id'        => $shopId,
@@ -371,11 +336,6 @@ class SaleController extends Controller
                     'total'      => $item['price'] * $item['quantity'],
                     'notes'      => $item['notes'] ?? [],
                 ]);
-
-                $product = $products[$productId];
-                $product->stock -= $item['quantity'];
-                $product->save();
-
             }
 
             SystemLog::create([
