@@ -4,8 +4,7 @@
 <div class="container my-4">
     <div class="card shadow-sm border-0 rounded-4 animate__animated">
 
-        @php
-        @endphp
+        @php $isSuper = auth()->user()->role === 'superadmin'; @endphp
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3 flex-wrap">

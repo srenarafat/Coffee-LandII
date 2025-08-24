@@ -55,8 +55,9 @@ class IngredientStockController extends Controller
 
         $items = $summaryQuery->paginate(20)->appends($request->query());
         $ingredients = Ingredient::all();
+        $isSuper = auth()->user()->role === 'superadmin';
 
-        return view('admin.ingredient_stock.index', compact('items', 'ingredients'));
+        return view('admin.ingredient_stock.index', compact('items', 'ingredients', 'isSuper'));
     }
 
     public function history(Request $request, Ingredient $ingredient)
