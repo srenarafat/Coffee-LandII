@@ -42,23 +42,21 @@
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
                                 $options    = array_filter([
-                                    $item['size'] ?? null,
-                                    $item['sugar'] ?? null,
-                                    $item['ice'] ?? null,
+                                    $item['size'],
+                                    $item['sugar_level'] . '%',
+                                    $item['ice_option'],
                                 ]);
                             @endphp
                             <tr data-row-id="{{ $key }}">
                                 <td style="min-width: 140px;">
                                     <div class="fw-semibold">{{ $item['name'] }}</div>
-                                    @if($options || !empty($item['notes']))
+                                    @if($options || $item['note'])
                                         <div class="cart-options mt-1">
                                             @if($options)
                                                 <div>{{ implode(' • ', $options) }}</div>
                                             @endif
-                                            @if(!empty($item['notes']))
-                                                @foreach($item['notes'] as $note)
-                                                    <div>&ndash; {{ $note }}</div>
-                                                @endforeach
+                                            @if($item['note'])
+                                                <div>&ndash; {{ $item['note'] }}</div>
                                             @endif
                                         </div>
                                     @endif

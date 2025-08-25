@@ -48,7 +48,7 @@
 
                         <div class="col-6">
                             <label for="customizerIce" class="form-label">{{ __('messages.ice') }}</label>
-                            <select name="ice" id="customizerIce" class="form-select" aria-label="{{ __('messages.ice') }}">
+                             <select name="ice_option" id="customizerIce" class="form-select" aria-label="{{ __('messages.ice') }}">
                                 <option value="normal">{{ __('messages.ice_normal') }}</option>
                                 <option value="less">{{ __('messages.ice_less') }}</option>
                                 <option value="none">{{ __('messages.no_ice') }}</option>

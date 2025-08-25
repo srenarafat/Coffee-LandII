@@ -56,6 +56,24 @@
             });
         }
 
+        const qtyMinus = document.getElementById('qtyMinus');
+        if (qtyMinus && qtyInput && !qtyMinus.dataset.listener) {
+            qtyMinus.dataset.listener = 'true';
+            qtyMinus.addEventListener('click', function () {
+                const current = parseInt(qtyInput.value) || 1;
+                qtyInput.value = Math.max(1, current - 1);
+            });
+        }
+
+        const qtyPlus = document.getElementById('qtyPlus');
+        if (qtyPlus && qtyInput && !qtyPlus.dataset.listener) {
+            qtyPlus.dataset.listener = 'true';
+            qtyPlus.addEventListener('click', function () {
+                const current = parseInt(qtyInput.value) || 1;
+                qtyInput.value = Math.max(1, current + 1);
+            });
+        }
+
         const sugarInput = document.getElementById('customizerSugar');
         if (sugarInput && !sugarInput.dataset.listener) {
             sugarInput.dataset.listener = 'true';
