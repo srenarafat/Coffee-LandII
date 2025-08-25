@@ -18,6 +18,7 @@
             class="btn rounded-circle d-flex align-items-center justify-content-center mt-2 open-customizer"
             data-id="{{ $product->id }}"
             data-name="{{ app()->getLocale() === 'kh' && $product->name_km ? $product->name_km : $product->name }}"
+            data-price="{{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}"
             data-image="{{ asset('storage/' . $product->image) }}"
             style="color: white; width: 36px; height: 36px; background-color: #5f4545;">
         <i class="bi bi-plus fs-6"></i>

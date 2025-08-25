@@ -9,7 +9,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <ul id="currentNotes" class="list-group mb-3"></ul>
                     <input type="text" name="note" id="commentInput" class="form-control mb-2" list="commentList">
                     <datalist id="commentList">
                         @foreach($comments as $c)
