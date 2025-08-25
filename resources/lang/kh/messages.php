@@ -270,6 +270,7 @@ return [
     'drink_size' => 'ទំហំភេសជ្ជៈ',
     'sugar_level' => 'កម្រិតស្ករ',
     'ice' => 'ទឹកកក',
+    'ice_level' => 'កំរិតទឹកកក',
     'small' => 'តូច',
     'medium' => 'មធ្យម',
     'large' => 'ធំ',

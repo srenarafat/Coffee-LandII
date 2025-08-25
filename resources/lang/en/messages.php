@@ -270,6 +270,7 @@ return [
     'drink_size' => 'Drink Size',
     'sugar_level' => 'Sugar Level',
     'ice' => 'Ice',
+    'ice_level' => 'Ice Level',
     'small' => 'Small',
     'medium' => 'Medium',
     'large' => 'Large',

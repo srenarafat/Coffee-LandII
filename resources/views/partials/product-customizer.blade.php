@@ -7,115 +7,92 @@
 @endphp
 
 <div class="modal fade" id="customizerModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg"> {{-- a little wider for tiles --}}
-    <div class="modal-content">
+  {{-- custom smaller width --}}
+  <div class="modal-dialog modal-dialog-centered modal-custom">
+    <div class="modal-content border-0 rounded-3 shadow">
       <form id="customizerForm" class="add-to-cart-form" method="POST" action="{{ $addRoute }}">
         @csrf
         <input type="hidden" name="product_id" id="customizerProductId">
+        <input type="hidden" name="size"        id="sizeValue"        value="medium">
+        <input type="hidden" name="sugar_level" id="sugarValueInput"  value="100">
+        <input type="hidden" name="ice_option"  id="iceValue"         value="normal">
 
-        {{-- Hidden fields bound to the tile selections (defaults) --}}
-        <input type="hidden" name="size"         id="sizeValue"         value="medium">
-        <input type="hidden" name="sugar_level"  id="sugarValueInput"   value="100">
-        <input type="hidden" name="ice_option"   id="iceValue"          value="normal">
-
-        <div class="modal-header">
-          <h5 class="modal-title" id="customizerTitle">{{ __('messages.add_to_cart') }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        {{-- header --}}
+        <div class="modal-header py-2 bg-brown text-white">
+          <h6 class="modal-title fw-semibold">{{ __('messages.add_to_cart') }}</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body">
-          <div class="row g-4">
-            {{-- product preview --}}
-            <div class="col-12 text-center">
-              <img id="customizerImage" src="" alt="" class="img-fluid customizer-img">
-              <h5 id="customizerName" class="mt-2"></h5>
-              <p id="customizerPrice" class="fw-semibold mb-0"></p>
-            </div>
+        {{-- body --}}
+        <div class="modal-body p-2">
+          {{-- product preview --}}
+          <div class="text-center mb-2">
+            <img id="customizerImage" alt="" class="rounded-3 shadow-sm" style="max-height:95px">
+            <div class="fw-semibold mt-1 small" id="customizerName"></div>
+            <small class="text-muted" id="customizerPrice"></small>
+          </div>
 
-            {{-- quantity --}}
-            <div class="col-12 col-md-6">
-              <label class="form-label d-block">{{ __('messages.quantity') }}</label>
-              <div class="input-group qty-control w-auto">
-                <button type="button" id="qtyMinus" class="btn btn-outline-secondary" aria-label="{{ __('messages.decrease_quantity') }}">−</button>
-                <input type="text" name="quantity" id="customizerQty" value="1" readonly class="form-control text-center" style="max-width:64px;">
-                <button type="button" id="qtyPlus" class="btn btn-outline-secondary" aria-label="{{ __('messages.increase_quantity') }}">+</button>
-              </div>
+          {{-- quantity --}}
+          <div class="mb-2">
+            <label class="form-label small mb-1">{{ __('messages.quantity') }}</label>
+            <div class="input-group input-group-sm" style="max-width:160px">
+              <button type="button" id="qtyMinus" class="btn btn-outline-brown">−</button>
+              <input type="text" id="customizerQty" name="quantity" value="1" readonly class="form-control text-center" style="max-width:52px">
+              <button type="button" id="qtyPlus" class="btn btn-outline-brown">+</button>
             </div>
+          </div>
 
-            {{-- SIZE --}}
-            <div class="col-12">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">{{ __('messages.drink_size') }}</h6>
-                <span class="badge rounded-pill bg-light text-muted border">{{ __('1 Required') }}</span>
-              </div>
-              <div class="option-grid">
-                <button type="button" class="option-tile" data-group="size" data-value="small">
-                  <div class="option-title">{{ __('messages.small') }}</div>
-                </button>
-                <button type="button" class="option-tile active" data-group="size" data-value="medium">
-                  <div class="option-title">{{ __('messages.medium') }}</div>
-                </button>
-                <button type="button" class="option-tile" data-group="size" data-value="large">
-                  <div class="option-title">{{ __('messages.large') }}</div>
-                </button>
-              </div>
+          {{-- size --}}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small mb-0">{{ __('messages.drink_size') }}</label>
+              <span class="badge rounded-pill bg-light text-muted border small">{{ __('1 Required') }}</span>
             </div>
+            <div class="opt-grid">
+              <button type="button" class="opt-tile"        data-group="size"  data-value="small">{{ __('messages.small') }}</button>
+              <button type="button" class="opt-tile active" data-group="size"  data-value="medium">{{ __('messages.medium') }}</button>
+              <button type="button" class="opt-tile"        data-group="size"  data-value="large">{{ __('messages.large') }}</button>
+            </div>
+          </div>
 
-            {{-- SUGAR LEVEL --}}
-            <div class="col-12">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">{{ __('messages.sugar_level') }}</h6>
-                <span class="badge rounded-pill bg-light text-muted border">{{ __('1 Required') }}</span>
-              </div>
-              <div class="option-grid">
-                {{-- values chosen to map to your backend integer sugar % --}}
-                <button type="button" class="option-tile" data-group="sugar" data-value="0">
-                  <div class="option-title">{{ __('No Sweet') }}</div>
-                </button>
-                <button type="button" class="option-tile" data-group="sugar" data-value="50">
-                  <div class="option-title">{{ __('Less Sweet') }}</div>
-                </button>
-                <button type="button" class="option-tile active" data-group="sugar" data-value="100">
-                  <div class="option-title">{{ __('Normal Sweet') }}</div>
-                </button>
-                <button type="button" class="option-tile" data-group="sugar" data-value="150">
-                  <div class="option-title">{{ __('More Sweet') }}</div>
-                </button>
-              </div>
+          {{-- sugar --}}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small mb-0">{{ __('messages.sugar_level') }}</label>
+              <span class="badge rounded-pill bg-light text-muted border small">{{ __('1 Required') }}</span>
             </div>
+            <div class="opt-grid">
+              <button type="button" class="opt-tile"        data-group="sugar" data-value="0">{{ __('No Sweet') }}</button>
+              <button type="button" class="opt-tile"        data-group="sugar" data-value="50">{{ __('Less Sweet') }}</button>
+              <button type="button" class="opt-tile active" data-group="sugar" data-value="100">{{ __('Normal Sweet') }}</button>
+              <button type="button" class="opt-tile"        data-group="sugar" data-value="150">{{ __('More Sweet') }}</button>
+            </div>
+          </div>
 
-            {{-- ICE LEVEL --}}
-            <div class="col-12">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">{{ __('messages.ice') }}</h6>
-                <span class="badge rounded-pill bg-light text-muted border">{{ __('1 Required') }}</span>
-              </div>
-              <div class="option-grid">
-                <button type="button" class="option-tile" data-group="ice" data-value="none">
-                  <div class="option-title">{{ __('messages.no_ice') }}</div>
-                </button>
-                <button type="button" class="option-tile" data-group="ice" data-value="less">
-                  <div class="option-title">{{ __('messages.ice_less') }}</div>
-                </button>
-                <button type="button" class="option-tile active" data-group="ice" data-value="normal">
-                  <div class="option-title">{{ __('messages.ice_normal') }}</div>
-                </button>
-                <button type="button" class="option-tile" data-group="ice" data-value="more">
-                  <div class="option-title">{{ __('More Ice') }}</div>
-                </button>
-              </div>
+          {{-- ice --}}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small mb-0">{{ __('messages.ice_level') }}</label>
+              <span class="badge rounded-pill bg-light text-muted border small">{{ __('1 Required') }}</span>
             </div>
+            <div class="opt-grid">
+              <button type="button" class="opt-tile"        data-group="ice" data-value="none">{{ __('messages.no_ice') }}</button>
+              <button type="button" class="opt-tile"        data-group="ice" data-value="less">{{ __('messages.ice_less') }}</button>
+              <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
+              <button type="button" class="opt-tile"        data-group="ice" data-value="more">{{ __('More Ice') }}</button>
+            </div>
+          </div>
 
-            {{-- NOTE --}}
-            <div class="col-12">
-              <label for="customizerNote" class="form-label">{{ __('messages.note_optional') }}</label>
-              <input type="text" name="note" id="customizerNote" class="form-control" placeholder="{{ __('messages.note_placeholder') }}">
-            </div>
+          {{-- note --}}
+          <div>
+            <label for="customizerNote" class="form-label small mb-1">{{ __('messages.note_optional') }}</label>
+            <input id="customizerNote" name="note" type="text" class="form-control form-control-sm" placeholder="{{ __('messages.note_placeholder') }}">
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">{{ __('messages.add_to_cart') }}</button>
+        {{-- footer --}}
+        <div class="modal-footer py-2">
+          <button type="submit" class="btn btn-brown btn-sm px-3">{{ __('messages.add_to_cart') }}</button>
         </div>
       </form>
     </div>
@@ -123,92 +100,81 @@
 </div>
 
 <style>
-  .customizer-img{ max-height:150px; border-radius:12px; }
-  /* grid of tiles */
-  .option-grid{
-    display:grid;
-    grid-template-columns: repeat(4, minmax(0,1fr));
-    gap:.75rem;
-  }
-  @media (max-width: 576px){
-    .option-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  }
+  /* Custom smaller modal */
+  .modal-custom { max-width: 420px; }
 
-  .option-tile{
+  /* Brown theme */
+  .bg-brown{ background:#6f4e37 !important; }
+  .btn-brown{ background:#6f4e37; color:#fff; }
+  .btn-brown:hover{ background:#5c3f2e; color:#fff; }
+  .btn-outline-brown{ border:1px solid #6f4e37; color:#6f4e37; }
+  .btn-outline-brown:hover{ background:#6f4e37; color:#fff; }
+
+  /* option grid */
+  .opt-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:.4rem;
+  }
+  @media(max-width:480px){ .opt-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  /* option tiles */
+  .opt-tile{
     display:flex; align-items:center; justify-content:center;
-    height:64px; width:100%;
-    border:1px solid #e5e7eb; border-radius:12px;
-    background:#fff;
-    transition:.15s ease;
-    padding:.5rem .75rem;
-    cursor:pointer;
+    height:40px; font-size:.85rem;
+    border:1px solid #e0d7d2; border-radius:8px;
+    background:#faf8f6; color:#4a372b; font-weight:600;
+    transition:all .15s ease; cursor:pointer;
   }
-  .option-tile:hover{ box-shadow:0 0 0 3px rgba(13,110,253,.15) inset; }
-  .option-tile.active{
-    background:#fff7e6;               /* soft highlight like your sample */
-    border-color:#f7d48a;
-    box-shadow:0 0 0 2px #fde7b1 inset;
+  .opt-tile:hover{ background:#f1ebe7; }
+  .opt-tile.active{
+    background:#eaddd1; border-color:#c8a98b;
+    box-shadow:0 0 0 2px rgba(111,78,55,.25) inset;
+    color:#5c3f2e;
   }
-  .option-title{ font-weight:600; font-size:.95rem; color:#111827; }
-  .qty-control .btn{ width:42px; }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const sizeInput   = document.getElementById('sizeValue');
-  const sugarInput  = document.getElementById('sugarValueInput');
-  const iceInput    = document.getElementById('iceValue');
+  const modalEl = document.getElementById('customizerModal');
+  const sizeIn  = document.getElementById('sizeValue');
+  const sugarIn = document.getElementById('sugarValueInput');
+  const iceIn   = document.getElementById('iceValue');
+  const qty     = document.getElementById('customizerQty');
 
-  // tile selection handler (radio behavior per group)
-  document.getElementById('customizerModal').addEventListener('click', (e) => {
-    const tile = e.target.closest('.option-tile');
-    if(!tile) return;
-
-    const group = tile.dataset.group;
-    const value = tile.dataset.value;
-
-    // clear active in the same group
-    document.querySelectorAll(`.option-tile[data-group="${group}"]`).forEach(t => t.classList.remove('active'));
-    tile.classList.add('active');
-
-    if(group === 'size')   sizeInput.value  = value;
-    if(group === 'sugar')  sugarInput.value = value;    // numeric string (e.g., "100")
-    if(group === 'ice')    iceInput.value   = value;    // "normal" | "less" | "none" | "more"
+  // tile toggle
+  modalEl.addEventListener('click', (e) => {
+    const t = e.target.closest('.opt-tile'); if(!t) return;
+    const g = t.dataset.group, v = t.dataset.value;
+    modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    if (g==='size')  sizeIn.value  = v;
+    if (g==='sugar') sugarIn.value = v;
+    if (g==='ice')   iceIn.value   = v;
   });
 
-  // keep your quantity buttons working
-  const qty = document.getElementById('customizerQty');
+  // qty +/- (min 1)
   document.getElementById('qtyMinus')?.addEventListener('click', () => {
-    const n = Math.max(1, (parseInt(qty.value,10)||1) - 1);
-    qty.value = n;
+    qty.value = Math.max(1, (parseInt(qty.value,10)||1) - 1);
   });
   document.getElementById('qtyPlus')?.addEventListener('click', () => {
-    const n = Math.max(1, (parseInt(qty.value,10)||1) + 1);
-    qty.value = n;
+    qty.value = Math.max(1, (parseInt(qty.value,10)||1) + 1);
   });
 
-  // when opening the modal from your script, also reset selections to defaults
-  const modalEl = document.getElementById('customizerModal');
+  // reset defaults every time the modal opens
   modalEl.addEventListener('show.bs.modal', () => {
-    // defaults: medium / 100 / normal (as before)
-    sizeInput.value  = 'medium';
-    sugarInput.value = '100';
-    iceInput.value   = 'normal';
+    sizeIn.value  = 'medium';
+    sugarIn.value = '100';
+    iceIn.value   = 'normal';
+    qty.value     = 1;
+    document.getElementById('customizerNote').value = '';
 
-    // visual reset
     ['size','sugar','ice'].forEach(g=>{
-      const tiles = document.querySelectorAll(`.option-tile[data-group="${g}"]`);
-      tiles.forEach(t=>t.classList.remove('active'));
+      modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
     });
-    document.querySelector('.option-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
-    document.querySelector('.option-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
-    document.querySelector('.option-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
-
-    // reset qty & note like before
-    const qtyInput = document.getElementById('customizerQty');
-    if (qtyInput) qtyInput.value = 1;
-    const note = document.getElementById('customizerNote');
-    if (note) note.value = '';
+    modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
+    modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
+    modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
   });
 });
 </script>

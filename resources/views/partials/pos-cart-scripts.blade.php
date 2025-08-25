@@ -14,14 +14,13 @@
                 document.getElementById('customizerImage').src = this.dataset.image;
 
                 // defaults for silent options
-                const sizeSel  = document.getElementById('customizerSize');
-                const sugarInp = document.getElementById('customizerSugar');
-                const iceSel   = document.getElementById('customizerIce');
+                const sizeSel  = document.getElementById('sizeValue');
+                const sugarInp = document.getElementById('sugarValueInput');
+                const iceSel   = document.getElementById('iceValue');
                 const noteInp  = document.getElementById('customizerNote');
 
                 sizeSel.value  = 'medium';
-                sugarInp.value = 100;
-                document.getElementById('sugarValue').textContent = 100;
+                sugarInp.value = '100';
                 iceSel.value   = 'normal';
                 noteInp.value  = '';
 
@@ -38,9 +37,9 @@
                 e.preventDefault();
 
                 // build FD and strip defaults so they are not added to the cart line
-                const sizeSel  = document.getElementById('customizerSize');
-                const sugarInp = document.getElementById('customizerSugar');
-                const iceSel   = document.getElementById('customizerIce');
+                const sizeSel  = document.getElementById('sizeValue');
+                const sugarInp = document.getElementById('sugarValueInput');
+                const iceSel   = document.getElementById('iceValue');
                 const noteInp  = document.getElementById('customizerNote');
 
                 const fd = new FormData(form);
@@ -97,13 +96,6 @@
             });
         }
 
-        const sugarInput = document.getElementById('customizerSugar');
-        if (sugarInput && !sugarInput.dataset.listener) {
-            sugarInput.dataset.listener = 'true';
-            sugarInput.addEventListener('input', function () {
-                document.getElementById('sugarValue').textContent = this.value;
-            });
-        }
     }
 
     function scrollCartToBottom() {
