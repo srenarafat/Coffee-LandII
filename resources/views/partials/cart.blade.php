@@ -41,26 +41,48 @@
                                 $lineTotal  = $item['price'] * $item['quantity'];
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
-                                $options    = array_filter([
-                                    $item['size'],
-                                    $item['sugar_level'] . '%',
-                                    $item['ice_option'],
-                                ]);
+
+                                // Only show options that differ from defaults
+                                $options = [];
+                                if (!empty($item['size']) && strtolower($item['size']) !== 'medium') {
+                                    $options[] = strtolower($item['size']);
+                                }
+                                if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
+                                    $options[] = ((int)$item['sugar_level']).'%';
+                                }
+                                if (!empty($item['ice_option']) && strtolower($item['ice_option']) !== 'normal') {
+                                    $options[] = strtolower($item['ice_option']);
+                                }
                             @endphp
                             <tr data-row-id="{{ $key }}">
                                 <td style="min-width: 140px;">
-                                    <div class="fw-semibold">{{ $item['name'] }}</div>
-                                    @if($options || $item['note'])
-                                        <div class="cart-options mt-1">
-                                            @if($options)
-                                                <div>{{ implode(' • ', $options) }}</div>
-                                            @endif
-                                            @if($item['note'])
-                                                <div>&ndash; {{ $item['note'] }}</div>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </td>
+    <div class="fw-semibold">{{ $item['name'] }}</div>
+
+    @php
+        $optionsList = [];
+        if (!empty($item['size']) && strtolower($item['size']) !== 'medium') {
+            $optionsList[] = ucfirst($item['size']) . ' Size';
+        }
+        if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
+            $optionsList[] = 'Sugar: ' . (int)$item['sugar_level'] . '%';
+        }
+        if (!empty($item['ice_option']) && strtolower($item['ice_option']) !== 'normal') {
+            $optionsList[] = ucfirst($item['ice_option']) . ' Ice';
+        }
+        if (!empty($item['note'])) {
+            $optionsList[] = $item['note']; // ✅ just the note text
+        }
+    @endphp
+
+    @if($optionsList)
+        <ul class="cart-options-list mt-1">
+            @foreach($optionsList as $opt)
+                <li>{{ $opt }}</li>
+            @endforeach
+        </ul>
+    @endif
+</td>
+
 
 
                                 <td class="text-center">
@@ -70,11 +92,9 @@
                                         <input type="hidden" name="action" value="">
                                         <input type="hidden" class="update-url" value="{{ route($routePrefix . '.pos.update') }}">
                                         <div class="d-flex align-items-center justify-content-center gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle decrease-btn"
-                                                    style="width: 28px; height: 28px;">−</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle decrease-btn" style="width: 28px; height: 28px;">−</button>
                                             <span class="px-2 qty" data-qty="{{ $item['quantity'] }}" data-confirmed="{{ $item['quantity'] }}">{{ $item['quantity'] }}</span>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle increase-btn"
-                                                    style="width: 28px; height: 28px;">+</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle increase-btn" style="width: 28px; height: 28px;">+</button>
                                         </div>
                                     </form>
                                 </td>
@@ -90,8 +110,7 @@
                                 <!-- Price shows LINE TOTAL; keep unit price in data-unit for instant recalc -->
                                 <td class="text-nowrap">
                                     {{ optional($setting)->currency ?? '$' }}
-                                    <span class="row-price"
-                                          data-unit="{{ number_format($item['price'], 2, '.', '') }}">
+                                    <span class="row-price" data-unit="{{ number_format($item['price'], 2, '.', '') }}">
                                         {{ number_format($lineTotal, 2) }}
                                     </span>
                                 </td>
@@ -140,27 +159,28 @@
 @include('partials.comment-modal', ['routePrefix' => $routePrefix, 'comments' => $comments ?? collect()])
 @include('partials.table-modal')
 
-
 <style>
-    .cart-header th {
-        background-color: #d8eaff !important;
-        color: #000 !important;
-        font-weight: bold;
-    }
-    .cart-options {
-        font-size: 0.8rem;
-        line-height: 1.2;
-        color: #6c757d;
-    }
-    .cart-options div + div {
-        margin-top: 2px;
-    }
-    @media (max-width: 768px) {
-        .cart-header th, .table td { font-size: 13px; padding: 0.4rem; }
-        .cart-panel { max-height: 48vh; overflow-y: auto; }
+    .cart-options-list {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+    color: #555;
+    list-style-type: disc;
+}
+    .cart-options-list li {
+    margin: 2px 0;
+}
+    .cart-header th{ background-color:#d8eaff!important; color:#000!important; font-weight:bold; }
+    .cart-options{ font-size:.8rem; line-height:1.2; color:#6c757d; }
+    .cart-options div + div{ margin-top:2px; }
+    @media (max-width:768px){
+        .cart-header th,.table td{ font-size:13px; padding:.4rem; }
+        .cart-panel{ max-height:48vh; overflow-y:auto; }
     }
 </style>
+
 @push('scripts')
+
 <script>
 (function(){
   const currency = @json(optional($setting)->currency ?? '$');

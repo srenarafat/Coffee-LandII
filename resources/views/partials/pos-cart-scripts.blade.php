@@ -3,6 +3,7 @@
     const cartContainer = document.getElementById('cart-container');
     let selectedTableNumber = @json(session('table_number'));
 
+    // open customizer with DEFAULTS (size=medium, sugar=100, ice=normal, note empty)
     function attachCustomizerButtons() {
         document.querySelectorAll('.open-customizer').forEach(btn => {
             if (btn.dataset.listener) return;
@@ -11,9 +12,19 @@
                 document.getElementById('customizerProductId').value = this.dataset.id;
                 document.getElementById('customizerQty').value = 1;
                 document.getElementById('customizerImage').src = this.dataset.image;
-                document.getElementById('customizerSugar').value = 0;
-                document.getElementById('sugarValue').textContent = 0;
-                document.getElementById('customizerNote').value = '';
+
+                // defaults for silent options
+                const sizeSel  = document.getElementById('customizerSize');
+                const sugarInp = document.getElementById('customizerSugar');
+                const iceSel   = document.getElementById('customizerIce');
+                const noteInp  = document.getElementById('customizerNote');
+
+                sizeSel.value  = 'medium';
+                sugarInp.value = 100;
+                document.getElementById('sugarValue').textContent = 100;
+                iceSel.value   = 'normal';
+                noteInp.value  = '';
+
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
             });
         });
@@ -25,7 +36,19 @@
             form.dataset.listener = 'true';
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                const formData = new FormData(form);
+
+                // build FD and strip defaults so they are not added to the cart line
+                const sizeSel  = document.getElementById('customizerSize');
+                const sugarInp = document.getElementById('customizerSugar');
+                const iceSel   = document.getElementById('customizerIce');
+                const noteInp  = document.getElementById('customizerNote');
+
+                const fd = new FormData(form);
+                if (sizeSel.value === 'medium') fd.delete('size');
+                if (String(sugarInp.value) === '100') fd.delete('sugar_level');
+                if (iceSel.value === 'normal') fd.delete('ice_option');
+                if (!noteInp.value.trim()) fd.delete('note');
+
                 fetch(form.action, {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -33,7 +56,7 @@
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: formData
+                    body: fd
                 })
                 .then(res => res.ok ? res.json() : Promise.reject(res))
                 .then(data => {
@@ -85,9 +108,7 @@
 
     function scrollCartToBottom() {
         const cartPanel = cartContainer.querySelector('.cart-panel');
-        if (cartPanel) {
-            cartPanel.scrollTop = cartPanel.scrollHeight;
-        }
+        if (cartPanel) cartPanel.scrollTop = cartPanel.scrollHeight;
     }
 
     function highlightTableButtons(number) {
@@ -156,8 +177,8 @@
         });
     }
 
-
     function attachCartFormHandlers() {
+        // add/increase/decrease in cart
         document.querySelectorAll('.add-to-cart-form').forEach(form => {
             if (form.dataset.listener) return;
             form.dataset.listener = 'true';
@@ -170,18 +191,10 @@
                 fetch(form.action, {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => { throw new Error(text || res.statusText); });
-                    }
-                    return res.json();
-                })
+                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
                 .then(data => {
                     if (data.cart) {
                         cartContainer.innerHTML = data.cart;
@@ -189,22 +202,16 @@
                         scrollCartToBottom();
                         const qtyInput = form.querySelector('input[name="quantity"]');
                         if (qtyInput) qtyInput.value = 1;
-                    } else {
-                        console.error("Cart data missing in response", data);
                     }
                 })
                 .catch(error => {
-    try {
-        const msg = JSON.parse(error.message);
-        showToast(msg.error || 'Error updating cart');
-    } catch {
-        showToast(error.message || 'Error updating cart');
-    }
-});
-
+                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+                    catch { showToast(error.message || 'Error updating cart'); }
+                });
             });
         });
 
+        // remove line
         document.querySelectorAll('.remove-item-form').forEach(form => {
             if (form.dataset.listener) return;
             form.dataset.listener = 'true';
@@ -213,40 +220,24 @@
                 fetch(form.action, {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: new FormData(form)
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => { throw new Error(text || res.statusText); });
-                    }
-                    return res.json();
-                })
+                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
                 .then(data => {
-                        if (data.cart) {
-                            cartContainer.innerHTML = data.cart;
-                            attachCartFormHandlers();
-                           
-                            
-                        } else {
-                            console.error("Cart data missing in response", data);
-                        }
-                    })
+                    if (data.cart) {
+                        cartContainer.innerHTML = data.cart;
+                        attachCartFormHandlers();
+                    }
+                })
                 .catch(error => {
-    try {
-        const msg = JSON.parse(error.message);
-        showToast(msg.error || 'Error updating cart');
-    } catch {
-        showToast(error.message || 'Error updating cart');
-    }
-});
-
+                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+                    catch { showToast(error.message || 'Error updating cart'); }
+                });
             });
         });
 
+        // open notes modal
         document.querySelectorAll('.note-btn').forEach(btn => {
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
@@ -260,6 +251,8 @@
                 modal.show();
             });
         });
+
+        // table modal opener
         const openTable = document.getElementById('openTableModal');
         if (openTable && !openTable.dataset.listener) {
             openTable.dataset.listener = 'true';
@@ -270,6 +263,7 @@
             });
         }
 
+        // table buttons
         document.querySelectorAll('.table-btn').forEach(btn => {
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
@@ -280,42 +274,27 @@
                 fetch('{{ route($routePrefix . '.pos.table') }}', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => { throw new Error(text || res.statusText); });
-                    }
-                    return res.json();
-                })
+                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
                 .then(data => {
                     selectedTableNumber = data.table_number;
                     const currentEl = document.getElementById('currentTable');
-                    if (currentEl) {
-                        currentEl.textContent = '{{ __('messages.table') }}: ' + data.table_number;
-                    }
+                    if (currentEl) currentEl.textContent = '{{ __('messages.table') }}: ' + data.table_number;
                     highlightTableButtons(selectedTableNumber);
                     const modalEl = document.getElementById('tableModal');
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
                 })
                 .catch(error => {
-    try {
-        const msg = JSON.parse(error.message);
-        showToast(msg.error || 'Error updating cart');
-    } catch {
-        showToast(error.message || 'Error updating cart');
-    }
-});
-
+                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+                    catch { showToast(error.message || 'Error updating cart'); }
+                });
             });
         });
 
-
+        // comment form submit
         const form = document.getElementById('commentForm');
         if (form && !form.dataset.listener) {
             form.dataset.listener = 'true';
@@ -325,18 +304,10 @@
                 fetch(form.action, {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => { throw new Error(text || res.statusText); });
-                    }
-                    return res.json();
-                })
+                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
                 .then(data => {
                     const modalEl = document.getElementById('commentModal');
                     const modal = bootstrap.Modal.getInstance(modalEl);
@@ -350,31 +321,23 @@
                         const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
                         renderNotes(notes);
                     }
-            
                 })
                 .catch(error => {
-    try {
-        const msg = JSON.parse(error.message);
-        showToast(msg.error || 'Error updating cart');
-    } catch {
-        showToast(error.message || 'Error updating cart');
-    }
-});
-
+                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+                    catch { showToast(error.message || 'Error updating cart'); }
+                });
             });
         }
-        
+
         attachSaveCommentHandler();
     }
+
     attachCustomizerButtons();
     attachCustomizerForm();
     attachCartFormHandlers();
-    if (selectedTableNumber) {
-        highlightTableButtons(selectedTableNumber);
-    }
+    if (selectedTableNumber) highlightTableButtons(selectedTableNumber);
 
     function attachSaveCommentHandler() {
-    
         const saveBtn = document.getElementById('saveComment');
         if (saveBtn && !saveBtn.dataset.listener) {
             saveBtn.dataset.listener = 'true';
@@ -390,56 +353,39 @@
                     },
                     body: JSON.stringify({ text })
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => { throw new Error(text || res.statusText); });
-                    }
-                    return res.json();
-                })
+                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
                 .then(comment => {
                     const list = document.getElementById('commentList');
                     const opt = document.createElement('option');
                     opt.value = comment.text;
                     list.appendChild(opt);
 
-
                     const form = document.getElementById('commentForm');
                     if (form) {
-                        if (typeof form.requestSubmit === 'function') {
-                            form.requestSubmit();
-                        } else {
-                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                        }
+                        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                        else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                     }
                 })
                 .catch(error => {
-    try {
-        const msg = JSON.parse(error.message);
-        showToast(msg.error || 'Error updating cart');
-    } catch {
-        showToast(error.message || 'Error updating cart');
-    }
-});
-
+                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+                    catch { showToast(error.message || 'Error updating cart'); }
+                });
             });
         }
-        }
+    }
 
+    // live search keeps handlers
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = this.value;
         const category = document.querySelector('input[name="category"]')?.value || '';
-
         fetch(`{{ route($routePrefix . '.pos.liveSearch') }}?query=${encodeURIComponent(query)}&category=${category}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('product-grid').innerHTML = html;
-                attachCustomizerButtons();
-                attachCartFormHandlers();
-            });
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('product-grid').innerHTML = html;
+            attachCustomizerButtons();
+            attachCartFormHandlers();
+        });
     });
-
 </script>

@@ -24,6 +24,10 @@
     .summary { margin-top: 10px; }
     .center { text-align: center; margin-top: 8px; font-size: 10px; }
     .bold { font-weight: bold; }
+
+    /* small bullet list like in cart */
+    .line-list { margin: 2px 0 0 14px; padding: 0; list-style: disc; }
+    .line-list li { font-size: 10px; line-height: 1.25; color:#555; margin: 1px 0; }
     </style>
 </head>
 
@@ -86,16 +90,51 @@
                     @php
                         $lineTotal = $item->price * $item->quantity;
                         $computedTotal += $lineTotal;
+
+                        // Robustly pull options from multiple possible places
+                        $meta = $item->meta ?? $item->options ?? null;
+                        if (is_string($meta)) { $meta = json_decode($meta, true); }
+                        if (!is_array($meta)) { $meta = []; }
+
+                        $size  = $item->size ?? ($meta['size'] ?? null);
+                        $sugar = $item->sugar_level ?? ($meta['sugar_level'] ?? null);
+                        $ice   = $item->ice_option ?? ($meta['ice_option'] ?? null);
+
+                        // Build the same cleaned list shown in cart:
+                        $lines = [];
+                        if ($size && strtolower($size) !== 'medium') {
+                            $lines[] = ucfirst($size) . ' Size';
+                        }
+                        if ($sugar !== null && (int)$sugar !== 100) {
+                            $lines[] = 'Sugar: ' . ((int)$sugar) . '%';
+                        }
+                        if ($ice && strtolower($ice) !== 'normal') {
+                            $lines[] = ucfirst($ice) . ' Ice';
+                        }
+
+                        // Notes can be an array or a string; show only the text (no "Note:")
+                        $notes = $item->notes ?? ($item->note ?? null);
+                        if (is_string($notes) && trim($notes) !== '') {
+                            $lines[] = $notes;
+                        } elseif (is_array($notes)) {
+                            foreach ($notes as $n) {
+                                if (is_string($n) && trim($n) !== '') {
+                                    $lines[] = $n;
+                                }
+                            }
+                        }
                     @endphp
                     <tr>
                         <td style="vertical-align: top;">{{ $index + 1 }}</td>
 
                         <td style="text-align: left; vertical-align: top;">
                             <div style="font-weight: bold;">{{ $item->product->name }}</div>
-                            @if(!empty($item->notes))
-                                @foreach($item->notes as $note)
-                                    <div style="font-size: 10px; color: #555;">&ndash; {{ $note }}</div>
-                                @endforeach
+                            @if(!empty($lines))
+                                <ul class="line-list">
+                                    @foreach($lines as $l)
+                                        <li>{{ $l }}</li>
+                                    @endforeach
+                                </ul>
                             @endif
                         </td>
 
@@ -103,13 +142,12 @@
                             {{ $item->quantity }}
                         </td>
 
-
                         <td class="text-right" style="vertical-align: top;">
-                            {{ optional($setting)->currency ?? '$' }}{{ number_format($item->price, 2) }}
+                            {{ $currency }}{{ number_format($item->price, 2) }}
                         </td>
 
                         <td class="text-right" style="vertical-align: top; padding-right: 10px;">
-                            {{ optional($setting)->currency ?? '$' }}{{ number_format($lineTotal, 2) }}
+                            {{ $currency }}{{ number_format($lineTotal, 2) }}
                         </td>
                     </tr>
                 @endforeach
@@ -129,20 +167,20 @@
                             <tr>
                                 <td style="border: none;">
                                     {{ __('messages.discount') }}:
-                                    -{{ optional($setting)->currency ?? '$' }} {{ number_format($sale->discount, 2) }}
+                                    -{{ $currency }} {{ number_format($sale->discount, 2) }}
                                 </td>
                             </tr>
                             @endif
                             <tr>
                                 <td style="border: none;">
                                     <strong>{{ __('messages.grand_total') }}:</strong>
-                                    {{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}
+                                    {{ $currency }}{{ number_format($sale->total, 2) }}
                                 </td>
                             </tr>
                             <tr>
                                 <td style="border: none;">
-                                    {{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }}):
-                                    {{ optional($setting)->currency ?? '$' }}{{ number_format($sale->cash_usd, 2) }}
+                                    {{ __('messages.cash_received') }} ({{ $currency }}):
+                                    {{ $currency }}{{ number_format($sale->cash_usd, 2) }}
                                 </td>
                             </tr>
                             <tr>
@@ -153,8 +191,8 @@
                             </tr>
                             <tr>
                                 <td style="border: none;">
-                                    {{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }}):
-                                    {{ optional($setting)->currency ?? '$' }}{{ number_format($sale->change_usd, 2) }}
+                                    {{ __('messages.change') }} ({{ $currency }}):
+                                    {{ $currency }}{{ number_format($sale->change_usd, 2) }}
                                 </td>
                             </tr>
                             <tr>
@@ -170,7 +208,6 @@
                             </tr>
                         </table>
                     </td>
-
 
                     @if (!empty($scanBase64))
                     <td style="width: 35%; text-align: center; vertical-align: top; padding-top:15px; padding-right:10px;">
@@ -189,7 +226,7 @@
         <hr style="border-top: 1px dashed #000; margin: 10px 0;">
 
         <div class="footer" style="font-size: 12px; text-align:center;">
-            <p class="mb-0" style="line-height: 1.05; margin-bottom: -2px;">Wi-Fi: Coffee Land</p>
+            <p class="mb-0" style="line-height: 1.05; margin-bottom: -2px;">Wi‑Fi: Coffee Land</p>
             <p class="mb-0" style="line-height: 1.05; margin-bottom: -2px;">Password: khmerfood</p>
             <p class="mt-1">សូមអរគុណសម្រាប់ការអញ្ជើញមក</p>
         </div>
