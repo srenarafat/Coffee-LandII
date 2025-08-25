@@ -205,5 +205,5 @@
 {{-- 🔔 Toasts / scripts --}}
 @include('partials.product-customizer')
 @include('partials.toast')
-<!-- @include('partials.pos-cart-scripts', ['routePrefix' => 'cashier']) -->
+@include('partials.pos-cart-scripts', ['routePrefix' => 'cashier'])
 @endsection
