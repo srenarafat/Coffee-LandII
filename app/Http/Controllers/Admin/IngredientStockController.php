@@ -93,6 +93,7 @@ class IngredientStockController extends Controller
         $data = $request->validate([
             'id'    => 'required|exists:ingredients,id',
             'stock' => 'required|numeric|min:0',
+            'note'  => 'nullable|string|max:255',
         ]);
 
         $ingredient = Ingredient::findOrFail($data['id']);
@@ -109,6 +110,7 @@ class IngredientStockController extends Controller
             'stock_after'   => $ingredient->stock,
             'unit'          => $ingredient->unit,
             'user_id'       => auth()->id(),
+            'note'          => $data['note'] ?? null,
         ]);
 
         return back()->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));

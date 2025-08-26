@@ -65,6 +65,7 @@ class IngredientLowStockTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.ingredient-stock.adjust'), [
             'id' => $ingredient->id,
             'stock' => 5,
+            'note' => 'Manual adjustment',
         ]);
 
         $response->assertRedirect();
@@ -79,6 +80,7 @@ class IngredientLowStockTest extends TestCase
             'quantity' => 3,
             'stock_after' => 5,
             'user_id' => $user->id,
+            'note' => 'Manual adjustment',
         ]);
     }
 
@@ -91,6 +93,7 @@ class IngredientLowStockTest extends TestCase
         $response = $this->actingAs($user)->post(route('superadmin.ingredient-stock.adjust'), [
             'id' => $ingredient->id,
             'stock' => 4,
+            'note' => 'Manual adjustment',
         ]);
 
         $response->assertRedirect();
@@ -105,6 +108,7 @@ class IngredientLowStockTest extends TestCase
             'quantity' => 3,
             'stock_after' => 4,
             'user_id' => $user->id,
+            'note' => 'Manual adjustment',
         ]);
     }
 }
