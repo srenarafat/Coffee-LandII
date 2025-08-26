@@ -131,4 +131,37 @@ class IngredientLowStockTest extends TestCase
         $this->assertEquals(2, $ingredient->stock);
         $this->assertDatabaseCount('ingredient_stock_logs', 0);
     }
+    public function test_adjust_via_ajax_returns_json_and_updates_stock()
+{
+    Setting::create(['low_stock_threshold' => 5]);
+    $user = User::factory()->create(['role' => 'admin']);
+    $ingredient = Ingredient::create(['name' => 'Milk', 'unit' => 'ml', 'stock' => 1.5]);
+
+    $response = $this->actingAs($user)->postJson(
+        route('admin.ingredient-stock.adjust'),
+        ['id' => $ingredient->id, 'stock' => 3.0, 'note' => 'Delivery'],
+        ['X-Requested-With' => 'XMLHttpRequest']
+    );
+
+    $response->assertOk()
+             ->assertJson([
+                 'ok'        => true,
+                 'id'        => $ingredient->id,
+                 'new_stock' => 3.0,
+                 'unit'      => 'ml',
+             ]);
+
+    $ingredient->refresh();
+    $this->assertSame(3.0, $ingredient->stock);
+
+    $this->assertDatabaseHas('ingredient_stock_logs', [
+        'ingredient_id' => $ingredient->id,
+        'type'          => 'in',
+        'quantity'      => 1.5,
+        'stock_after'   => 3.0,
+        'user_id'       => $user->id,
+        'note'          => 'Delivery',
+    ]);
+}
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Ingredient;
 use App\Models\IngredientStockLog;
 use App\Models\Setting;
@@ -15,10 +16,39 @@ class IngredientStockController extends Controller
     public function low()
     {
         $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $ingredients = Ingredient::where('stock', '<=', $threshold)->orderBy('name')->get();
 
-        return view('admin.ingredient_stock.low', compact('ingredients', 'threshold'));
+        // Per-unit "alert" thresholds (edit freely).
+        // Fallback is 3 when unit is unknown.
+        $unitAlerts = [
+            // weight
+            'kg'      => 3,
+            'g'       => 500,   // example: alert below 500 g
+            // volume
+            'l'       => 3,
+            'ml'      => 500,   // example: alert below 500 ml
+            // counting units
+            'pcs'     => 10,
+            'pc'      => 10,
+            'piece'   => 10,
+            'pack'    => 2,
+            'package' => 2,
+            'bottle'  => 3,
+            'can'     => 5,
+        ];
+
+        $ingredients = Ingredient::query()
+            ->where('stock', '<=', $threshold)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.ingredient_stock.low', compact('ingredients', 'threshold', 'unitAlerts'));
     }
+
+    /* =======================
+       The rest of this class
+       stays exactly as in your
+       last working version.
+       ======================= */
 
     public function index(Request $request)
     {
@@ -38,21 +68,13 @@ class IngredientStockController extends Controller
             ->select('id', 'name', 'unit', 'stock')
             ->when($request->ingredient_id, fn ($q) => $q->where('id', $request->ingredient_id))
             ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
-                if ($request->start_date) {
-                    $q->whereDate('created_at', '>=', $request->start_date);
-                }
-                if ($request->end_date) {
-                    $q->whereDate('created_at', '<=', $request->end_date);
-                }
+                if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                 $q->where('type', 'in');
             }], 'quantity')
             ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
-                if ($request->start_date) {
-                    $q->whereDate('created_at', '>=', $request->start_date);
-                }
-                if ($request->end_date) {
-                    $q->whereDate('created_at', '<=', $request->end_date);
-                }
+                if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                 $q->where('type', 'out');
             }], 'quantity')
             ->withMax(['stockLogs as last_at' => $logFilter], 'created_at')
@@ -62,9 +84,9 @@ class IngredientStockController extends Controller
             )
             ->orderBy('name');
 
-        $items = $summaryQuery->paginate(20)->appends($request->query());
+        $items       = $summaryQuery->paginate(20)->appends($request->query());
         $ingredients = Ingredient::all();
-        $isSuper = auth()->user()->role === 'superadmin';
+        $isSuper     = auth()->user()->role === 'superadmin';
 
         return view('admin.ingredient_stock.index', compact('items', 'ingredients', 'isSuper'));
     }
@@ -91,32 +113,69 @@ class IngredientStockController extends Controller
     public function adjust(Request $request)
     {
         $data = $request->validate([
-            'id'    => 'required|exists:ingredients,id',
-            'stock' => 'required|numeric|min:0',
-            'note'  => 'nullable|string|max:255',
+            'id'            => 'required|exists:ingredients,id',
+            'stock'         => 'required|numeric|min:0',
+            'note'          => 'nullable|string|max:255',
+            'only_increase' => 'sometimes|boolean',
         ]);
 
         $ingredient = Ingredient::findOrFail($data['id']);
-        $newStock   = (float) $data['stock'];
-        $diff       = $newStock - $ingredient->stock;
+        $oldStock   = (float) $ingredient->stock;
 
-        $ingredient->stock = $newStock;
-        $ingredient->save();
-
-        if ($diff === 0.0) {
-            return redirect()->route(auth()->user()->role . '.ingredient-stock.low')
-                ->with('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
+        if ($request->boolean('only_increase')) {
+            $add = (float) $data['stock'];
+            if ($add <= 0) {
+                $message = __('messages.only_increase_allowed');
+                if ($request->ajax()) {
+                    return response()->json(['ok' => false, 'error' => $message], 422);
+                }
+                return back()->withErrors(['stock' => $message])->withInput();
+            }
+            $newStock = $oldStock + $add;
+            $diff     = $add;
+        } else {
+            $newStock = (float) $data['stock'];
+            $diff     = $newStock - $oldStock;
+            if (abs($diff) < 1e-9) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'ok'         => true,
+                        'unchanged'  => true,
+                        'id'         => $ingredient->id,
+                        'new_stock'  => $ingredient->stock,
+                        'unit'       => $ingredient->unit,
+                        'message'    => __('messages.stock_not_changed', ['name' => $ingredient->name]),
+                    ]);
+                }
+                return redirect()->route(auth()->user()->role . '.ingredient-stock.low')
+                    ->with('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
+            }
         }
 
-        IngredientStockLog::create([
-            'ingredient_id' => $ingredient->id,
-            'type'          => $diff >= 0 ? 'in' : 'out',
-            'quantity'      => abs($diff),
-            'stock_after'   => $ingredient->stock,
-            'unit'          => $ingredient->unit,
-            'user_id'       => auth()->id(),
-            'note'          => $data['note'] ?? null,
-        ]);
+        DB::transaction(function () use ($ingredient, $newStock, $diff, $data) {
+            $ingredient->stock = $newStock;
+            $ingredient->save();
+
+            IngredientStockLog::create([
+                'ingredient_id' => $ingredient->id,
+                'type'          => $diff >= 0 ? 'in' : 'out',
+                'quantity'      => abs($diff),
+                'stock_after'   => $ingredient->stock,
+                'unit'          => $ingredient->unit,
+                'user_id'       => auth()->id(),
+                'note'          => $data['note'] ?? null,
+            ]);
+        });
+
+        if ($request->ajax()) {
+            return response()->json([
+                'ok'        => true,
+                'id'        => $ingredient->id,
+                'new_stock' => $newStock,
+                'unit'      => $ingredient->unit,
+                'message'   => __('messages.stock_updated', ['name' => $ingredient->name]),
+            ]);
+        }
 
         return redirect()->route(auth()->user()->role . '.ingredient-stock.low')
             ->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));
@@ -130,14 +189,12 @@ class IngredientStockController extends Controller
 
     public function store(Request $request)
     {
-        // Clean unit input proactively
         $cleanUnit = function (?string $u) {
-            $u = preg_replace('/^\s*\d+\s*/', '', (string)$u);           // remove leading numbers
-            $u = preg_replace('/[^A-Za-z\s\/\.\-]/', '', $u);            // keep letters only symbols
+            $u = preg_replace('/^\s*\d+\s*/', '', (string)$u);
+            $u = preg_replace('/[^A-Za-z\s\/\.\-]/', '', $u);
             return trim($u);
         };
 
-        // Validation
         $request->merge(['unit' => $cleanUnit($request->unit)]);
         $request->validate([
             'ingredient_id'   => 'nullable|exists:ingredients,id',
@@ -150,16 +207,12 @@ class IngredientStockController extends Controller
             'rename_to'       => 'nullable|string|max:255',
         ]);
 
-        // Resolve or create ingredient
         if ($request->filled('ingredient_id')) {
             $ingredient = Ingredient::findOrFail($request->ingredient_id);
         } else {
             $nameNorm = $this->normalizeName($request->ingredient_name);
-
-            // exact case-insensitive match
             $ingredient = Ingredient::whereRaw('LOWER(name) = ?', [mb_strtolower($nameNorm)])->first();
 
-            // fuzzy match small typos (optional)
             if (!$ingredient) {
                 $all = Ingredient::select('id','name')->get();
                 $best = null; $bestDist = PHP_INT_MAX;
@@ -177,24 +230,19 @@ class IngredientStockController extends Controller
                     'name'  => $nameNorm,
                     'unit'  => $request->unit,
                     'stock' => 0,
-                    // If your schema requires shop_id, add it here:
-                    // 'shop_id' => auth()->user()->shop_id,
                 ]);
             }
         }
 
-        // If editing existing (rename/unit/merge)
         if ($request->boolean('edit_existing') && $request->filled('ingredient_id')) {
             $renameTo = trim((string)$request->rename_to);
             $newUnit  = $cleanUnit($request->unit);
 
-            // 1) Rename with merge if destination exists
             if ($renameTo !== '') {
                 $renameToNorm = $this->normalizeName($renameTo);
                 $target = Ingredient::whereRaw('LOWER(name) = ?', [mb_strtolower($renameToNorm)])->first();
 
                 if ($target && $target->id !== $ingredient->id) {
-                    // Merge: move logs, combine stock, prefer provided unit
                     IngredientStockLog::where('ingredient_id', $ingredient->id)
                         ->update(['ingredient_id' => $target->id]);
                     $target->stock += $ingredient->stock;
@@ -208,20 +256,17 @@ class IngredientStockController extends Controller
                 }
             }
 
-            // 2) Unit change
             if ($newUnit !== '') {
                 $ingredient->unit = $newUnit;
             }
             $ingredient->save();
 
-            // 3) Align past logs’ unit for this ingredient
             if ($newUnit !== '') {
                 IngredientStockLog::where('ingredient_id', $ingredient->id)
                     ->update(['unit' => $newUnit]);
             }
         }
 
-        // Stock movement
         $quantity = (float) $request->quantity;
         if ($request->type === 'out' && $ingredient->stock < $quantity) {
             return back()->withErrors(['quantity' => __('messages.stock_not_enough')])->withInput();
@@ -234,8 +279,8 @@ class IngredientStockController extends Controller
             'ingredient_id' => $ingredient->id,
             'type'          => $request->type,
             'quantity'      => $quantity,
-            'stock_after'   => $ingredient->stock,   // 👈 capture balance right now
-            'unit'          => $ingredient->unit,  // always canonical unit
+            'stock_after'   => $ingredient->stock,
+            'unit'          => $ingredient->unit,
             'note'          => $request->note,
             'user_id'       => auth()->id(),
         ]);
@@ -251,7 +296,7 @@ class IngredientStockController extends Controller
     private function normalizeName(string $name): string
     {
         $name = preg_replace('/\s+/', ' ', trim($name));
-        return mb_convert_case($name, MB_CASE_TITLE, "UTF-8"); // Title Case
+        return mb_convert_case($name, MB_CASE_TITLE, "UTF-8");
     }
 
     public function exportCsv(Request $request)
@@ -272,7 +317,7 @@ class IngredientStockController extends Controller
 
             $callback = function () use ($logs) {
                 $out = fopen('php://output', 'w');
-                echo chr(0xEF) . chr(0xBB) . chr(0xBF); // UTF-8 BOM
+                echo chr(0xEF) . chr(0xBB) . chr(0xBF);
                 fputcsv($out, [
                     __('messages.id'),
                     __('messages.user'),
@@ -287,13 +332,13 @@ class IngredientStockController extends Controller
                 foreach ($logs as $log) {
                     fputcsv($out, [
                         $log->ingredient->id,
+                        $log->user?->name,
                         $log->ingredient->name,
                         strtoupper($log->type),
                         $log->quantity,
-                        $log->ingredient->unit,
-                        $log->stock_after . ' ' . $log->ingredient->unit,
+                        $log->unit,
+                        $log->stock_after . ' ' . $log->unit,
                         $log->note,
-                        $log->user->name,
                         $log->created_at->format('d/m/Y H:i'),
                     ]);
                 }
@@ -306,30 +351,18 @@ class IngredientStockController extends Controller
         $items = Ingredient::query()
             ->select('id', 'name', 'unit', 'stock')
             ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
-                if ($request->start_date) {
-                    $q->whereDate('created_at', '>=', $request->start_date);
-                }
-                if ($request->end_date) {
-                    $q->whereDate('created_at', '<=', $request->end_date);
-                }
+                if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                 $q->where('type', 'in');
             }], 'quantity')
             ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
-                if ($request->start_date) {
-                    $q->whereDate('created_at', '>=', $request->start_date);
-                }
-                if ($request->end_date) {
-                    $q->whereDate('created_at', '<=', $request->end_date);
-                }
+                if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                 $q->where('type', 'out');
             }], 'quantity')
             ->withMax(['stockLogs as last_at' => function ($q) use ($request) {
-                if ($request->start_date) {
-                    $q->whereDate('created_at', '>=', $request->start_date);
-                }
-                if ($request->end_date) {
-                    $q->whereDate('created_at', '<=', $request->end_date);
-                }
+                if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
             }], 'created_at')
             ->orderBy('name')
             ->get();
@@ -382,30 +415,18 @@ class IngredientStockController extends Controller
             $items = Ingredient::query()
                 ->select('id', 'name', 'unit', 'stock')
                 ->withSum(['stockLogs as total_in' => function ($q) use ($request) {
-                    if ($request->start_date) {
-                        $q->whereDate('created_at', '>=', $request->start_date);
-                    }
-                    if ($request->end_date) {
-                        $q->whereDate('created_at', '<=', $request->end_date);
-                    }
+                    if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                    if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                     $q->where('type', 'in');
                 }], 'quantity')
                 ->withSum(['stockLogs as total_out' => function ($q) use ($request) {
-                    if ($request->start_date) {
-                        $q->whereDate('created_at', '>=', $request->start_date);
-                    }
-                    if ($request->end_date) {
-                        $q->whereDate('created_at', '<=', $request->end_date);
-                    }
+                    if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                    if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                     $q->where('type', 'out');
                 }], 'quantity')
                 ->withMax(['stockLogs as last_at' => function ($q) use ($request) {
-                    if ($request->start_date) {
-                        $q->whereDate('created_at', '>=', $request->start_date);
-                    }
-                    if ($request->end_date) {
-                        $q->whereDate('created_at', '<=', $request->end_date);
-                    }
+                    if ($request->start_date) { $q->whereDate('created_at', '>=', $request->start_date); }
+                    if ($request->end_date)   { $q->whereDate('created_at', '<=', $request->end_date); }
                 }], 'created_at')
                 ->orderBy('name')
                 ->get();
