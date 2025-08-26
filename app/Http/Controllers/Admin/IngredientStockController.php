@@ -88,6 +88,32 @@ class IngredientStockController extends Controller
         return view('admin.ingredient_stock.history', compact('ingredient', 'logs'));
     }
 
+    public function adjust(Request $request)
+    {
+        $data = $request->validate([
+            'id'    => 'required|exists:ingredients,id',
+            'stock' => 'required|numeric|min:0',
+        ]);
+
+        $ingredient = Ingredient::findOrFail($data['id']);
+        $newStock   = (float) $data['stock'];
+        $diff       = $newStock - $ingredient->stock;
+
+        $ingredient->stock = $newStock;
+        $ingredient->save();
+
+        IngredientStockLog::create([
+            'ingredient_id' => $ingredient->id,
+            'type'          => $diff >= 0 ? 'in' : 'out',
+            'quantity'      => abs($diff),
+            'stock_after'   => $ingredient->stock,
+            'unit'          => $ingredient->unit,
+            'user_id'       => auth()->id(),
+        ]);
+
+        return back()->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));
+    }
+
     public function create()
     {
         $ingredients = Ingredient::all();

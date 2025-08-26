@@ -123,6 +123,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
     Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
+    Route::post('ingredient-stock/adjust', [IngredientStockController::class, 'adjust'])->name('ingredient-stock.adjust');
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
     Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');
     Route::get('reports/top-quantity-sales', [SalesReportController::class, 'topQuantitySales'])->name('reports.topQuantitySales');
@@ -183,6 +184,7 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
 
     
     Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
+    Route::post('ingredient-stock/adjust', [IngredientStockController::class, 'adjust'])->name('ingredient-stock.adjust');
 
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
     Route::get('reports/sales/week', [SalesReportController::class, 'week'])->name('reports.sales.week');

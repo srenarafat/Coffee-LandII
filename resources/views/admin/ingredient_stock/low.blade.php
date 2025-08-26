@@ -115,18 +115,30 @@
         </div>
 
         <div class="modal-body p-3">
+          {{-- Ingredient --}}
           <div class="mb-2">
             <label class="form-label small mb-1">Ingredient</label>
             <input type="text" id="adjustStockName" class="form-control form-control-sm" readonly>
           </div>
+
+          {{-- Current stock --}}
           <div class="mb-2">
             <label class="form-label small mb-1">Current Stock</label>
             <input type="text" id="adjustStockCurrent" class="form-control form-control-sm" readonly>
           </div>
+
+          {{-- New stock --}}
           <div class="mb-2">
             <label class="form-label small mb-1">New Stock</label>
             <input type="number" name="stock" class="form-control form-control-sm" required>
             <small class="text-muted">Enter the new stock amount</small>
+          </div>
+
+          {{-- Note --}}
+          <div class="mb-2">
+            <label class="form-label small mb-1">Note</label>
+            <textarea name="note" rows="2" class="form-control form-control-sm"
+                      placeholder="E.g. Delivery, Wastage, Manual adjustment…"></textarea>
           </div>
         </div>
 
