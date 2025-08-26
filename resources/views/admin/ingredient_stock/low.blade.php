@@ -5,14 +5,11 @@
   <div class="card shadow-sm border-0 rounded-4">
 
     {{-- Header --}}
-    <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center bg-light">
-      <div class="d-flex align-items-center gap-2">
-        <h5 class="mb-0 fw-bold text-brown">📦 Low Ingredient Stock</h5>
-        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
-          Threshold: {{ rtrim(rtrim(number_format($threshold, 2), '0'), '.') }}
-        </span>
-      </div>
-
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-light">
+      <h5 class="mb-0 fw-bold text-brown">📦 Low Ingredient Stock</h5>
+      <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
+      Threshold: 3
+      </span>
       <div class="d-flex gap-2">
         <input id="lowStockSearch" type="search" class="form-control form-control-sm"
                placeholder="Search ingredient…" style="min-width:220px">
@@ -25,14 +22,14 @@
     {{-- Body --}}
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table id="lowStockTable" class="table table-hover align-middle mb-0">
-          <thead class="sticky-top bg-brown text-white" style="top:0;z-index:5;">
+        <table id="lowStockTable" class="table table-striped align-middle mb-0">
+          <thead class="bg-brown text-white">
             <tr>
-              <th class="text-start" style="width:40%">Ingredient</th>
-              <th class="text-center" style="width:15%">Unit</th>
-              <th class="text-center" style="width:15%">in Stock</th>
-              <th class="text-center" style="width:15%">Status</th>
-              <th class="text-center" style="width:15%">Action</th>
+              <th class="text-start">Ingredient</th>
+              <th class="text-center">Unit</th>
+              <th class="text-center">In Stock</th>
+              <th class="text-center">Status</th>
+              <th class="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -41,45 +38,25 @@
               $stock   = (float) ($ingredient->stock ?? 0);
               $unitRaw = (string) ($ingredient->unit ?? '');
               $unitKey = strtolower(trim($unitRaw));
-              $min     = $unitAlerts[$unitKey] ?? 3;  // default alert threshold
-              $pct     = min(100, max(0, round(($stock / max(1,$threshold)) * 100)));
+              $min     = $unitAlerts[$unitKey] ?? 3;   // default alert threshold
               $isAlert = $stock < $min;
               $fmt     = fn($n) => rtrim(rtrim(number_format($n, 2), '0'), '.');
             @endphp
             <tr class="{{ $isAlert ? 'table-warning' : '' }}">
-              {{-- Ingredient + bar --}}
-              <td>
-                <div class="fw-semibold">{{ $ingredient->name }}</div>
-                <div class="progress progress-thin mt-1" title="Remaining vs threshold">
-                  <div class="progress-bar {{ $pct<=25?'bg-danger':($pct<=60?'bg-warning':'bg-success') }}"
-                       role="progressbar" style="width: {{ $pct }}%" aria-valuenow="{{ $pct }}"
-                       aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                <small class="text-muted">at {{ $fmt($stock) }} / {{ $fmt($threshold) }}</small>
-              </td>
-
-              {{-- Unit --}}
+              <td>{{ $ingredient->name }}</td>
+              <td class="text-center">{{ $unitRaw }}</td>
               <td class="text-center">
-                <span title="Alert below {{ $fmt($min) }} {{ $unitRaw }}">{{ $unitRaw }}</span>
-              </td>
-
-              {{-- Stock --}}
-              <td class="text-center">
-                <span class="badge rounded-pill {{ $stock<=0?'bg-danger':($stock<=$threshold?'bg-warning text-dark':'bg-success') }} current-stock">
+                <span class="badge rounded-pill {{ $isAlert ? 'bg-danger' : 'bg-warning text-dark' }} current-stock">
                   {{ $fmt($stock) }}
                 </span>
               </td>
-
-              {{-- Status --}}
               <td class="text-center">
                 @if($isAlert)
-                  <span class="badge bg-danger" title="Alert below {{ $fmt($min) }} {{ $unitRaw }}">ALERT</span>
+                  <span class="badge bg-danger">ALERT</span>
                 @else
-                  <span class="badge bg-warning text-dark" title="Below threshold {{ $fmt($threshold) }}">Low</span>
+                  <span class="badge bg-warning text-dark">Low</span>
                 @endif
               </td>
-
-              {{-- Action --}}
               <td class="text-center">
                 <button
                   class="btn btn-sm btn-brown adjust-stock-btn"
@@ -98,10 +75,6 @@
           </tbody>
         </table>
       </div>
-
-      @if(method_exists($ingredients, 'links'))
-        <div class="mt-3 px-3">{{ $ingredients->links() }}</div>
-      @endif
     </div>
   </div>
 </div>
@@ -141,7 +114,7 @@
           </div>
 
           <div class="mb-2">
-            <label class="form-label small mb-1">Current Stock</label>
+            <label class="form-label small mb-1">in Stock</label>
             <input type="text" id="adjustStockCurrent" class="form-control form-control-sm" readonly>
           </div>
 
@@ -154,7 +127,6 @@
                    step="0.01"
                    min="0.01"
                    placeholder="e.g. 2">
-            <small class="text-muted">Amount to add to current stock</small>
           </div>
 
           <div class="mb-2">
@@ -178,8 +150,7 @@
   .text-brown { color:#6f4e37; }
   .btn-brown { background:#6f4e37; color:#fff; }
   .btn-brown:hover { background:#5c3f2e; color:#fff; }
-  .progress-thin { height:6px; background:#f1f5f9; }
-  thead.sticky-top th { box-shadow:0 1px 0 rgba(0,0,0,.05); }
+  thead th { font-weight:600; }
 </style>
 @endpush
 
@@ -196,7 +167,7 @@
     });
   });
 
-  // Open Adjust modal (read the on-screen stock)
+  // Open Adjust modal
   document.querySelectorAll('.adjust-stock-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id   = btn.dataset.id;
@@ -209,13 +180,13 @@
       document.getElementById('adjustStockId').value      = id;
       document.getElementById('adjustStockName').value    = `${name} (${unit})`;
       document.getElementById('adjustStockCurrent').value = `${current} ${unit}`;
-
       document.getElementById('adjustStockAdd').value = '';
+
       new bootstrap.Modal(document.getElementById('adjustStockModal')).show();
     });
   });
 
-  // Submit via AJAX
+  // AJAX submit
   document.getElementById('adjustStockForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form   = e.target;
