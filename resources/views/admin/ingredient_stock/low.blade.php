@@ -5,19 +5,21 @@
   <div class="card shadow-sm border-0 rounded-4">
 
     {{-- Header --}}
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-light">
-      <h5 class="mb-0 fw-bold text-brown">📦 Low Ingredient Stock</h5>
-      <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
+<div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-light">
+  <h5 class="mb-0 fw-bold text-brown d-flex align-items-center gap-2">
+    📦 Low Ingredient Stock
+    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
       Threshold: 3
-      </span>
-      <div class="d-flex gap-2">
-        <input id="lowStockSearch" type="search" class="form-control form-control-sm"
-               placeholder="Search ingredient…" style="min-width:220px">
-        <a href="{{ route(auth()->user()->role.'.ingredient-stock.low') }}" class="btn btn-sm btn-outline-secondary">
-          Refresh
-        </a>
-      </div>
-    </div>
+    </span>
+  </h5>
+
+  <div class="d-flex gap-2">
+    <input id="lowStockSearch" type="search" class="form-control form-control-sm"
+           placeholder="Search ingredient…" style="min-width:220px">
+    <a href="{{ route(auth()->user()->role.'.ingredient-stock.low') }}"
+       class="btn btn-sm btn-outline-secondary">Refresh</a>
+  </div>
+</div>
 
     {{-- Body --}}
     <div class="card-body p-0">
