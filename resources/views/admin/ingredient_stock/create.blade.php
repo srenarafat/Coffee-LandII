@@ -179,13 +179,15 @@
 document.addEventListener('DOMContentLoaded', function () {
   // ===== Data =====
   const RAW = @json(
-    $ingredients->map(fn($i) => [
-      'id'    => $i->id,
-      'name'  => $i->name,
-      'unit'  => $i->unit,
-      'stock' => (float) $i->stock,
-    ])
-  );
+    $ingredients->map(function ($i) {
+        return [
+            'id'    => $i->id,
+            'name'  => $i->name,
+            'unit'  => $i->unit,
+            'stock' => (float) $i->stock
+        ];
+    })
+);
 
   const LOW_STOCK_THRESHOLD = 3; // change here easily
 
