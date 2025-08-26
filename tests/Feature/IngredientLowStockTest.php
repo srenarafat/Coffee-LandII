@@ -14,8 +14,7 @@ class IngredientLowStockTest extends TestCase
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'admin', 'shop_id' => $shop->id]);
-        Setting::create(['low_stock_threshold' => 5]);
-
+        Setting::create(['low_stock_threshold' => 3]);
         $category = Category::create(['name' => 'C']);
         Product::create([
             'name' => 'LowProduct',
@@ -25,7 +24,7 @@ class IngredientLowStockTest extends TestCase
             'stock' => 1,
         ]);
 
-        Ingredient::create(['name' => 'Sugar', 'unit' => 'g', 'stock' => 3]);
+        Ingredient::create(['name' => 'Sugar', 'unit' => 'g', 'stock' => 2]);
         Ingredient::create(['name' => 'Salt', 'unit' => 'g', 'stock' => 10]);
 
         $response = $this->actingAs($user)->get(route('admin.dashboard'));
@@ -36,7 +35,7 @@ class IngredientLowStockTest extends TestCase
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'admin', 'shop_id' => $shop->id]);
-        Setting::create(['low_stock_threshold' => 5]);
+        Setting::create(['low_stock_threshold' => 3]);
 
         $category = Category::create(['name' => 'C']);
         Product::create([
@@ -47,7 +46,7 @@ class IngredientLowStockTest extends TestCase
             'stock' => 1,
         ]);
 
-        Ingredient::create(['name' => 'Sugar', 'unit' => 'g', 'stock' => 3]);
+        Ingredient::create(['name' => 'Sugar', 'unit' => 'g', 'stock' => 2]);
         Ingredient::create(['name' => 'Salt', 'unit' => 'g', 'stock' => 10]);
 
         $response = $this->actingAs($user)->get(route('admin.ingredient-stock.low'));
@@ -56,9 +55,27 @@ class IngredientLowStockTest extends TestCase
         $response->assertDontSee('LowProduct');
     }
     
+    
+    public function test_stock_equal_to_threshold_not_alerted()
+    {
+        $shop = Shop::create(['name' => 'S1']);
+        $user = User::factory()->create(['role' => 'admin', 'shop_id' => $shop->id]);
+        Setting::create(['low_stock_threshold' => 3]);
+
+        Ingredient::create(['name' => 'Exact', 'unit' => 'g', 'stock' => 3]);
+        Ingredient::create(['name' => 'Low', 'unit' => 'g', 'stock' => 2]);
+
+        $response = $this->actingAs($user)->get(route('admin.dashboard'));
+        $response->assertViewHas('lowStockCount', 1);
+
+        $response = $this->actingAs($user)->get(route('admin.ingredient-stock.low'));
+        $response->assertOk();
+        $response->assertSee('Low');
+        $response->assertDontSee('Exact');
+    }
     public function test_admin_can_adjust_low_stock()
     {
-        Setting::create(['low_stock_threshold' => 5]);
+        Setting::create(['low_stock_threshold' => 3]);
         $user = User::factory()->create(['role' => 'admin']);
         $ingredient = Ingredient::create(['name' => 'Flour', 'unit' => 'kg', 'stock' => 2]);
 
@@ -86,7 +103,7 @@ class IngredientLowStockTest extends TestCase
 
     public function test_superadmin_can_adjust_low_stock()
     {
-        Setting::create(['low_stock_threshold' => 5]);
+        Setting::create(['low_stock_threshold' => 3]);
         $user = User::factory()->create(['role' => 'superadmin']);
         $ingredient = Ingredient::create(['name' => 'Sugar', 'unit' => 'g', 'stock' => 1]);
 
@@ -114,7 +131,7 @@ class IngredientLowStockTest extends TestCase
     
     public function test_zero_diff_adjustment_creates_no_log(): void
     {
-        Setting::create(['low_stock_threshold' => 5]);
+        Setting::create(['low_stock_threshold' => 3]);
         $user = User::factory()->create(['role' => 'admin']);
         $ingredient = Ingredient::create(['name' => 'Salt', 'unit' => 'g', 'stock' => 2]);
 
@@ -133,7 +150,7 @@ class IngredientLowStockTest extends TestCase
     }
     public function test_adjust_via_ajax_returns_json_and_updates_stock()
 {
-    Setting::create(['low_stock_threshold' => 5]);
+    Setting::create(['low_stock_threshold' => 3]);
     $user = User::factory()->create(['role' => 'admin']);
     $ingredient = Ingredient::create(['name' => 'Milk', 'unit' => 'ml', 'stock' => 1.5]);
 

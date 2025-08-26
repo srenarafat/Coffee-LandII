@@ -21,7 +21,7 @@
                 <th class="text-center">{{ __('messages.type') }}</th>
                 <th class="text-center">{{ __('messages.qty') }}</th>
                 <th class="text-center">{{ __('messages.unit') }}</th>
-                <th class="text-center">{{ __('messages.current_stock') }}</th>
+                <th class="text-center">{{ __('messages.in_stock') }}</th>
                 <th class="text-center">{{ __('messages.Note') }}</th>
                 <th class="text-center">{{ __('messages.date') }}</th>
             </tr>

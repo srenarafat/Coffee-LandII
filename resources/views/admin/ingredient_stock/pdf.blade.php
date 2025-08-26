@@ -32,7 +32,7 @@
                     <th>{{ __('messages.type') }}</th>
                     <th>{{ __('messages.qty') }}</th>
                     <th>{{ __('messages.unit') }}</th>
-                    <th>{{ __('messages.current_stock') }}</th>
+                    <th>{{ __('messages.in_stock') }}</th>
                     <th>{{ __('messages.Note') }}</th>
                     <th>{{ __('messages.users') }}</th>
                     <th>{{ __('messages.date') }}</th>
@@ -61,7 +61,7 @@
                     <th>{{ __('messages.ingredient') }}</th>
                     <th>{{ __('messages.total_in') }}</th>
                     <th>{{ __('messages.total_out') }}</th>
-                    <th>{{ __('messages.current_stock') }}</th>
+                    <th>{{ __('messages.in_stock') }}</th>
                     <th>{{ __('messages.last_at') }}</th>
                 </tr>
             </thead>

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         if (!Schema::hasColumn('settings', 'low_stock_threshold')) {
             Schema::table('settings', function (Blueprint $table) {
-                $table->unsignedInteger('low_stock_threshold')->default(5);
+                $table->unsignedInteger('low_stock_threshold')->default(3);
             });
         }
     }

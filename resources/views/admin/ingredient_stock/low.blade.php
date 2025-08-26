@@ -30,7 +30,7 @@
             <tr>
               <th class="text-start" style="width:40%">Ingredient</th>
               <th class="text-center" style="width:15%">Unit</th>
-              <th class="text-center" style="width:15%">Stock</th>
+              <th class="text-center" style="width:15%">in Stock</th>
               <th class="text-center" style="width:15%">Status</th>
               <th class="text-center" style="width:15%">Action</th>
             </tr>

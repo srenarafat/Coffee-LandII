@@ -15,7 +15,7 @@ class IngredientStockController extends Controller
 {
     public function low()
     {
-        $threshold = Setting::value('low_stock_threshold') ?? 5;
+        $threshold = Setting::value('low_stock_threshold') ?? 3;
 
         // Per-unit "alert" thresholds (edit freely).
         // Fallback is 3 when unit is unknown.
@@ -37,7 +37,7 @@ class IngredientStockController extends Controller
         ];
 
         $ingredients = Ingredient::query()
-            ->where('stock', '<=', $threshold)
+            ->where('stock', '<', $threshold)
             ->orderBy('name')
             ->get();
 

@@ -39,8 +39,8 @@ class AdminController extends Controller
                                ->where('shop_id', auth()->user()->shop_id)
                                ->sum('total');
 
-        $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
+        $threshold = Setting::value('low_stock_threshold') ?? 3;
+        $lowStockCount = Ingredient::where('stock', '<', $threshold)->count();
 
         // Calculate sales stats for the current week
         $startDate = Carbon::now()->startOfWeek();
@@ -87,8 +87,8 @@ class AdminController extends Controller
                                 ->where('shop_id', auth()->user()->shop_id))
                                 ->sum('quantity');
         $avgOrderValue = $ordersToday > 0 ? $todayTotalSales / $ordersToday : 0;
-        $threshold = Setting::value('low_stock_threshold') ?? 5;
-        $lowStockCount = Ingredient::where('stock', '<=', $threshold)->count();
+        $threshold = Setting::value('low_stock_threshold') ?? 3;
+        $lowStockCount = Ingredient::where('stock', '<', $threshold)->count();
 
 
         $weekAgo = Carbon::now()->subDays(7);

@@ -13,7 +13,7 @@ return new class extends Migration
             Schema::table('settings', function (Blueprint $table) {
                 $table->unsignedInteger('low_stock_threshold')->nullable();
                 // If you prefer a default instead of NULL, use:
-                // $table->unsignedInteger('low_stock_threshold')->default(5);
+                // $table->unsignedInteger('low_stock_threshold')->default(3);
             });
         }
     }

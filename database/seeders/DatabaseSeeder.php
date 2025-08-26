@@ -24,6 +24,6 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ProductSeeder::class,
         ]);
-        Setting::firstOrCreate([], ['low_stock_threshold' => 5]);
+        Setting::firstOrCreate([], ['low_stock_threshold' => 3]);
     }
 }
