@@ -111,4 +111,24 @@ class IngredientLowStockTest extends TestCase
             'note' => 'Manual adjustment',
         ]);
     }
+    
+    public function test_zero_diff_adjustment_creates_no_log(): void
+    {
+        Setting::create(['low_stock_threshold' => 5]);
+        $user = User::factory()->create(['role' => 'admin']);
+        $ingredient = Ingredient::create(['name' => 'Salt', 'unit' => 'g', 'stock' => 2]);
+
+        $response = $this->actingAs($user)->post(route('admin.ingredient-stock.adjust'), [
+            'id' => $ingredient->id,
+            'stock' => 2,
+            'note' => 'No change',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
+
+        $ingredient->refresh();
+        $this->assertEquals(2, $ingredient->stock);
+        $this->assertDatabaseCount('ingredient_stock_logs', 0);
+    }
 }

@@ -200,6 +200,7 @@ return [
     'in_stock' => 'In Stock',
     'product_id' => 'Product ID',
     'stock_not_enough' => 'Not enough stock.',
+    'stock_not_changed' => ':name stock unchanged.',
     'stock_updated' => ':name 🎉 Stock updated successfully.',
     'id' => 'ID',
     'ingredient' => 'Ingredient',

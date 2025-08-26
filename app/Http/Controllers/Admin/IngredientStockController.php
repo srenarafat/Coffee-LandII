@@ -103,6 +103,10 @@ class IngredientStockController extends Controller
         $ingredient->stock = $newStock;
         $ingredient->save();
 
+        if ($diff === 0.0) {
+            return back()->with('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
+        }
+
         IngredientStockLog::create([
             'ingredient_id' => $ingredient->id,
             'type'          => $diff >= 0 ? 'in' : 'out',

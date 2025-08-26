@@ -13,7 +13,7 @@ class Ingredient extends Model
     ];
 
     protected $casts = [
-        'stock' => 'integer',
+        'stock' => 'float',
     ];
 
     public function stockLogs()
