@@ -104,7 +104,8 @@ class IngredientStockController extends Controller
         $ingredient->save();
 
         if ($diff === 0.0) {
-            return back()->with('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
+            return redirect()->route(auth()->user()->role . '.ingredient-stock.low')
+                ->with('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
         }
 
         IngredientStockLog::create([
@@ -117,7 +118,8 @@ class IngredientStockController extends Controller
             'note'          => $data['note'] ?? null,
         ]);
 
-        return back()->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));
+        return redirect()->route(auth()->user()->role . '.ingredient-stock.low')
+            ->with('success', __('messages.stock_updated', ['name' => $ingredient->name]));
     }
 
     public function create()

@@ -58,7 +58,7 @@
                 {{-- stock count --}}
                 <td class="text-center">
                   <span class="badge rounded-pill {{ $stock<=0?'bg-danger':($stock<=$threshold?'bg-warning text-dark':'bg-success') }}">
-                    {{ $stock }}
+                    {{ number_format($stock, 2) }}
                   </span>
                 </td>
 
@@ -79,7 +79,7 @@
                           data-id="{{ $ingredient->id }}"
                           data-name="{{ $ingredient->name }}"
                           data-unit="{{ $ingredient->unit }}"
-                          data-stock="{{ $stock }}">
+                          data-stock="{{ number_format($stock, 2, '.', '') }}">
                     Adjust
                   </button>
                 </td>
@@ -130,7 +130,7 @@
           {{-- New stock --}}
           <div class="mb-2">
             <label class="form-label small mb-1">New Stock</label>
-            <input type="number" name="stock" class="form-control form-control-sm" required>
+            <input type="number" name="stock" class="form-control form-control-sm" step="0.01" required>
             <small class="text-muted">Enter the new stock amount</small>
           </div>
 
@@ -178,7 +178,7 @@
       const id   = btn.dataset.id;
       const name = btn.dataset.name;
       const unit = btn.dataset.unit;
-      const stock= btn.dataset.stock;
+      const stock= parseFloat(btn.dataset.stock || 0).toFixed(2);
 
       document.getElementById('adjustStockId').value   = id;
       document.getElementById('adjustStockName').value = name+' ('+unit+')';

@@ -68,7 +68,7 @@ class IngredientLowStockTest extends TestCase
             'note' => 'Manual adjustment',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('admin.ingredient-stock.low'));
         $response->assertSessionHas('success', __('messages.stock_updated', ['name' => $ingredient->name]));
 
         $ingredient->refresh();
@@ -96,7 +96,7 @@ class IngredientLowStockTest extends TestCase
             'note' => 'Manual adjustment',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('superadmin.ingredient-stock.low'));
         $response->assertSessionHas('success', __('messages.stock_updated', ['name' => $ingredient->name]));
 
         $ingredient->refresh();
@@ -124,7 +124,7 @@ class IngredientLowStockTest extends TestCase
             'note' => 'No change',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('admin.ingredient-stock.low'));
         $response->assertSessionHas('info', __('messages.stock_not_changed', ['name' => $ingredient->name]));
 
         $ingredient->refresh();
