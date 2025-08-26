@@ -37,7 +37,7 @@
           <tbody>
             @forelse($ingredients as $ingredient)
               @php
-                $stock = (int) ($ingredient->stock ?? 0);
+                $stock = $ingredient->stock ?? 0;
                 $pct   = min(100, max(0, round(($stock / max(1,$threshold)) * 100)));
               @endphp
               <tr>
@@ -49,7 +49,7 @@
                          role="progressbar" style="width: {{ $pct }}%" aria-valuenow="{{ $pct }}"
                          aria-valuemin="0" aria-valuemax="100"></div>
                   </div>
-                  <small class="text-muted">at {{ $stock }} / {{ $threshold }}</small>
+                  <small class="text-muted">at {{ number_format($stock, 2) }} / {{ number_format($threshold, 2) }}</small>
                 </td>
 
                 {{-- unit --}}
@@ -79,7 +79,7 @@
                           data-id="{{ $ingredient->id }}"
                           data-name="{{ $ingredient->name }}"
                           data-unit="{{ $ingredient->unit }}"
-                          data-stock="{{ number_format($stock, 2, '.', '') }}">
+                          data-stock="{{ $stock }}">
                     Adjust
                   </button>
                 </td>
