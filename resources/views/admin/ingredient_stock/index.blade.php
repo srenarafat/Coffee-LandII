@@ -70,9 +70,9 @@
                         <tr>
                             <th class="text-center">{{ __('messages.ingredient_id') }}</th>
                             <th class="text-center">{{ __('messages.ingredient') }}</th>
-                            <th class="text-center">{{ __('messages.total_in') }}</th>
-                            <th class="text-center">{{ __('messages.total_out') }}</th>
-                            <th class="text-center">{{ __('messages.current_stock') }}</th>
+                            <th class="text-center">{{ __('messages.stock_in') }}</th>
+                            <th class="text-center">{{ __('messages.stock_out') }}</th>
+                            <th class="text-center">{{ __('messages.in_stock') }}</th>
                             <th class="text-center">{{ __('messages.last at') }}</th>
                             <th class="text-center"></th>
                         </tr>
