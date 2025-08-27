@@ -1,5 +1,5 @@
 @forelse ($products as $product)
-<div class="product-card">
+<div class="product-card position-relative">
     <!-- Product Image -->
     <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
 
@@ -9,21 +9,35 @@
     </h6>
 
     <!-- Price -->
-    <p class="fw-semibold">
+    <p class="fw-semibold mb-5"> {{-- add bottom space so text doesn't collide with the button --}}
         {{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}
     </p>
 
     <!-- Customize Button -->
     <button type="button"
-            class="btn rounded-circle d-flex align-items-center justify-content-center mt-2 open-customizer"
+            class="btn rounded-circle d-flex align-items-center justify-content-center position-absolute open-customizer"
             data-id="{{ $product->id }}"
             data-name="{{ app()->getLocale() === 'kh' && $product->name_km ? $product->name_km : $product->name }}"
             data-price="{{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}"
             data-image="{{ asset('storage/' . $product->image) }}"
-            style="color: white; width: 36px; height: 36px; background-color: #5f4545;">
+            style="color:#fff;width:36px;height:36px;background-color:#5f4545;bottom:10px;right:10px;">
         <i class="bi bi-plus fs-6"></i>
     </button>
 </div>
 @empty
 <div class="text-muted text-center">{{ __('messages.no_product_found') }}</div>
 @endforelse
+<style>
+  .product-card{
+    background:#fff;border:1px solid #eee;border-radius:16px;padding:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.04);
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    height:100%;
+  }
+  .product-card img{
+    width:100%;height:140px;object-fit:contain;border-radius:12px;background:#f7f7f7;
+  }
+  .product-card .open-customizer{
+    box-shadow:0 6px 16px rgba(0,0,0,.18);
+  }
+</style>
