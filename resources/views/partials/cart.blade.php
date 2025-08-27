@@ -115,7 +115,16 @@
                                     </span>
                                 </td>
 
-                                <td>
+                                <td class="d-flex gap-1">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary edit-item-btn"
+                                            data-cart-key="{{ $key }}"
+                                            data-item='@json(array_merge($item, [
+                                                "image_url" => asset('storage/' . $item['image']),
+                                                "price_display" => (optional($setting)->currency ?? '$') . number_format($item['price'], 2)
+                                            ]))'>
+                                        {{ __('messages.edit') }}
+                                    </button>
                                     <form method="POST" action="{{ route($routePrefix . '.pos.remove', $key) }}" class="d-inline remove-item-form">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-danger">&times;</button>
@@ -472,7 +481,7 @@
     }
 
     if (removeNoteBtn){
-      const cartKey = $('#commentCartKey').value;
+      let cartKey = $('#commentCartKey').value;
       const fd = new FormData();
       fd.append('_token', getCsrf());
       fd.append('cart_key', cartKey);
@@ -488,11 +497,14 @@
           const modal = bootstrap.Modal.getInstance($('#commentModal'));
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
-          const btn = cartContainer.querySelector(`[data-cart-key="${cartKey}"]`);
+          const newKey = json.new_key || cartKey;
+          $('#commentCartKey').value = newKey;
+          const btn = cartContainer.querySelector(`[data-cart-key="${newKey}"]`);
           if(btn){
             const newNotes = JSON.parse(btn.dataset.notes || '[]');
             btn.dataset.notes = JSON.stringify(newNotes);
           }
+          cartKey = newKey;
         }
       }catch(err){ showToast('Error updating note'); }
       return;
@@ -548,7 +560,9 @@
           const modal = bootstrap.Modal.getInstance($('#commentModal'));
           if(modal) modal.hide();
           cartContainer.innerHTML = json.cart;
-          const btn = cartContainer.querySelector(`[data-cart-key="${cartKey}"]`);
+          const newKey = json.new_key || cartKey;
+          $('#commentCartKey').value = newKey;
+          const btn = cartContainer.querySelector(`[data-cart-key="${newKey}"]`);
           if(btn){
             const notes = JSON.parse(btn.dataset.notes || '[]');
             btn.dataset.notes = JSON.stringify(notes);

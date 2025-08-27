@@ -13,6 +13,7 @@
       <form id="customizerForm" class="add-to-cart-form" method="POST" action="{{ $addRoute }}">
         @csrf
         <input type="hidden" name="product_id" id="customizerProductId">
+        <input type="hidden" name="cart_key" id="customizerCartKey">
 
         {{-- defaults bound to tiles --}}
         <input type="hidden" name="size"        id="sizeValue"        value="medium">
@@ -33,14 +34,22 @@
             <small class="text-muted fw-semibold" id="customizerPrice"></small>
           </div>
 
-          {{-- qty (compact) --}}
-          <div class="mb-2 center">
-            <label class="form-label mb-1 small">{{ __('messages.quantity') }}</label>
-            <div class="input-group input-group-sm" style="max-width:160px">
-              <button type="button" id="qtyMinus" class="btn btn-outline-secondary">−</button>
-              <input type="text" id="customizerQty" name="quantity" value="1" readonly
-                     class="form-control text-center" style="max-width:50px">
-              <button type="button" id="qtyPlus" class="btn btn-outline-secondary">+</button>
+          {{-- Quantity (centered, pill style) --}}
+          <div class="mb-2 text-center">
+            <!-- <label class="form-label mb-1 fw-semibold">{{ __('messages.quantity') }}</label> -->
+
+            <div class="qty-control mx-auto">
+              <button type="button" id="qtyMinus" class="qty-btn" aria-label="Decrease">−</button>
+              <input
+                type="text"
+                id="customizerQty"
+                name="quantity"
+                value="1"
+                readonly
+                class="qty-input"
+                inputmode="numeric"
+                autocomplete="off">
+              <button type="button" id="qtyPlus" class="qty-btn" aria-label="Increase">+</button>
             </div>
           </div>
 
@@ -153,6 +162,40 @@
     box-shadow:0 0 0 2px rgba(13,110,253,.14) inset, 0 2px 8px rgba(13,110,253,.08);
     color:#0b5ed7;
   }
+    /* Centered, attractive quantity control */
+.qty-control{
+  display:inline-flex; align-items:center;
+  border:2px solid #198754;         /* your POS green */
+  border-radius:999px; padding:2px;
+  background:#fff; width:auto;      /* prevent full-width stretch */
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+}
+
+.qty-btn{
+  width:38px; height:38px; border:none; border-radius:999px;
+  background:#198754; color:#fff; font-weight:800; font-size:1.1rem; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:transform .08s ease, background .2s ease, box-shadow .2s;
+  box-shadow:0 2px 6px rgba(25,135,84,.25);
+}
+.qty-btn:hover{ background:#157347; }
+.qty-btn:active{ transform:scale(.95); }
+
+.qty-input{
+  width:60px; border:none; outline:none; text-align:center;
+  background:transparent; font-weight:700; font-size:1.05rem; color:#111;
+  padding:0 .25rem;
+}
+/* remove number spinners across browsers if the type changes later */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.qty-input[type=number]{ -moz-appearance:textfield; }
+
+.qty-control:focus-within{ box-shadow:0 0 0 3px rgba(25,135,84,.18); }
+
+/* Optional smaller size: add 'qty-sm' to .qty-control */
+.qty-control.qty-sm .qty-btn{ width:32px; height:32px; font-size:1rem; }
+.qty-control.qty-sm .qty-input{ width:48px; font-size:.95rem; }
 </style>
 
 <script>
@@ -163,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sugarIn = document.getElementById('sugarValueInput');
   const iceIn   = document.getElementById('iceValue');
   const qty     = document.getElementById('customizerQty');
+  const form    = document.getElementById('customizerForm');
 
   // tile toggle
   modalEl.addEventListener('click', (e) => {
@@ -183,8 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     qty.value = Math.max(1, (parseInt(qty.value,10)||1) + 1);
   });
 
-  // reset defaults each time the dialog opens
+  // reset defaults each time the dialog opens unless editing
   modalEl.addEventListener('show.bs.modal', () => {
+    if (form.dataset.mode === 'edit') return;
     sizeIn.value  = 'medium';
     sugarIn.value = '100';
     iceIn.value   = 'normal';

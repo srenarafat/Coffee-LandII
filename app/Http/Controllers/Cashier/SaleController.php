@@ -171,6 +171,15 @@ class SaleController extends Controller
 
     public function updateQuantity(Request $request)
     {
+        $request->validate([
+            'cart_key'    => 'required',
+            'quantity'    => 'nullable|integer|min:1',
+            'size'        => 'nullable|string',
+            'sugar_level' => 'nullable|integer|min:0|max:150',
+            'ice_option'  => 'nullable|string',
+            'note'        => 'nullable|string',
+        ]);
+
         $id     = $request->input('cart_key');
         $action = $request->input('action');
 
@@ -192,6 +201,29 @@ class SaleController extends Controller
                     $cart[$id]['quantity']++;
                 } elseif ($action === 'decrease') {
                     $cart[$id]['quantity'] = max(1, $cart[$id]['quantity'] - 1);
+                    } elseif ($action === 'overwrite') {
+                    $qty   = max(1, (int) $request->input('quantity', $cart[$id]['quantity']));
+                    $size  = $request->input('size', '');
+                    $sugar = $request->input('sugar_level');
+                    $ice   = $request->input('ice_option', '');
+                    $note  = trim($request->input('note', ''));
+
+                    $cart[$id]['quantity']    = $qty;
+                    $cart[$id]['size']        = $size;
+                    $cart[$id]['sugar_level'] = $sugar;
+                    $cart[$id]['ice_option']  = $ice;
+                    $cart[$id]['note']        = $note;
+
+                    $newKey = $this->makeCartKey($productId, $size, $sugar, $ice, $note);
+                    if ($newKey !== $id) {
+                        if (isset($cart[$newKey])) {
+                            $cart[$newKey]['quantity'] += $cart[$id]['quantity'];
+                        } else {
+                            $cart[$newKey] = $cart[$id];
+                        }
+                        unset($cart[$id]);
+                        $id = $newKey;
+                    }
                 }
             }
         }
@@ -241,12 +273,27 @@ class SaleController extends Controller
         $note   = trim($request->input('note', ''));
         $remove = trim($request->input('remove_note', ''));
 
-        $cart = session()->get('cart', []);
+        $cart   = session()->get('cart', []);
+        $newKey = $id;
         if (isset($cart[$id])) {
             if ($remove !== '') {
                 $cart[$id]['note'] = '';
             } else {
                 $cart[$id]['note'] = $note;
+            }
+            
+            $item   = $cart[$id];
+            $newKey = $this->makeCartKey(
+                $item['product_id'],
+                $item['size'] ?? '',
+                $item['sugar_level'] ?? null,
+                $item['ice_option'] ?? '',
+                $item['note']
+            );
+
+            if ($newKey !== $id) {
+                $cart[$newKey] = $item;
+                unset($cart[$id]);
             }
         }
 
@@ -261,7 +308,7 @@ class SaleController extends Controller
                 ? 'superadmin'
                 : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
             $html = view('partials.cart', ['routePrefix' => $prefix])->render();
-            return response()->json(['cart' => $html]);
+            return response()->json(['cart' => $html, 'new_key' => $newKey]);
         }
 
         return back();

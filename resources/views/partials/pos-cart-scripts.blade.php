@@ -2,6 +2,8 @@
     const container = document.getElementById('product-container');
     const cartContainer = document.getElementById('cart-container');
     let selectedTableNumber = @json(session('table_number'));
+    const customizerForm = document.getElementById('customizerForm');
+    const customizerAddAction = customizerForm ? customizerForm.action : '';
 
     // open customizer with DEFAULTS (size=medium, sugar=100, ice=normal, note empty)
     function attachCustomizerButtons() {
@@ -9,9 +11,15 @@
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
+                if (!customizerForm) return;
+                customizerForm.action = customizerAddAction;
+                customizerForm.dataset.mode = 'add';
+                document.getElementById('customizerCartKey').value = '';
                 document.getElementById('customizerProductId').value = this.dataset.id;
                 document.getElementById('customizerQty').value = 1;
                 document.getElementById('customizerImage').src = this.dataset.image;
+                document.getElementById('customizerName').textContent = this.dataset.name || '';
+                document.getElementById('customizerPrice').textContent = this.dataset.price || '';
 
                 // defaults for silent options
                 const sizeSel  = document.getElementById('sizeValue');
@@ -30,7 +38,7 @@
     }
 
     function attachCustomizerForm() {
-        const form = document.getElementById('customizerForm');
+        const form = customizerForm;
         if (form && !form.dataset.listener) {
             form.dataset.listener = 'true';
             form.addEventListener('submit', function (e) {
@@ -47,6 +55,9 @@
                 if (String(sugarInp.value) === '100') fd.delete('sugar_level');
                 if (iceSel.value === 'normal') fd.delete('ice_option');
                 if (!noteInp.value.trim()) fd.delete('note');
+                if (form.dataset.mode === 'edit') {
+                    fd.append('action', 'overwrite');
+                }
 
                 fetch(form.action, {
                     method: 'POST',
@@ -66,6 +77,9 @@
                         attachCartFormHandlers();
                         scrollCartToBottom();
                     }
+                    form.action = customizerAddAction;
+                    form.dataset.mode = 'add';
+                    document.getElementById('customizerCartKey').value = '';
                 });
             });
         }
@@ -138,7 +152,7 @@
             if (btn.dataset.listener) return;
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
-                const cartKey = document.getElementById('commentCartKey').value;
+                let cartKey = document.getElementById('commentCartKey').value;
                 const note = btn.dataset.note;
                 const formData = new FormData();
                 formData.append('cart_key', cartKey);
@@ -161,8 +175,12 @@
                         cartContainer.innerHTML = data.cart;
                         attachCartFormHandlers();
                         scrollCartToBottom();
-                        const notes = JSON.parse(document.querySelector(`[data-cart-key="${cartKey}"]`).dataset.notes || '[]');
+                        const newKey = data.new_key || cartKey;
+                        document.getElementById('commentCartKey').value = newKey;
+                        const btn = document.querySelector(`[data-cart-key="${newKey}"]`);
+                        const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
                         renderNotes(notes);
+                        cartKey = newKey;
                     }
                 });
             });
@@ -226,6 +244,44 @@
                     try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
                     catch { showToast(error.message || 'Error updating cart'); }
                 });
+            });
+        });
+
+        // edit cart item options
+        document.querySelectorAll('.edit-item-btn').forEach(btn => {
+            if (btn.dataset.listener) return;
+            btn.dataset.listener = 'true';
+            btn.addEventListener('click', function () {
+                if (!customizerForm) return;
+                const item = JSON.parse(btn.dataset.item || '{}');
+                const row = btn.closest('tr');
+                const updateUrl = row.querySelector('.update-url')?.value || customizerAddAction;
+                customizerForm.action = updateUrl;
+                customizerForm.dataset.mode = 'edit';
+                document.getElementById('customizerCartKey').value = btn.dataset.cartKey;
+                document.getElementById('customizerProductId').value = item.product_id;
+                document.getElementById('customizerQty').value = item.quantity || 1;
+                document.getElementById('customizerImage').src = item.image_url || '';
+                document.getElementById('customizerName').textContent = item.name || '';
+                document.getElementById('customizerPrice').textContent = item.price_display || '';
+                const sizeSel  = document.getElementById('sizeValue');
+                const sugarInp = document.getElementById('sugarValueInput');
+                const iceSel   = document.getElementById('iceValue');
+                const noteInp  = document.getElementById('customizerNote');
+                const size  = item.size || 'medium';
+                const sugar = item.sugar_level != null ? String(item.sugar_level) : '100';
+                const ice   = item.ice_option || 'normal';
+                sizeSel.value = size;
+                sugarInp.value = sugar;
+                iceSel.value = ice;
+                noteInp.value = item.note || '';
+                ['size','sugar','ice'].forEach(g=>{
+                    document.querySelectorAll(`#customizerModal .opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+                });
+                document.querySelector(`#customizerModal .opt-tile[data-group="size"][data-value="${size}"]`)?.classList.add('active');
+                document.querySelector(`#customizerModal .opt-tile[data-group="sugar"][data-value="${sugar}"]`)?.classList.add('active');
+                document.querySelector(`#customizerModal .opt-tile[data-group="ice"][data-value="${ice}"]`)?.classList.add('active');
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
             });
         });
 
@@ -309,7 +365,9 @@
                         attachCartFormHandlers();
                         scrollCartToBottom();
                         const cartKey = document.getElementById('commentCartKey').value;
-                        const btn = document.querySelector(`[data-cart-key="${cartKey}"]`);
+                        const newKey = data.new_key || cartKey;
+                        document.getElementById('commentCartKey').value = newKey;
+                        const btn = document.querySelector(`[data-cart-key="${newKey}"]`);
                         const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
                         renderNotes(notes);
                     }
