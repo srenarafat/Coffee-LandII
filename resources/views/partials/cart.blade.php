@@ -102,7 +102,7 @@
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-secondary note-btn"
                                             data-cart-key="{{ $key }}"
-                                            data-notes='@json($item['note'] ? [$item['note']] : [])'>
+                                            data-notes="@json($item['note'] ? [$item['note']] : [])">
                                         {{ __('messages.edit') }}
                                     </button>
                                 </td>
