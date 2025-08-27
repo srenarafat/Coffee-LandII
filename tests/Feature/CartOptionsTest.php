@@ -37,7 +37,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'M',
-            'sugar_level' => '50%',
+            'sugar_level' => 50,
             'ice_option' => 'normal',
             'note' => 'hello',
         ]);
@@ -47,7 +47,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'M',
-            'sugar_level' => '50%',
+            'sugar_level' => 50,
             'ice_option' => 'normal',
             'note' => 'hello',
         ]);
@@ -56,7 +56,7 @@ class CartOptionsTest extends TestCase
         $this->assertCount(1, $cart);
         $this->assertEquals(2, $cart[$key]['quantity']);
         $this->assertEquals('M', $cart[$key]['size']);
-        $this->assertEquals('50%', $cart[$key]['sugar_level']);
+        $this->assertEquals(50, $cart[$key]['sugar_level']);
         $this->assertEquals('normal', $cart[$key]['ice_option']);
         $this->assertEquals('hello', $cart[$key]['note'] ?? null);
 
@@ -69,7 +69,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 2,
             'size' => 'M',
-            'sugar_level' => '50%',
+            'sugar_level' => 50,
             'ice_option' => 'normal',
             'note' => 'hello',
         ]);
@@ -85,7 +85,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'S',
-            'sugar_level' => '0%',
+            'sugar_level' => 0,
             'ice_option' => 'less',
             'note' => 'a',
         ]);
@@ -94,7 +94,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'L',
-            'sugar_level' => '0%',
+            'sugar_level' => 0,
             'ice_option' => 'less',
             'note' => 'a',
         ]);
@@ -114,7 +114,7 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'S',
-            'sugar_level' => '0%',
+            'sugar_level' => 0,
             'ice_option' => 'less',
             'note' => 'a',
         ]);
@@ -122,9 +122,42 @@ class CartOptionsTest extends TestCase
             'product_id' => $product->id,
             'quantity' => 1,
             'size' => 'L',
-            'sugar_level' => '0%',
+            'sugar_level' => 0,
             'ice_option' => 'less',
             'note' => 'a',
+        ]);
+    }
+
+    public function test_more_sweet_option_accepts_150()
+    {
+        [$user, $product] = $this->setupShop();
+
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'size' => 'M',
+            'sugar_level' => 150,
+            'ice_option' => 'normal',
+        ]);
+
+        $cart = session('cart');
+        $this->assertCount(1, $cart);
+        $key = array_key_first($cart);
+        $this->assertEquals(150, $cart[$key]['sugar_level']);
+
+        $this->post('/cashier/pos/checkout', [
+            'method' => 'cash',
+            'cash_usd' => 4,
+        ]);
+
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'size' => 'M',
+            'sugar_level' => 150,
+            'ice_option' => 'normal',
         ]);
     }
 }

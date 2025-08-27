@@ -89,7 +89,7 @@ class SaleController extends Controller
             'product_id'   => 'required|integer|exists:products,id',
             'quantity'     => 'nullable|integer|min:1',
             'size'         => 'nullable|string',
-            'sugar_level'  => 'nullable|integer|min:0|max:100',
+            'sugar_level'  => 'nullable|integer|min:0|max:150',
             'ice_option'   => 'nullable|string',
             'note'         => 'nullable|string',
         ]);
