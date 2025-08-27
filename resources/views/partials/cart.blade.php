@@ -119,7 +119,7 @@
                                     <button type="button"
                                             class="btn btn-sm btn-outline-secondary edit-item-btn"
                                             data-cart-key="{{ $key }}"
-                                            data-item='@json(array_merge($item, [
+                                            data-notes="@json($item['note'] ? [$item['note']] : [])"
                                                 "image_url" => asset('storage/' . $item['image']),
                                                 "price_display" => (optional($setting)->currency ?? '$') . number_format($item['price'], 2)
                                             ]))'>

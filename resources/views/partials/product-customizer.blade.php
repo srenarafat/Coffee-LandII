@@ -13,7 +13,7 @@
       <form id="customizerForm" class="add-to-cart-form" method="POST" action="{{ $addRoute }}">
         @csrf
         <input type="hidden" name="product_id" id="customizerProductId">
-        <input type="hidden" name="cart_key" id="customizerCartKey">
+        <input type="hidden" name="cart_key"   id="customizerCartKey">
 
         {{-- defaults bound to tiles --}}
         <input type="hidden" name="size"        id="sizeValue"        value="medium">
@@ -36,9 +36,7 @@
 
           {{-- Quantity (centered, pill style) --}}
           <div class="mb-2 text-center">
-            <!-- <label class="form-label mb-1 fw-semibold">{{ __('messages.quantity') }}</label> -->
-
-            <div class="qty-control mx-auto">
+            <div class="qty-control mx-auto" aria-label="Quantity">
               <button type="button" id="qtyMinus" class="qty-btn" aria-label="Decrease">−</button>
               <input
                 type="text"
@@ -60,9 +58,9 @@
               <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
             </div>
             <div class="opt-grid compact">
-              <button type="button" class="opt-tile" data-group="size" data-value="small">{{ __('messages.small') }}</button>
+              <button type="button" class="opt-tile" data-group="size"  data-value="small">{{ __('messages.small') }}</button>
               <button type="button" class="opt-tile active" data-group="size" data-value="medium">{{ __('messages.medium') }}</button>
-              <button type="button" class="opt-tile" data-group="size" data-value="large">{{ __('messages.large') }}</button>
+              <button type="button" class="opt-tile" data-group="size"  data-value="large">{{ __('messages.large') }}</button>
             </div>
           </div>
 
@@ -129,10 +127,9 @@
     background: #ffffff;
   }
   .customizer-header{
-    background: #198754;   /* Bootstrap success green or replace with your sidebar green hex */
-    color:#fff;
-    border-bottom:0;
-}
+    background: #198754; /* POS green */
+    color:#fff; border-bottom:0;
+  }
   .customizer-footer{ border-top:0; }
 
   @keyframes c-fade-in{ from{ transform:translateY(4px); opacity:0 } to{ transform:none; opacity:1 } }
@@ -162,86 +159,89 @@
     box-shadow:0 0 0 2px rgba(13,110,253,.14) inset, 0 2px 8px rgba(13,110,253,.08);
     color:#0b5ed7;
   }
-    /* Centered, attractive quantity control */
-.qty-control{
-  display:inline-flex; align-items:center;
-  border:2px solid #198754;         /* your POS green */
-  border-radius:999px; padding:2px;
-  background:#fff; width:auto;      /* prevent full-width stretch */
-  box-shadow:0 6px 16px rgba(0,0,0,.08);
-}
 
-.qty-btn{
-  width:38px; height:38px; border:none; border-radius:999px;
-  background:#198754; color:#fff; font-weight:800; font-size:1.1rem; line-height:1;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition:transform .08s ease, background .2s ease, box-shadow .2s;
-  box-shadow:0 2px 6px rgba(25,135,84,.25);
-}
-.qty-btn:hover{ background:#157347; }
-.qty-btn:active{ transform:scale(.95); }
-
-.qty-input{
-  width:60px; border:none; outline:none; text-align:center;
-  background:transparent; font-weight:700; font-size:1.05rem; color:#111;
-  padding:0 .25rem;
-}
-/* remove number spinners across browsers if the type changes later */
-.qty-input::-webkit-outer-spin-button,
-.qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
-.qty-input[type=number]{ -moz-appearance:textfield; }
-
-.qty-control:focus-within{ box-shadow:0 0 0 3px rgba(25,135,84,.18); }
-
-/* Optional smaller size: add 'qty-sm' to .qty-control */
-.qty-control.qty-sm .qty-btn{ width:32px; height:32px; font-size:1rem; }
-.qty-control.qty-sm .qty-input{ width:48px; font-size:.95rem; }
+  /* Quantity control */
+  .qty-control{
+    display:inline-flex; align-items:center;
+    border:2px solid #198754; border-radius:999px; padding:2px;
+    background:#fff; width:auto;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+  }
+  .qty-btn{
+    width:38px; height:38px; border:none; border-radius:999px;
+    background:#198754; color:#fff; font-weight:800; font-size:1.1rem; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:transform .08s ease, background .2s ease, box-shadow .2s;
+    box-shadow:0 2px 6px rgba(25,135,84,.25);
+  }
+  .qty-btn:hover{ background:#157347; }
+  .qty-btn:active{ transform:scale(.95); }
+  .qty-input{
+    width:60px; border:none; outline:none; text-align:center;
+    background:transparent; font-weight:700; font-size:1.05rem; color:#111; padding:0 .25rem;
+  }
+  .qty-input::-webkit-outer-spin-button,
+  .qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .qty-input[type=number]{ -moz-appearance:textfield; }
+  .qty-control:focus-within{ box-shadow:0 0 0 3px rgba(25,135,84,.18); }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const modalEl = document.getElementById('customizerModal');
+/* Guard to avoid double binding if this partial is injected twice */
+if (!window.__customizerBound__) {
+  window.__customizerBound__ = true;
 
-  const sizeIn  = document.getElementById('sizeValue');
-  const sugarIn = document.getElementById('sugarValueInput');
-  const iceIn   = document.getElementById('iceValue');
-  const qty     = document.getElementById('customizerQty');
-  const form    = document.getElementById('customizerForm');
+  document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('customizerModal');
+    const form    = document.getElementById('customizerForm');
 
-  // tile toggle
-  modalEl.addEventListener('click', (e) => {
-    const t = e.target.closest('.opt-tile'); if(!t) return;
-    const g = t.dataset.group, v = t.dataset.value;
-    modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    if (g==='size')  sizeIn.value  = v;
-    if (g==='sugar') sugarIn.value = v;
-    if (g==='ice')   iceIn.value   = v;
-  });
+    const sizeIn  = document.getElementById('sizeValue');
+    const sugarIn = document.getElementById('sugarValueInput');
+    const iceIn   = document.getElementById('iceValue');
+    const qtyEl   = document.getElementById('customizerQty');
 
-  // qty +/- (compact)
-  document.getElementById('qtyMinus')?.addEventListener('click', () => {
-    qty.value = Math.max(1, (parseInt(qty.value,10)||1) - 1);
-  });
-  document.getElementById('qtyPlus')?.addEventListener('click', () => {
-    qty.value = Math.max(1, (parseInt(qty.value,10)||1) + 1);
-  });
+    const clampQty = (n) => {
+      n = parseInt(n, 10) || 1;
+      return Math.max(1, n);
+    };
 
-  // reset defaults each time the dialog opens unless editing
-  modalEl.addEventListener('show.bs.modal', () => {
-    if (form.dataset.mode === 'edit') return;
-    sizeIn.value  = 'medium';
-    sugarIn.value = '100';
-    iceIn.value   = 'normal';
-    qty.value     = 1;
-    document.getElementById('customizerNote').value = '';
+    /* Single delegated click handler: prevents double increment */
+    modalEl.addEventListener('click', (e) => {
+      // Option tiles
+      const tile = e.target.closest('.opt-tile');
+      if (tile) {
+        const g = tile.dataset.group, v = tile.dataset.value;
+        modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+        tile.classList.add('active');
+        if (g==='size')  sizeIn.value  = v;
+        if (g==='sugar') sugarIn.value = v;
+        if (g==='ice')   iceIn.value   = v;
+        return;
+      }
 
-    ['size','sugar','ice'].forEach(g=>{
-      modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+      // Quantity buttons
+      if (e.target.closest('#qtyPlus'))  qtyEl.value = clampQty((qtyEl.value || 1) * 1 + 1);
+      if (e.target.closest('#qtyMinus')) qtyEl.value = clampQty((qtyEl.value || 1) * 1 - 1);
     });
-    modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
-    modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
-    modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
+
+    // Reset defaults each time the dialog opens unless editing
+    modalEl.addEventListener('show.bs.modal', () => {
+      if (form?.dataset?.mode === 'edit') return;
+
+      sizeIn.value  = 'medium';
+      sugarIn.value = '100';
+      iceIn.value   = 'normal';
+      qtyEl.value   = 1;
+      const note = document.getElementById('customizerNote');
+      if (note) note.value = '';
+
+      ['size','sugar','ice'].forEach(g=>{
+        modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+      });
+      modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
+      modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
+      modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
+    });
   });
-});
+}
 </script>
