@@ -36,7 +36,7 @@
                     </thead>
                     <tbody id="cartBody">
                         @php $total = 0; $itemCount = 0; @endphp
-                        @foreach(session('cart', []) as $key => $item)
+                        @foreach(collect(session('cart', []))->sortBy('name') as $key => $item)
                             @php
                                 $lineTotal  = $item['price'] * $item['quantity'];
                                 $total     += $lineTotal;

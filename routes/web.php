@@ -252,9 +252,9 @@ Route::get('/customer-screen', function () {
 })->name('customer.view');
 
 Route::get('/api/cart', function () {
-    $cart = session('cart', []);
+    $cart = collect(session('cart', []))->sortBy('name')->values()->all();
     return response()->json([
-        'items'        => array_values($cart), // Reset keys for frontend
+        'items'        => $cart,
         'order_number' => session('order_number'),
         'table_number' => session('table_number'),
     ]);

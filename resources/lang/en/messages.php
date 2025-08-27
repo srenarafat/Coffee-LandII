@@ -278,6 +278,7 @@ return [
     'ice_normal' => 'Normal Ice',
     'ice_less' => 'Less Ice',
     'no_ice' => 'No Ice',
+    'more_ice' => 'More Ice',
     'add_to_cart' => 'Add to Cart',
 
 ];
