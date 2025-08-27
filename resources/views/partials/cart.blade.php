@@ -116,15 +116,21 @@
                                 </td>
 
                                 <td class="d-flex gap-1">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-secondary edit-item-btn"
-                                            data-cart-key="{{ $key }}"
-                                            data-notes="@json($item['note'] ? [$item['note']] : [])"
-                                                "image_url" => asset('storage/' . $item['image']),
-                                                "price_display" => (optional($setting)->currency ?? '$') . number_format($item['price'], 2)
-                                            ]))'>
-                                        {{ __('messages.edit') }}
-                                    </button>
+                                    @php
+    // Build safe payload for the editor
+    $editPayload = $item; // $item is an array from the session
+    $editPayload['image_url']     = !empty($item['image']) ? asset('storage/'.$item['image']) : '';
+    $editPayload['price_display'] = (optional($setting)->currency ?? '$') . number_format($item['price'] ?? 0, 2);
+@endphp
+
+<button type="button"
+        class="btn btn-sm btn-outline-secondary edit-item-btn"
+        data-cart-key="{{ $key }}"
+        data-notes='@json($item["note"] ? [$item["note"]] : [])'
+        data-item='@json($editPayload)'>
+    {{ __('messages.edit') }}
+</button>
+
                                     <form method="POST" action="{{ route($routePrefix . '.pos.remove', $key) }}" class="d-inline remove-item-form">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-danger">&times;</button>
@@ -198,6 +204,7 @@
   const removeLabel = @json(__('messages.remove_command'));
   const tableUrl = @json(route($routePrefix . '.pos.table'));
   const tableLabel = @json(__('messages.table'));
+  const commentStoreUrl = @json(route('comments.store'));
   let selectedTable = @json(session('table_number'));
 
 
@@ -417,6 +424,7 @@
     const tableBtn = e.target.closest('.table-btn');
     const noteBtn = e.target.closest('.note-btn');
     const removeNoteBtn = e.target.closest('.remove-note');
+    const saveCommentBtn = e.target.closest('#saveComment');
     const plus = e.target.closest('.increase-btn');
     const minus = e.target.closest('.decrease-btn');
     const removeForm = e.target.closest('.remove-item-form');
@@ -507,6 +515,42 @@
           cartKey = newKey;
         }
       }catch(err){ showToast('Error updating note'); }
+      return;
+    }
+
+    if (saveCommentBtn){
+      const text = $('#commentInput').value.trim();
+      if (!text) return;
+      try{
+        const res = await fetch(commentStoreUrl, {
+          method:'POST',
+          headers:{
+            'X-CSRF-TOKEN': getCsrf(),
+            'X-Requested-With':'XMLHttpRequest',
+            'Content-Type':'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+        if(!res.ok){
+          const errTxt = await res.text();
+          throw new Error(errTxt || res.statusText);
+        }
+        const comment = await res.json();
+        const list = $('#commentList');
+        if(list){
+          const opt = document.createElement('option');
+          opt.value = comment.text;
+          list.appendChild(opt);
+        }
+        const form = $('#commentForm');
+        if(form){
+          if(typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+        }
+      }catch(error){
+        try{ const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
+        catch{ showToast(error.message || 'Error updating cart'); }
+      }
       return;
     }
 

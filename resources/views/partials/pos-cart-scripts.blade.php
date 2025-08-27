@@ -1,5 +1,4 @@
 <script>
-    const container = document.getElementById('product-container');
     const cartContainer = document.getElementById('cart-container');
     let selectedTableNumber = @json(session('table_number'));
     const customizerForm = document.getElementById('customizerForm');
@@ -92,23 +91,10 @@
             });
         }
 
-        const qtyMinus = document.getElementById('qtyMinus');
-        if (qtyMinus && qtyInput && !qtyMinus.dataset.listener) {
-            qtyMinus.dataset.listener = 'true';
-            qtyMinus.addEventListener('click', function () {
-                const current = parseInt(qtyInput.value) || 1;
-                qtyInput.value = Math.max(1, current - 1);
-            });
-        }
-
-        const qtyPlus = document.getElementById('qtyPlus');
-        if (qtyPlus && qtyInput && !qtyPlus.dataset.listener) {
-            qtyPlus.dataset.listener = 'true';
-            qtyPlus.addEventListener('click', function () {
-                const current = parseInt(qtyInput.value) || 1;
-                qtyInput.value = Math.max(1, current + 1);
-            });
-        }
+        // Quantity plus/minus controls are handled in
+        // `product-customizer.blade.php`. The listeners previously here
+        // caused the value to increment twice (e.g., 1 → 3). By removing them
+        // we ensure the customizer is the sole source of quantity changes.
 
     }
 
