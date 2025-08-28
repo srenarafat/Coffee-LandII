@@ -7,7 +7,6 @@
 @endphp
 
 <div class="modal fade" id="customizerModal" tabindex="-1" aria-hidden="true">
-  <!-- smaller, tighter dialog -->
   <div class="modal-dialog modal-dialog-centered modal-compact">
     <div class="modal-content customizer-card">
       <form id="customizerForm" class="add-to-cart-form" method="POST" action="{{ $addRoute }}">
@@ -17,7 +16,7 @@
 
         {{-- defaults bound to tiles --}}
         <input type="hidden" name="size"        id="sizeValue"        value="medium">
-        <input type="hidden" name="sugar_level" id="sugarValueInput"  value="100"> {{-- % --}}
+        <input type="hidden" name="sugar_level" id="sugarValueInput"  value="100">
         <input type="hidden" name="ice_option"  id="iceValue"         value="normal">
 
         <div class="modal-header py-2 customizer-header">
@@ -25,16 +24,15 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
 
-        {{-- Body is scrollable to reduce perceived height --}}
         <div class="modal-body p-3 pb-2 customizer-body">
-          {{-- preview --}}
+          {{-- Preview --}}
           <div class="text-center mb-2">
             <img id="customizerImage" alt="" class="rounded-3 shadow-sm" style="max-height:84px">
             <div class="mt-1 fw-semibold small" id="customizerName"></div>
             <small class="text-muted fw-semibold" id="customizerPrice"></small>
           </div>
 
-          {{-- Quantity (centered, pill style) --}}
+          {{-- Quantity --}}
           <div class="mb-2 text-center">
             <div class="qty-control mx-auto" aria-label="Quantity">
               <button type="button" id="qtyMinus" class="qty-btn" aria-label="Decrease">−</button>
@@ -51,20 +49,20 @@
             </div>
           </div>
 
-          {{-- size --}}
+          {{-- Drink Size --}}
           <div class="mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label class="form-label mb-0 small">{{ __('messages.drink_size') }}</label>
               <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
             </div>
             <div class="opt-grid compact">
-              <button type="button" class="opt-tile" data-group="size"  data-value="small">{{ __('messages.small') }}</button>
-              <button type="button" class="opt-tile active" data-group="size" data-value="medium">{{ __('messages.medium') }}</button>
-              <button type="button" class="opt-tile" data-group="size"  data-value="large">{{ __('messages.large') }}</button>
+              <button type="button" class="opt-tile"        data-group="size"  data-value="small">{{ __('messages.small') }}</button>
+              <button type="button" class="opt-tile active" data-group="size"  data-value="medium">{{ __('messages.medium') }}</button>
+              <button type="button" class="opt-tile"        data-group="size"  data-value="large">{{ __('messages.large') }}</button>
             </div>
           </div>
 
-          {{-- sugar --}}
+          {{-- Sugar --}}
           <div class="mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label class="form-label mb-0 small">{{ __('messages.sugar_level') }}</label>
@@ -80,21 +78,21 @@
             </div>
           </div>
 
-          {{-- ice --}}
+          {{-- Ice --}}
           <div class="mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label class="form-label mb-0 small">{{ __('messages.ice_level') ?? __('messages.ice') }}</label>
               <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
             </div>
             <div class="opt-grid compact">
-              <button type="button" class="opt-tile" data-group="ice" data-value="none">{{ __('messages.no_ice') }}</button>
-              <button type="button" class="opt-tile" data-group="ice" data-value="less">{{ __('messages.ice_less') }}</button>
+              <button type="button" class="opt-tile"        data-group="ice" data-value="none">{{ __('messages.no_ice') }}</button>
+              <button type="button" class="opt-tile"        data-group="ice" data-value="less">{{ __('messages.ice_less') }}</button>
               <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
-              <button type="button" class="opt-tile" data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
+              <button type="button" class="opt-tile"        data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
             </div>
           </div>
 
-          {{-- note --}}
+          {{-- Note --}}
           <div class="mb-1">
             <label for="customizerNote" class="form-label mb-1 small">{{ __('messages.note_optional') }}</label>
             <input id="customizerNote" name="note" type="text" class="form-control form-control-sm"
@@ -111,46 +109,29 @@
 </div>
 
 <style>
-  /* width ↓   (was ~520px) */
   .modal-compact { max-width: 470px; }
   @media (max-width: 768px){ .modal-compact{ max-width: 90vw; } }
-
-  /* reduce visible height; body scrolls if needed */
   .customizer-body{ max-height: 62vh; overflow:auto; }
-
-  /* prettier card */
   .customizer-card{
     border:0; border-radius:16px;
     box-shadow: 0 20px 60px rgba(0,0,0,.25);
     overflow:hidden;
     animation: c-fade-in .12s ease-out;
-    background: #ffffff;
+    background:#fff;
   }
-  .customizer-header{
-    background: #198754; /* POS green */
-    color:#fff; border-bottom:0;
-  }
+  .customizer-header{ background:#198754; color:#fff; border-bottom:0; }
   .customizer-footer{ border-top:0; }
-
   @keyframes c-fade-in{ from{ transform:translateY(4px); opacity:0 } to{ transform:none; opacity:1 } }
 
-  /* tighter option grid */
-  .opt-grid{
-    display:grid; gap:.42rem;
-    grid-template-columns: repeat(2, minmax(0,1fr));
-  }
-  @media (min-width: 576px){
-    .opt-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
-  }
+  .opt-grid{ display:grid; gap:.42rem; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  @media (min-width: 576px){ .opt-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
   .opt-grid.compact .opt-tile{ height:40px; font-size:.88rem; padding:.18rem .4rem; }
-
-  /* glossy tile look */
   .opt-tile{
     display:flex; align-items:center; justify-content:center;
     border:1px solid #e7e9ee; border-radius:10px;
     background: linear-gradient(#f9fafc, #f3f6fb);
-    color:#1f2937; font-weight:600;
-    transition:all .15s ease; cursor:pointer;
+    color:#1f2937; font-weight:600; cursor:pointer;
+    transition:all .15s ease;
   }
   .opt-tile:hover{ background:linear-gradient(#f6f8fb,#eef3fb); border-color:#d6dde7; }
   .opt-tile.active{
@@ -160,34 +141,23 @@
     color:#0b5ed7;
   }
 
-  /* Quantity control */
-  .qty-control{
-    display:inline-flex; align-items:center;
-    border:2px solid #198754; border-radius:999px; padding:2px;
-    background:#fff; width:auto;
-    box-shadow:0 6px 16px rgba(0,0,0,.08);
-  }
+  .qty-control{ display:inline-flex; align-items:center; border:2px solid #198754; border-radius:999px; padding:2px; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,.08); }
   .qty-btn{
-    width:38px; height:38px; border:none; border-radius:999px;
-    background:#198754; color:#fff; font-weight:800; font-size:1.1rem; line-height:1;
+    width:38px; height:38px; border:none; border-radius:999px; background:#198754; color:#fff; font-weight:800; font-size:1.1rem; line-height:1;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     transition:transform .08s ease, background .2s ease, box-shadow .2s;
     box-shadow:0 2px 6px rgba(25,135,84,.25);
   }
   .qty-btn:hover{ background:#157347; }
   .qty-btn:active{ transform:scale(.95); }
-  .qty-input{
-    width:60px; border:none; outline:none; text-align:center;
-    background:transparent; font-weight:700; font-size:1.05rem; color:#111; padding:0 .25rem;
-  }
-  .qty-input::-webkit-outer-spin-button,
-  .qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .qty-input{ width:60px; border:none; outline:none; text-align:center; background:transparent; font-weight:700; font-size:1.05rem; color:#111; padding:0 .25rem; }
+  .qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   .qty-input[type=number]{ -moz-appearance:textfield; }
   .qty-control:focus-within{ box-shadow:0 0 0 3px rgba(25,135,84,.18); }
 </style>
 
 <script>
-/* Guard to avoid double binding if this partial is injected twice */
+/* Prevent double bind if partial re-injected */
 if (!window.__customizerBound__) {
   window.__customizerBound__ = true;
 
@@ -201,47 +171,68 @@ if (!window.__customizerBound__) {
     const qtyEl   = document.getElementById('customizerQty');
     const priceEl = document.getElementById('customizerPrice');
 
+    /* === Price prefix updater (S:/M:/L:) === */
     const updatePrice = () => {
-      const form = document.getElementById('customizerForm');
-      const size = sizeIn.value || 'medium';
-      const key  = 'price' + size.charAt(0).toUpperCase() + size.slice(1);
-      let price = form?.dataset ? form.dataset[key] : '';
-      if (!price) price = form?.dataset?.priceMedium || form?.dataset?.priceSmall || form?.dataset?.priceLarge || '';
-      if (priceEl) priceEl.textContent = price;
+      const size = (sizeIn.value || 'medium').toLowerCase();
+      const prefixMap = { small: 'S', medium: 'M', large: 'L' };
+      const prefix = prefixMap[size] || (size[0] || '').toUpperCase();
+
+      // If openers set dataset prices (priceSmall/priceMedium/priceLarge), use them
+      const key = 'price' + size.charAt(0).toUpperCase() + size.slice(1); // priceSmall|priceMedium|priceLarge
+      let price = form?.dataset?.[key];
+
+      // Otherwise, use clean base price captured on show/open
+      if (!price) {
+        const current = priceEl?.textContent || '';
+        // basePrice is the value without any previous "X: " prefix
+        const base = priceEl?.dataset?.basePrice || current.replace(/^[A-Z]:\s*/, '');
+        price = base;
+      }
+
+      if (priceEl) priceEl.textContent = `${prefix}: ${price}`;
     };
 
-    const clampQty = (n) => {
-      n = parseInt(n, 10) || 1;
-      return Math.max(1, n);
-    };
+    /* simple clamp */
+    const clampQty = (n) => Math.max(1, (parseInt(n, 10) || 1));
 
-    /* Single delegated click handler: prevents double increment */
+    /* Delegated clicks: tiles + qty */
     modalEl.addEventListener('click', (e) => {
-      // Option tiles
+      // Option tile clicked?
       const tile = e.target.closest('.opt-tile');
       if (tile) {
         const g = tile.dataset.group, v = tile.dataset.value;
-        modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
+        modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x => x.classList.remove('active'));
         tile.classList.add('active');
-        if (g==='size')  { sizeIn.value  = v; updatePrice(); }
-        if (g==='sugar') sugarIn.value = v;
-        if (g==='ice')   iceIn.value   = v;
+
+        if (g === 'size')  { sizeIn.value = v; updatePrice(); }
+        if (g === 'sugar') { sugarIn.value = v; }
+        if (g === 'ice')   { iceIn.value   = v; }
         return;
       }
 
-      // Quantity buttons
+      // Quantity +/- buttons
       if (e.target.closest('#qtyPlus'))  qtyEl.value = clampQty((qtyEl.value || 1) * 1 + 1);
       if (e.target.closest('#qtyMinus')) qtyEl.value = clampQty((qtyEl.value || 1) * 1 - 1);
     });
 
-    // Reset defaults each time the dialog opens unless editing
+    /* Reset defaults on open (unless editing) and capture base price text once */
     modalEl.addEventListener('show.bs.modal', () => {
-      if (form?.dataset?.mode === 'edit') { updatePrice(); return; }
+      // Capture/refresh base price (strip any old "X: " prefix)
+      if (priceEl) {
+        const clean = (priceEl.textContent || '').replace(/^[A-Z]:\s*/, '');
+        priceEl.dataset.basePrice = clean;
+      }
+
+      if (form?.dataset?.mode === 'edit') {
+        updatePrice();
+        return;
+      }
 
       sizeIn.value  = 'medium';
       sugarIn.value = '100';
       iceIn.value   = 'normal';
       qtyEl.value   = 1;
+
       const note = document.getElementById('customizerNote');
       if (note) note.value = '';
 
@@ -251,8 +242,18 @@ if (!window.__customizerBound__) {
       modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
+
       updatePrice();
     });
+
+    /* If some opener updates price text later, keep basePrice in sync */
+    const observer = new MutationObserver(() => {
+      if (!priceEl) return;
+      const clean = (priceEl.textContent || '').replace(/^[A-Z]:\s*/, '');
+      priceEl.dataset.basePrice = clean;
+      updatePrice();
+    });
+    if (priceEl) observer.observe(priceEl, { childList: true, characterData: true, subtree: true });
   });
 }
 </script>
