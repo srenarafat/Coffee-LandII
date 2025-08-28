@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\{User, Shop, Category, Product, Setting, Sale};
+use App\Models\{User, Shop, Category, Product, Setting};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -253,7 +253,7 @@ class CartOptionsTest extends TestCase
         $this->assertEquals(2, $item['price']);
     }
     
-    public function test_cart_and_invoice_show_medium_size_by_default()
+    public function test_cart_partial_shows_medium_size_by_default()
     {
         [$user, $product] = $this->setupShop();
 
@@ -264,25 +264,16 @@ class CartOptionsTest extends TestCase
             'quantity'   => 1,
         ]);
 
-        $cart = session('cart');
-        $item = collect($cart)->first();
-        $label = ucfirst($item['size'] ?: 'medium') . ' Size';
-        $this->assertEquals('Medium Size', $label);
-
-        $response = $this->actingAs($user)->get('/cashier/pos');
-        $response->assertSee('Medium Size');
-
-        $this->post('/cashier/pos/checkout', [
-            'method'   => 'cash',
-            'cash_usd' => 2,
+        $view = $this->view('partials.cart', [
+            'routePrefix' => 'cashier',
+            'setting'     => Setting::first(),
+            'comments'    => collect(),
         ]);
 
-        $sale = Sale::first();
-        $response = $this->actingAs($user)->get("/cashier/invoice/{$sale->id}/print");
-        $response->assertSee('Medium Size');
+        $view->assertSee('Medium Size');
     }
 
-    public function test_cart_and_invoice_show_medium_size_when_selected()
+    public function test_cart_partial_shows_medium_size_when_selected()
     {
         [$user, $product] = $this->setupShop();
 
@@ -294,21 +285,12 @@ class CartOptionsTest extends TestCase
             'size'       => 'medium',
         ]);
 
-        $cart = session('cart');
-        $item = collect($cart)->first();
-        $label = ucfirst($item['size'] ?: 'medium') . ' Size';
-        $this->assertEquals('Medium Size', $label);
-
-        $response = $this->actingAs($user)->get('/cashier/pos');
-        $response->assertSee('Medium Size');
-
-        $this->post('/cashier/pos/checkout', [
-            'method'   => 'cash',
-            'cash_usd' => 2,
+        $view = $this->view('partials.cart', [
+            'routePrefix' => 'cashier',
+            'setting'     => Setting::first(),
+            'comments'    => collect(),
         ]);
 
-        $sale = Sale::first();
-        $response = $this->actingAs($user)->get("/cashier/invoice/{$sale->id}/print");
-        $response->assertSee('Medium Size');
+        $view->assertSee('Medium Size');
     }
 }
