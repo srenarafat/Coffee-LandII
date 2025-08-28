@@ -61,7 +61,7 @@
             <td>{{ $categoryNames->implode(', ') }}</td>
             <td class="text-center">
                 @foreach ($sale->items as $item)
-                {{ $item->product->name }} (x{{ $item->quantity }})<br>
+                {{ $item->product->name }} ({{ strtoupper($item->size ?? 'M') }}) x{{ $item->quantity }}<br>
                 @endforeach
             </td>
             <td>{{ $sale->items->sum('quantity') }}</td>
