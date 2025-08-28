@@ -10,8 +10,8 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'price', 'category_id', 'image', 'stock',
-        'promotion_flag', 'is_active',
+        'name', 'price', 'price_small', 'price_medium', 'price_large',
+        'category_id', 'image', 'stock', 'promotion_flag', 'is_active',
     ];
 
     protected $casts = [
@@ -75,5 +75,17 @@ class Product extends Model
             : $this->category()->with('parent.parent')->first();
 
         return $category ? $category->isTreeActive() : false;
+    }
+    
+    public function priceForSize(string $size): float
+    {
+        $size = strtolower($size);
+
+        return match ($size) {
+            'small'  => $this->price_small  ?? $this->price_medium ?? $this->price_large ?? $this->price,
+            'large'  => $this->price_large  ?? $this->price_medium ?? $this->price_small ?? $this->price,
+            'medium', '' => $this->price_medium ?? $this->price ?? $this->price_small ?? $this->price_large,
+            default  => $this->price_medium ?? $this->price ?? $this->price_small ?? $this->price_large,
+        };
     }
 }

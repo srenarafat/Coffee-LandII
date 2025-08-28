@@ -3,6 +3,7 @@
     let selectedTableNumber = @json(session('table_number'));
     const customizerForm = document.getElementById('customizerForm');
     const customizerAddAction = customizerForm ? customizerForm.action : '';
+    const priceEl = document.getElementById('customizerPrice');
 
     // open customizer with DEFAULTS (size=medium, sugar=100, ice=normal, note empty)
     function attachCustomizerButtons() {
@@ -18,7 +19,10 @@
                 document.getElementById('customizerQty').value = 1;
                 document.getElementById('customizerImage').src = this.dataset.image;
                 document.getElementById('customizerName').textContent = this.dataset.name || '';
-                document.getElementById('customizerPrice').textContent = this.dataset.price || '';
+                priceEl.textContent = this.dataset.priceMedium || '';
+                customizerForm.dataset.priceSmall  = this.dataset.priceSmall || '';
+                customizerForm.dataset.priceMedium = this.dataset.priceMedium || '';
+                customizerForm.dataset.priceLarge  = this.dataset.priceLarge || '';
 
                 // defaults for silent options
                 const sizeSel  = document.getElementById('sizeValue');
@@ -193,6 +197,10 @@
                 document.getElementById('customizerImage').src = item.image_url || '';
                 document.getElementById('customizerName').textContent = item.name || '';
                 document.getElementById('customizerPrice').textContent = item.price_display || '';
+                priceEl.textContent = item.price_display || '';
+                customizerForm.dataset.priceSmall  = item.price_small_display || '';
+                customizerForm.dataset.priceMedium = item.price_medium_display || item.price_display || '';
+                customizerForm.dataset.priceLarge  = item.price_large_display || '';
                 const sizeSel  = document.getElementById('sizeValue');
                 const sugarInp = document.getElementById('sugarValueInput');
                 const iceSel   = document.getElementById('iceValue');

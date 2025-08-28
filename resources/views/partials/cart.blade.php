@@ -113,6 +113,13 @@
     $editPayload = $item; // $item is an array from the session
     $editPayload['image_url']     = !empty($item['image']) ? asset('storage/'.$item['image']) : '';
     $editPayload['price_display'] = (optional($setting)->currency ?? '$') . number_format($item['price'] ?? 0, 2);
+    $productModel = \App\Models\Product::find($item['product_id']);
+    $currency = optional($setting)->currency ?? '$';
+    if ($productModel) {
+        $editPayload['price_small_display']  = $productModel->price_small !== null ? $currency . number_format($productModel->price_small, 2) : '';
+        $editPayload['price_medium_display'] = $productModel->price_medium !== null ? $currency . number_format($productModel->price_medium, 2) : $editPayload['price_display'];
+        $editPayload['price_large_display']  = $productModel->price_large !== null ? $currency . number_format($productModel->price_large, 2) : '';
+    }
 @endphp
 
 <button type="button"

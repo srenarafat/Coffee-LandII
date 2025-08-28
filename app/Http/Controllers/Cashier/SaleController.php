@@ -120,7 +120,7 @@ class SaleController extends Controller
             $cart[$key] = [
                 'product_id'  => $product->id,
                 'name'        => $product->name,
-                'price'       => $product->price,
+                'price'       => $product->priceForSize($size),
                 'quantity'    => $quantity,
                 'image'       => $product->image, // keep image for UI
                 'size'        => $size,
@@ -210,6 +210,7 @@ class SaleController extends Controller
 
                     $cart[$id]['quantity']    = $qty;
                     $cart[$id]['size']        = $size;
+                    $cart[$id]['price']       = $product->priceForSize($size);
                     $cart[$id]['sugar_level'] = $sugar;
                     $cart[$id]['ice_option']  = $ice;
                     $cart[$id]['note']        = $note;

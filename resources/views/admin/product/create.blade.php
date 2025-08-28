@@ -25,10 +25,24 @@
                         <input type="text" name="name" class="form-control shadow-sm" placeholder="e.g. Latte" value="{{ old('name') }}" required>
                     </div>
 
-                    <!-- Price -->
+                    <!-- Base Price -->
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.price') }} ($)</label>
                         <input type="number" name="price" class="form-control shadow-sm" placeholder="e.g. 2.50" step="0.01" value="{{ old('price') }}" required>
+                    </div>
+
+                    <!-- Size Prices -->
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('messages.small') }} {{ __('messages.price') }} ($)</label>
+                        <input type="number" name="price_small" class="form-control shadow-sm" step="0.01" value="{{ old('price_small') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('messages.medium') }} {{ __('messages.price') }} ($)</label>
+                        <input type="number" name="price_medium" class="form-control shadow-sm" step="0.01" value="{{ old('price_medium') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('messages.large') }} {{ __('messages.price') }} ($)</label>
+                        <input type="number" name="price_large" class="form-control shadow-sm" step="0.01" value="{{ old('price_large') }}">
                     </div>
 
                     <!-- Product Image -->

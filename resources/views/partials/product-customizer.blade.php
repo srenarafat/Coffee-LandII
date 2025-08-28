@@ -199,6 +199,16 @@ if (!window.__customizerBound__) {
     const sugarIn = document.getElementById('sugarValueInput');
     const iceIn   = document.getElementById('iceValue');
     const qtyEl   = document.getElementById('customizerQty');
+    const priceEl = document.getElementById('customizerPrice');
+
+    const updatePrice = () => {
+      const form = document.getElementById('customizerForm');
+      const size = sizeIn.value || 'medium';
+      const key  = 'price' + size.charAt(0).toUpperCase() + size.slice(1);
+      let price = form?.dataset ? form.dataset[key] : '';
+      if (!price) price = form?.dataset?.priceMedium || form?.dataset?.priceSmall || form?.dataset?.priceLarge || '';
+      if (priceEl) priceEl.textContent = price;
+    };
 
     const clampQty = (n) => {
       n = parseInt(n, 10) || 1;
@@ -213,7 +223,7 @@ if (!window.__customizerBound__) {
         const g = tile.dataset.group, v = tile.dataset.value;
         modalEl.querySelectorAll(`.opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
         tile.classList.add('active');
-        if (g==='size')  sizeIn.value  = v;
+        if (g==='size')  { sizeIn.value  = v; updatePrice(); }
         if (g==='sugar') sugarIn.value = v;
         if (g==='ice')   iceIn.value   = v;
         return;
@@ -226,7 +236,7 @@ if (!window.__customizerBound__) {
 
     // Reset defaults each time the dialog opens unless editing
     modalEl.addEventListener('show.bs.modal', () => {
-      if (form?.dataset?.mode === 'edit') return;
+      if (form?.dataset?.mode === 'edit') { updatePrice(); return; }
 
       sizeIn.value  = 'medium';
       sugarIn.value = '100';
@@ -241,6 +251,7 @@ if (!window.__customizerBound__) {
       modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
+      updatePrice();
     });
   });
 }

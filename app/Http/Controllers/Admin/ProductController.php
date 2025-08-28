@@ -57,6 +57,9 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name'        => 'required',
             'price'       => 'required|numeric',
+            'price_small' => 'nullable|numeric',
+            'price_medium'=> 'nullable|numeric',
+            'price_large' => 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
@@ -71,7 +74,7 @@ class ProductController extends Controller
 
         $validator->validate();
 
-        $data = $request->only(['name', 'price', 'category_id', 'description']);
+        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'category_id', 'description']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('product_images', 'public');
@@ -99,6 +102,9 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name'        => 'required',
             'price'       => 'required|numeric',
+            'price_small' => 'nullable|numeric',
+            'price_medium'=> 'nullable|numeric',
+            'price_large' => 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
@@ -113,7 +119,7 @@ class ProductController extends Controller
 
         $validator->validate();
 
-        $data = $request->only(['name', 'price', 'category_id', 'description']);
+        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'category_id', 'description']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('product_images', 'public');

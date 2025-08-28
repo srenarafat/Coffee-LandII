@@ -10,18 +10,18 @@ class CartOptionsTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setupShop(): array
+    protected function setupShop(array $overrides = []): array
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
         $category = Category::create(['name' => 'C']);
-        $product = Product::create([
-            'name' => 'P',
-            'price' => 2,
+        $product = Product::create(array_merge([
+            'name'        => 'P',
+            'price'       => 2,
             'category_id' => $category->id,
-            'shop_id' => $shop->id,
-            'stock' => 10,
-        ]);
+            'shop_id'     => $shop->id,
+            'stock'       => 10,
+        ], $overrides));
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0, 'exchange_rate' => 4000]);
 
         return [$user, $product];
@@ -159,5 +159,97 @@ class CartOptionsTest extends TestCase
             'sugar_level' => 150,
             'ice_option' => 'normal',
         ]);
+    }
+    
+    public function test_size_prices_are_used()
+    {
+        [$user, $product] = $this->setupShop([
+            'price_small' => 1,
+            'price_medium'=> 2,
+            'price_large' => 3,
+        ]);
+
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'small',
+        ]);
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'medium',
+        ]);
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'large',
+        ]);
+
+        $cart = session('cart');
+        $prices = collect($cart)->pluck('price', 'size');
+        $this->assertEquals(1, $prices['small']);
+        $this->assertEquals(2, $prices['medium']);
+        $this->assertEquals(3, $prices['large']);
+
+        $this->post('/cashier/pos/checkout', [
+            'method' => 'cash',
+            'cash_usd' => 10,
+        ]);
+
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $product->id,
+            'price'      => 1,
+            'size'       => 'small',
+        ]);
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $product->id,
+            'price'      => 2,
+            'size'       => 'medium',
+        ]);
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $product->id,
+            'price'      => 3,
+            'size'       => 'large',
+        ]);
+    }
+
+    public function test_missing_price_falls_back_to_medium()
+    {
+        [$user, $product] = $this->setupShop([
+            'price_medium' => 2,
+            'price_large'  => 3,
+        ]);
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'small',
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $this->assertEquals(2, $item['price']);
+    }
+
+    public function test_default_medium_price_when_size_not_given()
+    {
+        [$user, $product] = $this->setupShop([
+            'price_small'  => 1,
+            'price_medium' => 2,
+            'price_large'  => 3,
+        ]);
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $this->assertEquals(2, $item['price']);
     }
 }

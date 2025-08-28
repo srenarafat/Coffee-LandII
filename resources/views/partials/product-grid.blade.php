@@ -1,3 +1,4 @@
+@php $currency = optional($setting)->currency ?? '$'; @endphp
 @forelse ($products as $product)
 <div class="product-card position-relative">
     <!-- Product Image -->
@@ -10,7 +11,7 @@
 
     <!-- Price -->
     <p class="fw-semibold mb-5"> {{-- add bottom space so text doesn't collide with the button --}}
-        {{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}
+        {{ $currency }}{{ number_format($product->priceForSize('medium'), 2) }}
     </p>
 
     <!-- Customize Button -->
@@ -18,7 +19,9 @@
             class="btn rounded-circle d-flex align-items-center justify-content-center position-absolute open-customizer"
             data-id="{{ $product->id }}"
             data-name="{{ app()->getLocale() === 'kh' && $product->name_km ? $product->name_km : $product->name }}"
-            data-price="{{ optional($setting)->currency ?? '$' }}{{ number_format($product->price, 2) }}"
+            data-price-small="{{ $product->price_small !== null ? $currency . number_format($product->price_small, 2) : '' }}"
+            data-price-medium="{{ $product->price_medium !== null ? $currency . number_format($product->price_medium, 2) : $currency . number_format($product->priceForSize('medium'), 2) }}"
+            data-price-large="{{ $product->price_large !== null ? $currency . number_format($product->price_large, 2) : '' }}"
             data-image="{{ asset('storage/' . $product->image) }}"
             style="color:#fff;width:36px;height:36px;background-color:#5f4545;bottom:10px;right:10px;">
         <i class="bi bi-plus fs-6"></i>

@@ -22,13 +22,27 @@
                             <input type="text" name="name" value="{{ old('name', $product->name) }}" class="form-control shadow-sm" placeholder="e.g., Iced Latte" required>
                         </div>
 
-                        <!-- Price -->
+                        <!-- Base Price -->
                         <div class="mb-3">
                             <label class="form-label">{{ __('messages.price') }} ($)</label>
                             <div class="input-group shadow-sm">
                                 <span class="input-group-text">$</span>
                                 <input type="number" name="price" value="{{ old('price', $product->price) }}" class="form-control" step="0.01" placeholder="e.g., 2.50" required>
                             </div>
+                        </div>
+
+                        <!-- Size Prices -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ __('messages.small') }} {{ __('messages.price') }} ($)</label>
+                            <input type="number" name="price_small" value="{{ old('price_small', $product->price_small) }}" class="form-control shadow-sm" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ __('messages.medium') }} {{ __('messages.price') }} ($)</label>
+                            <input type="number" name="price_medium" value="{{ old('price_medium', $product->price_medium) }}" class="form-control shadow-sm" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ __('messages.large') }} {{ __('messages.price') }} ($)</label>
+                            <input type="number" name="price_large" value="{{ old('price_large', $product->price_large) }}" class="form-control shadow-sm" step="0.01">
                         </div>
 
                         <!-- Category -->
