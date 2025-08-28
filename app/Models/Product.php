@@ -84,8 +84,8 @@ class Product extends Model
         return match ($size) {
             'small'  => $this->price_small  ?? $this->price_medium ?? $this->price_large ?? $this->price,
             'large'  => $this->price_large  ?? $this->price_medium ?? $this->price_small ?? $this->price,
-            'medium', '' => $this->price_medium ?? $this->price ?? $this->price_small ?? $this->price_large,
-            default  => $this->price_medium ?? $this->price ?? $this->price_small ?? $this->price_large,
+            'medium', '' => $this->price_medium ?? $this->price_small ?? $this->price_large ?? $this->price,
+             default  => $this->price_medium ?? $this->price_small ?? $this->price_large ?? $this->price,
         };
     }
 }

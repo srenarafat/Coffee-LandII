@@ -234,6 +234,47 @@ class CartOptionsTest extends TestCase
         $this->assertEquals(2, $item['price']);
     }
 
+    public function test_missing_medium_price_falls_back_to_other_sizes_before_base()
+    {
+        [$user, $product] = $this->setupShop([
+            'price'       => 10,
+            'price_small' => 1,
+            'price_medium'=> null,
+            'price_large' => 3,
+        ]);
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'medium',
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $this->assertEquals(1, $item['price']);
+    }
+
+    public function test_missing_medium_price_default_falls_back_to_other_sizes_before_base()
+    {
+        [$user, $product] = $this->setupShop([
+            'price'       => 10,
+            'price_small' => null,
+            'price_medium'=> null,
+            'price_large' => 3,
+        ]);
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $this->assertEquals(3, $item['price']);
+    }
+
     public function test_default_medium_price_when_size_not_given()
     {
         [$user, $product] = $this->setupShop([
