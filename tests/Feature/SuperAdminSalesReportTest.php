@@ -96,11 +96,13 @@ class SuperAdminSalesReportTest extends TestCase
 
         $response = $this->actingAs($superadmin)->get('/admin/sales-report');
         $response->assertOk();
-        $response->assertSee('Latte (S) x2');
+        $expected = 'Latte (S) x2';
+        $response->assertSee($expected);
+        
 
         $csv = $this->actingAs($superadmin)->get('/admin/reports/sales/export');
         $content = $csv->streamedContent();
-        $this->assertStringContainsString('Latte (S) x2', $content);
+        $this->assertStringContainsString($expected, $content);
     }
 }
 
