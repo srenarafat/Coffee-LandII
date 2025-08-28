@@ -1,6 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    // Index route (for AJAX) depending on role
+    $indexRoute = match (Auth::user()->role) {
+        'superadmin' => route('superadmin.products.index'),
+        'admin'      => route('admin.products.index'),
+        default      => route('cashier.products.index'), // in case you have a cashier list
+    };
+
+    // Create route depending on role (you already use admin create – adjust if needed)
+    $createRoute = match (Auth::user()->role) {
+        'superadmin' => route('superadmin.products.create'),
+        'admin'      => route('admin.products.create'),
+        default      => route('cashier.products.create'), // optional
+    };
+
+    $currentSort = request('sort');       // 'asc' | 'desc' | null
+    $currentSearch = request('search');   // keep search when clicking sort
+    $currentCategory = request('category'); // if you filter by category elsewhere
+@endphp
+
 <div class="container-fluid p-3 position-relative">
 
     @if(session('success'))
@@ -13,28 +33,47 @@
 
     <!-- Product List Box Card -->
     <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center px-4 py-3">
+        <div class="card-header bg-light border-bottom d-flex flex-wrap gap-2 justify-content-between align-items-center px-4 py-3">
             <h5 class="fw-bold mb-0">🧃 Product List</h5>
-            <div class="d-flex align-items-center gap-2">
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+
+                <!-- 🔠 Sort A–Z -->
+                <a href="{{ url()->current() }}?sort=asc{{ $currentSearch ? '&search='.urlencode($currentSearch) : '' }}{{ $currentCategory ? '&category='.$currentCategory : '' }}"
+                   class="btn btn-sm rounded-pill d-flex align-items-center gap-1
+                          {{ $currentSort === 'asc' ? 'btn-primary text-white' : 'btn-outline-primary' }}">
+                    <i class="bi bi-sort-alpha-down"></i> A–Z
+                </a>
+
+                <!-- 🔠 Sort Z–A -->
+                <a href="{{ url()->current() }}?sort=desc{{ $currentSearch ? '&search='.urlencode($currentSearch) : '' }}{{ $currentCategory ? '&category='.$currentCategory : '' }}"
+                   class="btn btn-sm rounded-pill d-flex align-items-center gap-1
+                          {{ $currentSort === 'desc' ? 'btn-primary text-white' : 'btn-outline-primary' }}">
+                    <i class="bi bi-sort-alpha-up"></i> Z–A
+                </a>
+
                 <!-- Search Bar -->
                 <form method="GET" action="{{ url()->current() }}" class="position-relative" style="width: 240px;">
-                    @if(request('category'))
-                        <input type="hidden" name="category" value="{{ request('category') }}">
+                    @if($currentCategory)
+                        <input type="hidden" name="category" value="{{ $currentCategory }}">
+                    @endif
+                    @if($currentSort)
+                        <input type="hidden" name="sort" value="{{ $currentSort }}">
                     @endif
                     <input type="text" name="search" id="liveSearch"
-                        value="{{ request('search') }}"
-                        placeholder="{{ __('messages.search_placeholder') }}"
-                        class="form-control shadow-sm rounded-pill ps-4 pe-5"
-                        style="height: 38px; font-size: 14px; border: 1px solid #ddd;">
+                           value="{{ $currentSearch }}"
+                           placeholder="{{ __('messages.search_placeholder') }}"
+                           class="form-control shadow-sm rounded-pill ps-4 pe-5"
+                           style="height: 38px; font-size: 14px; border: 1px solid #ddd;">
                     <button type="submit"
-                        class="position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent p-0">
+                            class="position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent p-0">
                         <i class="bi bi-search text-muted fs-5"></i>
                     </button>
                 </form>
 
                 <!-- Add New Product Button -->
-                <a href="{{ route('admin.products.create') }}"
-                class="btn btn-primary rounded-pill d-flex align-items-center gap-2 shadow-sm">
+                <a href="{{ $createRoute }}"
+                   class="btn btn-primary rounded-pill d-flex align-items-center gap-2 shadow-sm">
                     <i class="bi bi-plus-lg"></i> {{ __('messages.add_new_product') }}
                 </a>
             </div>
@@ -136,17 +175,41 @@
 
 @push('scripts')
 <script>
-    document.getElementById('liveSearch').addEventListener('keyup', function () {
-        const query = this.value;
-        fetch(`{{ route('admin.products.index') }}?search=${encodeURIComponent(query)}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('productBody').innerHTML = html;
-        });
-    });
+    // Live search (keeps current sort & category)
+    const liveSearchInput = document.getElementById('liveSearch');
+    const productBody = document.getElementById('productBody');
 
+    function buildQuery() {
+        const params = new URLSearchParams();
+        const search = liveSearchInput.value || '';
+        const sort = "{{ $currentSort }}";
+        const category = "{{ $currentCategory }}";
+
+        if (search)   params.set('search', search);
+        if (sort)     params.set('sort', sort);
+        if (category) params.set('category', category);
+
+        return params.toString();
+    }
+
+    if (liveSearchInput) {
+        let timer;
+        liveSearchInput.addEventListener('keyup', function () {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const query = buildQuery();
+                fetch(`{{ $indexRoute }}?${query}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    productBody.innerHTML = html;
+                });
+            }, 200); // small debounce
+        });
+    }
+
+    // Success toast auto-hide
     document.addEventListener('DOMContentLoaded', function () {
         const toast = document.getElementById('successToast');
         if (toast) {

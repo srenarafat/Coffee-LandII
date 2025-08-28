@@ -29,8 +29,8 @@
                         <tr>
                             <th>{{ __('messages.product') }}</th>
                             <th>{{ __('messages.qty') }}</th>
-                            <th>{{ __('messages.Note') }}</th>
                             <th>{{ __('messages.price') }}</th>
+                            <th>{{ __('messages.action') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -97,14 +97,6 @@
                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle increase-btn" style="width: 28px; height: 28px;">+</button>
                                         </div>
                                     </form>
-                                </td>
-
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary note-btn"
-                                            data-cart-key="{{ $key }}"
-                                            data-notes="@json($item['note'] ? [$item['note']] : [])">
-                                        {{ __('messages.edit') }}
-                                    </button>
                                 </td>
 
                                 <!-- Price shows LINE TOTAL; keep unit price in data-unit for instant recalc -->
@@ -200,12 +192,9 @@
 (function(){
   const currency = @json(optional($setting)->currency ?? '$');
   const cartContainer = document.getElementById('cart-container');
-  const noteUrl = @json(route($routePrefix . '.pos.note'));
-  const removeLabel = @json(__('messages.remove_command'));
-  const tableUrl = @json(route($routePrefix . '.pos.table'));
-  const tableLabel = @json(__('messages.table'));
-  const commentStoreUrl = @json(route('comments.store'));
-  let selectedTable = @json(session('table_number'));
+    const tableUrl = @json(route($routePrefix . '.pos.table'));
+    const tableLabel = @json(__('messages.table'));
+    let selectedTable = @json(session('table_number'));
 
 
   // ---- helpers -------------------------------------------------------------
@@ -219,22 +208,6 @@
       || '';
   }
 
-  function renderNotes(notes){
-    const list = $('#currentNotes');
-    if(!list) return;
-    list.innerHTML='';
-    notes.forEach(n=>{
-      const li=document.createElement('li');
-      li.className='list-group-item d-flex justify-content-between align-items-center';
-      li.textContent=n;
-      const btn=document.createElement('button');
-      btn.className='btn btn-sm btn-danger remove-note';
-      btn.textContent=removeLabel;
-      btn.dataset.note=n;
-      li.appendChild(btn);
-      list.appendChild(li);
-    });
-  }
   function highlightTableButtons(number){
     $$('.table-btn').forEach(btn=>{
       if(btn.dataset.number == number){
@@ -422,12 +395,9 @@
     const openTable = e.target.closest('#openTableModal');
     const clearTable = e.target.closest('#clearTable');
     const tableBtn = e.target.closest('.table-btn');
-    const noteBtn = e.target.closest('.note-btn');
-    const removeNoteBtn = e.target.closest('.remove-note');
-    const saveCommentBtn = e.target.closest('#saveComment');
-    const plus = e.target.closest('.increase-btn');
-    const minus = e.target.closest('.decrease-btn');
-    const removeForm = e.target.closest('.remove-item-form');
+      const plus = e.target.closest('.increase-btn');
+      const minus = e.target.closest('.decrease-btn');
+      const removeForm = e.target.closest('.remove-item-form');
 
     if(openTable){
       bootstrap.Modal.getOrCreateInstance($('#tableModal')).show();
@@ -478,85 +448,9 @@
       return;
     }
 
-     if (noteBtn){
-      const cartKey = noteBtn.dataset.cartKey;
-      const notes = JSON.parse(noteBtn.dataset.notes || '[]');
-      $('#commentCartKey').value = cartKey;
-      $('#commentInput').value = '';
-      renderNotes(notes);
-      bootstrap.Modal.getOrCreateInstance($('#commentModal')).show();
-      return;
-    }
-
-    if (removeNoteBtn){
-      let cartKey = $('#commentCartKey').value;
-      const fd = new FormData();
-      fd.append('_token', getCsrf());
-      fd.append('cart_key', cartKey);
-      fd.append('remove_note', removeNoteBtn.dataset.note || '');
-      try{
-        const res = await fetch(noteUrl, {
-          method:'POST',
-          headers:{'X-Requested-With':'XMLHttpRequest'},
-          body:fd
-        });
-        const json = await res.json().catch(()=>null);
-        if(res.ok && json?.cart){
-          const modal = bootstrap.Modal.getInstance($('#commentModal'));
-          if(modal) modal.hide();
-          cartContainer.innerHTML = json.cart;
-          const newKey = json.new_key || cartKey;
-          $('#commentCartKey').value = newKey;
-          const btn = cartContainer.querySelector(`[data-cart-key="${newKey}"]`);
-          if(btn){
-            const newNotes = JSON.parse(btn.dataset.notes || '[]');
-            btn.dataset.notes = JSON.stringify(newNotes);
-          }
-          cartKey = newKey;
-        }
-      }catch(err){ showToast('Error updating note'); }
-      return;
-    }
-
-    if (saveCommentBtn){
-      const text = $('#commentInput').value.trim();
-      if (!text) return;
-      try{
-        const res = await fetch(commentStoreUrl, {
-          method:'POST',
-          headers:{
-            'X-CSRF-TOKEN': getCsrf(),
-            'X-Requested-With':'XMLHttpRequest',
-            'Content-Type':'application/json'
-          },
-          body: JSON.stringify({ text })
-        });
-        if(!res.ok){
-          const errTxt = await res.text();
-          throw new Error(errTxt || res.statusText);
-        }
-        const comment = await res.json();
-        const list = $('#commentList');
-        if(list){
-          const opt = document.createElement('option');
-          opt.value = comment.text;
-          list.appendChild(opt);
-        }
-        const form = $('#commentForm');
-        if(form){
-          if(typeof form.requestSubmit === 'function') form.requestSubmit();
-          else form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
-        }
-      }catch(error){
-        try{ const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
-        catch{ showToast(error.message || 'Error updating cart'); }
-      }
-      return;
-    }
-
-    if (removeForm){
-      e.preventDefault();
-      const row = rowOf(removeForm);
+     if (removeForm){
+        e.preventDefault();
+        const row = rowOf(removeForm);
       const action = removeForm.getAttribute('action');
       const fd = new FormData(removeForm);
       // optimistic: drop the row, recalc, then request
@@ -587,35 +481,6 @@
     scheduleSync(row);
   });
   
-  document.addEventListener('submit', async (e)=>{
-    if(e.target.matches('#commentForm')){
-      e.preventDefault();
-      const form = e.target;
-      const cartKey = $('#commentCartKey').value;
-      const fd = new FormData(form);
-      try{
-        const res = await fetch(noteUrl, {
-          method:'POST',
-          headers:{'X-Requested-With':'XMLHttpRequest'},
-          body:fd
-        });
-        const json = await res.json().catch(()=>null);
-        if(res.ok && json?.cart){
-          const modal = bootstrap.Modal.getInstance($('#commentModal'));
-          if(modal) modal.hide();
-          cartContainer.innerHTML = json.cart;
-          const newKey = json.new_key || cartKey;
-          $('#commentCartKey').value = newKey;
-          const btn = cartContainer.querySelector(`[data-cart-key="${newKey}"]`);
-          if(btn){
-            const notes = JSON.parse(btn.dataset.notes || '[]');
-            btn.dataset.notes = JSON.stringify(notes);
-          }
-          form.reset();
-        }
-      }catch(err){ showToast('Error updating note'); }
-    }
-  });
 })();
 </script>
 @endpush

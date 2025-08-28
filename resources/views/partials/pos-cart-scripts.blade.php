@@ -115,63 +115,6 @@
         });
     }
 
-    function renderNotes(notes) {
-        const list = document.getElementById('currentNotes');
-        if (!list) return;
-        list.innerHTML = '';
-        notes.forEach(n => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.textContent = n;
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-sm btn-danger remove-note';
-            btn.textContent = '{{ __('messages.remove_command') }}';
-            btn.dataset.note = n;
-            li.appendChild(btn);
-            list.appendChild(li);
-        });
-        attachNoteHandlers();
-    }
-
-    function attachNoteHandlers() {
-        document.querySelectorAll('#currentNotes .remove-note').forEach(btn => {
-            if (btn.dataset.listener) return;
-            btn.dataset.listener = 'true';
-            btn.addEventListener('click', function () {
-                let cartKey = document.getElementById('commentCartKey').value;
-                const note = btn.dataset.note;
-                const formData = new FormData();
-                formData.append('cart_key', cartKey);
-                formData.append('remove_note', note);
-                fetch('{{ route($routePrefix . '.pos.note') }}', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: formData
-                })
-                .then(res => res.ok ? res.json() : Promise.reject(res))
-                .then(data => {
-                    if (data.cart) {
-                        const modalEl = document.getElementById('commentModal');
-                        const modal = bootstrap.Modal.getInstance(modalEl);
-                        if (modal) modal.hide();
-                        cartContainer.innerHTML = data.cart;
-                        attachCartFormHandlers();
-                        scrollCartToBottom();
-                        const newKey = data.new_key || cartKey;
-                        document.getElementById('commentCartKey').value = newKey;
-                        const btn = document.querySelector(`[data-cart-key="${newKey}"]`);
-                        const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
-                        renderNotes(notes);
-                        cartKey = newKey;
-                    }
-                });
-            });
-        });
-    }
 
     function attachCartFormHandlers() {
         // add/increase/decrease in cart
@@ -271,20 +214,6 @@
             });
         });
 
-        // open notes modal
-        document.querySelectorAll('.note-btn').forEach(btn => {
-            if (btn.dataset.listener) return;
-            btn.dataset.listener = 'true';
-            btn.addEventListener('click', function () {
-                const cartKey = btn.dataset.cartKey;
-                const notes = JSON.parse(btn.dataset.notes || '[]');
-                document.getElementById('commentCartKey').value = cartKey;
-                document.getElementById('commentInput').value = '';
-                renderNotes(notes);
-                const modal = new bootstrap.Modal(document.getElementById('commentModal'));
-                modal.show();
-            });
-        });
 
         // table modal opener
         const openTable = document.getElementById('openTableModal');
@@ -328,44 +257,6 @@
             });
         });
 
-        // comment form submit
-        const form = document.getElementById('commentForm');
-        if (form && !form.dataset.listener) {
-            form.dataset.listener = 'true';
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const formData = new FormData(form);
-                fetch(form.action, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: formData
-                })
-                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
-                .then(data => {
-                    const modalEl = document.getElementById('commentModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                    if (data.cart) {
-                        cartContainer.innerHTML = data.cart;
-                        attachCartFormHandlers();
-                        scrollCartToBottom();
-                        const cartKey = document.getElementById('commentCartKey').value;
-                        const newKey = data.new_key || cartKey;
-                        document.getElementById('commentCartKey').value = newKey;
-                        const btn = document.querySelector(`[data-cart-key="${newKey}"]`);
-                        const notes = btn ? JSON.parse(btn.dataset.notes || '[]') : [];
-                        renderNotes(notes);
-                    }
-                })
-                .catch(error => {
-                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
-                    catch { showToast(error.message || 'Error updating cart'); }
-                });
-            });
-        }
-
-        attachSaveCommentHandler();
     }
 
     attachCustomizerButtons();
@@ -373,42 +264,6 @@
     attachCartFormHandlers();
     if (selectedTableNumber) highlightTableButtons(selectedTableNumber);
 
-    function attachSaveCommentHandler() {
-        const saveBtn = document.getElementById('saveComment');
-        if (saveBtn && !saveBtn.dataset.listener) {
-            saveBtn.dataset.listener = 'true';
-            saveBtn.addEventListener('click', function () {
-                const text = document.getElementById('commentInput').value.trim();
-                if (!text) return;
-                fetch('{{ route('comments.store') }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ text })
-                })
-                .then(res => res.ok ? res.json() : res.text().then(t => Promise.reject(new Error(t || res.statusText))))
-                .then(comment => {
-                    const list = document.getElementById('commentList');
-                    const opt = document.createElement('option');
-                    opt.value = comment.text;
-                    list.appendChild(opt);
-
-                    const form = document.getElementById('commentForm');
-                    if (form) {
-                        if (typeof form.requestSubmit === 'function') form.requestSubmit();
-                        else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }
-                })
-                .catch(error => {
-                    try { const msg = JSON.parse(error.message); showToast(msg.error || 'Error updating cart'); }
-                    catch { showToast(error.message || 'Error updating cart'); }
-                });
-            });
-        }
-    }
 
     // live search keeps handlers
     document.getElementById('searchInput').addEventListener('keyup', function() {

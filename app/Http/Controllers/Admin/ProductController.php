@@ -13,15 +13,33 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
+        // 🔍 Search filter
         if ($search = $request->get('search')) {
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $products = $query->orderByDesc('created_at')->get();
+        // (Optional) If you pass a category filter in the view, keep it working
+        if ($categoryId = $request->get('category')) {
+            $query->where('category_id', $categoryId);
+        }
 
+        // 🔽 Sorting logic (A–Z / Z–A), default = newest
+        $sort = $request->get('sort');
+        if ($sort === 'asc') {
+            $query->orderBy('name', 'asc');
+        } elseif ($sort === 'desc') {
+            $query->orderBy('name', 'desc');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
+        $products = $query->get();
+
+        // Ajax partial body for live search/sort
         if ($request->ajax()) {
             return view('admin.product.partials.tbody', compact('products'))->render();
         }
+
         return view('admin.product.index', compact('products'));
     }
 
@@ -31,20 +49,20 @@ class ProductController extends Controller
 
         return view('admin.product.create', [
             'categoryOptions' => $categoryOptions,
-            ]);
+        ]);
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'price' => 'required|numeric',
+            'name'        => 'required',
+            'price'       => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:2048',
         ]);
 
-         $validator->after(function ($validator) use ($request) {
+        $validator->after(function ($validator) use ($request) {
             $category = Category::find($request->category_id);
             if (!$category || !$category->isTreeActive()) {
                 $validator->errors()->add('category_id', __('messages.category_inactive'));
@@ -60,6 +78,7 @@ class ProductController extends Controller
         }
 
         $product = Product::create($data);
+
         return redirect()
             ->route('admin.products.index')
             ->with('success', __('messages.product_added_successfully', ['name' => $product->name]));
@@ -70,19 +89,19 @@ class ProductController extends Controller
         $categoryOptions = category_options(null);
 
         return view('admin.product.edit', [
-            'product' => $product,
+            'product'         => $product,
             'categoryOptions' => $categoryOptions,
-            ]);
+        ]);
     }
 
     public function update(Request $request, Product $product)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'price' => 'required|numeric',
+            'name'        => 'required',
+            'price'       => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:2048',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -101,6 +120,7 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+
         return redirect()
             ->route('admin.products.index')
             ->with('success', __('messages.product_updated_successfully', ['name' => $product->name]));
@@ -109,9 +129,10 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $product->delete();
+
         return back()->with('success', __('messages.product_deleted_successfully'));
     }
-    
+
     public function activate(Product $product)
     {
         $product->update(['is_active' => true]);
@@ -126,4 +147,3 @@ class ProductController extends Controller
         return back()->with('success', __('messages.product_deactivated_successfully', ['name' => $product->name]));
     }
 }
-
