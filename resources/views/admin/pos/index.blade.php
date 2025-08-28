@@ -146,7 +146,7 @@
         {{-- 🌐 Language Switcher --}}
         <form action="{{ route('lang.switch') }}" method="GET">
           @php $next = app()->getLocale() === 'kh' ? 'en' : 'kh';
-               $flag = $next === 'kh' ? 'united-kingdom' : 'cambodia.png.png'; @endphp
+               $flag = $next === 'kh' ? 'cambodia.png' : 'united-kingdom.png'; @endphp
           <button type="submit" name="locale" value="{{ $next }}"
                   class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2">
             <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18" alt="lang">
