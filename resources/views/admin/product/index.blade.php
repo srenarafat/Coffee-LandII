@@ -2,23 +2,21 @@
 
 @section('content')
 @php
-    // Index route (for AJAX) depending on role
     $indexRoute = match (Auth::user()->role) {
         'superadmin' => route('superadmin.products.index'),
         'admin'      => route('admin.products.index'),
-        default      => route('cashier.products.index'), // in case you have a cashier list
+        default      => route('cashier.products.index'),
     };
 
-    // Create route depending on role (you already use admin create – adjust if needed)
     $createRoute = match (Auth::user()->role) {
         'superadmin' => route('superadmin.products.create'),
         'admin'      => route('admin.products.create'),
-        default      => route('cashier.products.create'), // optional
+        default      => route('cashier.products.create'),
     };
 
-    $currentSort = request('sort');       // 'asc' | 'desc' | null
-    $currentSearch = request('search');   // keep search when clicking sort
-    $currentCategory = request('category'); // if you filter by category elsewhere
+    $currentSort     = request('sort');
+    $currentSearch   = request('search');
+    $currentCategory = request('category');
 @endphp
 
 <div class="container-fluid p-3 position-relative">
@@ -37,7 +35,6 @@
             <h5 class="fw-bold mb-0">🧃 Product List</h5>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
-
                 <!-- 🔠 Sort A–Z -->
                 <a href="{{ url()->current() }}?sort=asc{{ $currentSearch ? '&search='.urlencode($currentSearch) : '' }}{{ $currentCategory ? '&category='.$currentCategory : '' }}"
                    class="btn btn-sm rounded-pill d-flex align-items-center gap-1
@@ -87,6 +84,8 @@
                         <th style="width: 60px;">{{ __('messages.serial') }}</th>
                         <th style="width: 100px;">{{ __('messages.image') }}</th>
                         <th>{{ __('messages.name') }}</th>
+                        {{-- 🆕 Import Price column (after Name) --}}
+                        <th>Import Price</th>
                         <th>{{ __('messages.price') }}</th>
                         <th>{{ __('messages.category') }}</th>
                         <th>{{ __('messages.status') }}</th>
@@ -101,6 +100,13 @@
                                 <img src="{{ asset('storage/' . $product->image) }}" class="product-img" alt="product">
                             </td>
                             <td>{{ $product->name }}</td>
+
+                            {{-- 🆕 Import Price cell --}}
+                            <td>
+                                @php $ip = $product->import_price ?? null; @endphp
+                                {{ $ip !== null ? '$'.number_format($ip, 2) : '-' }}
+                            </td>
+
                             <td>${{ number_format($product->price, 2) }}</td>
                             <td>{{ $product->category->name ?? '' }}</td>
                             <td>
@@ -112,8 +118,6 @@
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-
-                                    {{-- 🔶 Deactivate / Activate FIRST --}}
                                     @if($product->is_active)
                                         <form action="{{ auth()->user()->role === 'superadmin'
                                                             ? route('superadmin.products.deactivate', $product->id)
@@ -140,7 +144,6 @@
                                         </form>
                                     @endif
 
-                                    {{-- 🔵 Edit SECOND (solid blue like Category) --}}
                                     <a href="{{ auth()->user()->role === 'superadmin'
                                                 ? route('superadmin.products.edit', $product->id)
                                                 : route('admin.products.edit', $product->id) }}"
@@ -149,7 +152,6 @@
                                         <span>{{ __('messages.edit') }}</span>
                                     </a>
 
-                                    {{-- 🗑 Delete LAST (solid red like Category) --}}
                                     <form action="{{ auth()->user()->role === 'superadmin'
                                                     ? route('superadmin.products.destroy', $product->id)
                                                     : route('admin.products.destroy', $product->id) }}"
@@ -161,7 +163,6 @@
                                             <span>{{ __('messages.delete') }}</span>
                                         </button>
                                     </form>
-
                                 </div>
                             </td>
                         </tr>
@@ -175,13 +176,12 @@
 
 @push('scripts')
 <script>
-    // Live search (keeps current sort & category)
     const liveSearchInput = document.getElementById('liveSearch');
     const productBody = document.getElementById('productBody');
 
     function buildQuery() {
         const params = new URLSearchParams();
-        const search = liveSearchInput.value || '';
+        const search = liveSearchInput?.value || '';
         const sort = "{{ $currentSort }}";
         const category = "{{ $currentCategory }}";
 
@@ -202,14 +202,11 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.text())
-                .then(html => {
-                    productBody.innerHTML = html;
-                });
-            }, 200); // small debounce
+                .then(html => { productBody.innerHTML = html; });
+            }, 200);
         });
     }
 
-    // Success toast auto-hide
     document.addEventListener('DOMContentLoaded', function () {
         const toast = document.getElementById('successToast');
         if (toast) {
@@ -226,70 +223,19 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <style>
-    #successToast {
-        border-left: 6px solid #198754;
-        background-color: #d1e7dd;
-        font-size: 14px;
-        border-radius: 6px;
-        z-index: 1050;
-    }
+    #successToast { border-left: 6px solid #198754; background-color: #d1e7dd; font-size: 14px; border-radius: 6px; z-index: 1050; }
+    .product-img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    thead.sticky-top th { background-color: #dbeafe !important; color: #000; font-weight: bold; border-bottom: 1px solid #ccc; }
 
-    .product-img {
-        width: 70px;
-        height: 70px;
-        object-fit: cover;
-        border-radius: 8px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-    }
+    .btn-deactivate{ background:#f59e0b; border-color:#f59e0b; color:#111; font-weight:600; }
+    .btn-deactivate:hover{ background:#d97706; border-color:#d97706; color:#fff; }
 
-    /* 🔵 Header Style */
-    thead.sticky-top th {
-        background-color: #dbeafe !important;
-        color: #000;
-        font-weight: bold;
-        border-bottom: 1px solid #ccc;
-    }
+    .btn-edit{ background:#3b82f6; border-color:#3b82f6; color:#fff; font-weight:600; }
+    .btn-edit:hover{ background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
 
-    /* ⚠️ Deactivate (amber) */
-    .btn-deactivate{
-        background:#f59e0b;        /* amber-500 */
-        border-color:#f59e0b;
-        color:#111;
-        font-weight:600;
-    }
-    .btn-deactivate:hover{
-        background:#d97706;        /* amber-600 */
-        border-color:#d97706;
-        color:#fff;
-    }
+    .btn-delete{ background:#e11d48; border-color:#e11d48; color:#fff; font-weight:600; }
+    .btn-delete:hover{ background:#b91c1c; border-color:#b91c1c; color:#fff; }
 
-    /* ✏️ Edit (solid blue like Category) */
-    .btn-edit{
-        background:#3b82f6;        /* blue-500 */
-        border-color:#3b82f6;
-        color:#fff;
-        font-weight:600;
-    }
-    .btn-edit:hover{
-        background:#1d4ed8;        /* blue-700 */
-        border-color:#1d4ed8;
-        color:#fff;
-    }
-
-    /* 🗑 Delete (solid red like Category) */
-    .btn-delete{
-        background:#e11d48;        /* rose-600 */
-        border-color:#e11d48;
-        color:#fff;
-        font-weight:600;
-    }
-    .btn-delete:hover{
-        background:#b91c1c;        /* darker red */
-        border-color:#b91c1c;
-        color:#fff;
-    }
-
-    /* Icon alignment */
     .btn.btn-sm .bi{ font-size:1rem; line-height:1; }
 </style>
 @endpush
