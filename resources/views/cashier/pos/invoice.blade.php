@@ -96,15 +96,13 @@
                         if (is_string($meta)) { $meta = json_decode($meta, true); }
                         if (!is_array($meta)) { $meta = []; }
 
-                        $size  = $item->size ?? ($meta['size'] ?? null);
+                        $size  = $item->size ?? ($meta['size'] ?? 'medium');
                         $sugar = $item->sugar_level ?? ($meta['sugar_level'] ?? null);
                         $ice   = $item->ice_option ?? ($meta['ice_option'] ?? null);
 
                         // Build the same cleaned list shown in cart:
                         $lines = [];
-                        if ($size && strtolower($size) !== 'medium') {
-                            $lines[] = ucfirst($size) . ' Size';
-                        }
+                        $lines[] = ucfirst($size) . ' Size';
                         if ($sugar !== null && (int)$sugar !== 100) {
                             $lines[] = 'Sugar: ' . ((int)$sugar) . '%';
                         }

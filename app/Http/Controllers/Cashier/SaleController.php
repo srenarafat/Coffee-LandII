@@ -105,7 +105,7 @@ class SaleController extends Controller
         }
 
         $quantity    = (int) ($data['quantity'] ?? 1);
-        $size        = $data['size'] ?? '';
+        $size        = $data['size'] ?? 'medium';
         $sugar       = $data['sugar_level'] ?? null;
         $ice         = $data['ice_option'] ?? '';
         $note        = trim($data['note'] ?? '');
@@ -203,7 +203,7 @@ class SaleController extends Controller
                     $cart[$id]['quantity'] = max(1, $cart[$id]['quantity'] - 1);
                     } elseif ($action === 'overwrite') {
                     $qty   = max(1, (int) $request->input('quantity', $cart[$id]['quantity']));
-                    $size  = $request->input('size', '');
+                    $size  = $request->input('size', 'medium');
                     $sugar = $request->input('sugar_level');
                     $ice   = $request->input('ice_option', '');
                     $note  = trim($request->input('note', ''));
@@ -286,7 +286,7 @@ class SaleController extends Controller
             $item   = $cart[$id];
             $newKey = $this->makeCartKey(
                 $item['product_id'],
-                $item['size'] ?? '',
+                $item['size'] ?? 'medium',
                 $item['sugar_level'] ?? null,
                 $item['ice_option'] ?? '',
                 $item['note']
@@ -398,7 +398,7 @@ class SaleController extends Controller
                     'price'       => $item['price'],
                     'total'       => $item['price'] * $item['quantity'],
                     'note'        => $item['note'] ?? null,
-                    'size'        => $item['size'] ?? null,
+                    'size'        => $item['size'] ?? 'medium',
                     'sugar_level' => $item['sugar_level'] ?? null,
                     'ice_option'  => $item['ice_option'] ?? null,
                 ]);

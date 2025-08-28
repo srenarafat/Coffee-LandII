@@ -253,7 +253,7 @@ html, body {
         <a href="{{ route('admin.products.index') }}"
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
             <i class="bi bi-box-seam fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.Menu Items') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.menu_items') }}</small>
         </a>
 
 
@@ -261,7 +261,7 @@ html, body {
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
                   {{ request()->routeIs('admin.ingredient-stock.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.product') }}</small>
         </a>
 
 
@@ -310,7 +310,7 @@ html, body {
         <a href="{{ route('superadmin.products.index') }}"
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none {{ request()->routeIs('superadmin.products.*') ? 'active' : '' }}">
             <i class="bi bi-box-seam fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.product') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.menu_items') }}</small>
         </a>
 
 
@@ -318,7 +318,7 @@ html, body {
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none
                   {{ request()->routeIs('superadmin.ingredient-stock.*') ? 'active' : '' }}">
             <i class="bi bi-box-fill fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.stock_history') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.product') }}</small>
         </a>
 
 

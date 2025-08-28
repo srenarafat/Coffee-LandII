@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\{User, Shop, Category, Product, Setting};
+use App\Models\{User, Shop, Category, Product, Setting, Sale};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -251,5 +251,58 @@ class CartOptionsTest extends TestCase
         $cart = session('cart');
         $item = collect($cart)->first();
         $this->assertEquals(2, $item['price']);
+    }
+    
+    public function test_cart_and_invoice_show_medium_size_by_default()
+    {
+        [$user, $product] = $this->setupShop();
+
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $label = ucfirst($item['size'] ?: 'medium') . ' Size';
+        $this->assertEquals('Medium Size', $label);
+
+        $this->post('/cashier/pos/checkout', [
+            'method'   => 'cash',
+            'cash_usd' => 2,
+        ]);
+
+        $sale = Sale::first();
+        $response = $this->actingAs($user)->get("/cashier/invoice/{$sale->id}/print");
+        $response->assertSee('Medium Size');
+    }
+
+    public function test_cart_and_invoice_show_medium_size_when_selected()
+    {
+        [$user, $product] = $this->setupShop();
+
+        $this->actingAs($user);
+
+        $this->post('/cashier/pos/add', [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'size'       => 'medium',
+        ]);
+
+        $cart = session('cart');
+        $item = collect($cart)->first();
+        $label = ucfirst($item['size'] ?: 'medium') . ' Size';
+        $this->assertEquals('Medium Size', $label);
+
+        $this->post('/cashier/pos/checkout', [
+            'method'   => 'cash',
+            'cash_usd' => 2,
+        ]);
+
+        $sale = Sale::first();
+        $response = $this->actingAs($user)->get("/cashier/invoice/{$sale->id}/print");
+        $response->assertSee('Medium Size');
     }
 }

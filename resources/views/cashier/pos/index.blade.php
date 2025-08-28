@@ -151,9 +151,11 @@
               $next = $current === 'kh' ? 'en' : 'kh';
           @endphp
           <button type="submit" name="locale" value="{{ $next }}"
-                  class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2">config/app.php
-            <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18" alt="lang">
-          </button>
+        class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2"
+        title="{{ strtoupper($next) }}">
+  <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18"
+       alt="{{ $current === 'kh' ? 'Khmer' : 'English' }}">
+</button>
         </form>
 
         {{-- 🔍 Search (preserves category in query) --}}
