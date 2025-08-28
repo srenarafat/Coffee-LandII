@@ -269,6 +269,9 @@ class CartOptionsTest extends TestCase
         $label = ucfirst($item['size'] ?: 'medium') . ' Size';
         $this->assertEquals('Medium Size', $label);
 
+        $response = $this->actingAs($user)->get('/cashier/pos');
+        $response->assertSee('Medium Size');
+
         $this->post('/cashier/pos/checkout', [
             'method'   => 'cash',
             'cash_usd' => 2,
@@ -295,6 +298,9 @@ class CartOptionsTest extends TestCase
         $item = collect($cart)->first();
         $label = ucfirst($item['size'] ?: 'medium') . ' Size';
         $this->assertEquals('Medium Size', $label);
+
+        $response = $this->actingAs($user)->get('/cashier/pos');
+        $response->assertSee('Medium Size');
 
         $this->post('/cashier/pos/checkout', [
             'method'   => 'cash',

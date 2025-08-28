@@ -56,14 +56,14 @@
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
 
-                // build FD and strip defaults so they are not added to the cart line
+                // build FD and strip defaults (except size) so they are not added to the cart line
                 const sizeSel  = document.getElementById('sizeValue');
                 const sugarInp = document.getElementById('sugarValueInput');
                 const iceSel   = document.getElementById('iceValue');
                 const noteInp  = document.getElementById('customizerNote');
 
                 const fd = new FormData(form);
-                if (sizeSel.value === 'medium') fd.delete('size');
+                // always submit the selected size, even if it's the default "medium"
                 if (String(sugarInp.value) === '100') fd.delete('sugar_level');
                 if (iceSel.value === 'normal') fd.delete('ice_option');
                 if (!noteInp.value.trim()) fd.delete('note');

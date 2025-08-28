@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    // Used for the quantity progress bars
+    // Max value for the progress bar scaling
     $maxQty = max($topProducts->pluck('total_quantity')->all() ?: [1]);
 @endphp
 
@@ -21,15 +21,17 @@
   /* ===== Rank styles ===== */
   .rank-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    width:36px; height:36px; font-size:18px; border-radius:50%;
+    width:28px; height:28px; font-size:16px; border-radius:50%;
+    vertical-align:middle;
   }
   .rank-1{ background:#fff7e6; } /* gold */
-  .rank-2{ background:#eef4ff; } /* silver/blue */
-  .rank-3{ background:#fff0f1; } /* bronze/red */
+  .rank-2{ background:#eef4ff; } /* silver */
+  .rank-3{ background:#fff0f1; } /* bronze */
   .rank-chip{
-    display:inline-block; min-width:32px; text-align:center;
+    display:inline-block; min-width:36px; text-align:center;
     background:#eef2f7; color:#334155; border-radius:999px;
-    padding:.2rem .45rem; font-weight:700;
+    padding:.1rem .5rem; font-weight:700; line-height:1.2;
+    vertical-align:middle;
   }
 
   /* ===== Category chip ===== */
@@ -43,7 +45,7 @@
   /* ===== Quantity mini bar ===== */
   .qty-cell{ position:relative; display:flex; align-items:center; gap:.5rem; }
   .qty-bar{
-    position:relative; flex:1 1 auto; height:10px;
+    position:relative; flex:0 0 180px; height:10px;
     background:#eef2f7; border-radius:999px; overflow:hidden;
   }
   .qty-bar::after{
@@ -52,23 +54,15 @@
   }
   .qty-label{ min-width:3ch; text-align:right; color:#0b1320; }
 
-  /* ===== Page header spacing on small screens ===== */
+  /* Controls sizing on small screens */
   @media (max-width: 576px){
     .report-controls .form-select{ width: 180px !important; }
   }
 </style>
 
-<!-- ===== Title + Controls Row ===== -->
-<div class="row g-4 mb-2">
-  <!-- Title -->
-  <div class="col-lg-5 text-center">
-    <h5 class="fw-bold text-center text-uppercase text-brown mb-0">
-      📈 {{ __('messages.top_quantity_sale_products') }}
-    </h5>
-  </div>
-
-  <!-- Controls -->
-  <div class="col-lg-7">
+<!-- ===== Controls Row (no big title above) ===== -->
+<div class="row g-3 mb-3">
+  <div class="col-12">
     <div class="report-controls d-flex flex-wrap align-items-center gap-3 justify-content-lg-end justify-content-center">
 
       <!-- Export CSV -->
@@ -133,7 +127,7 @@
   </div>
 </div>
 
-<!-- ===== Table Only (No Chart) ===== -->
+<!-- ===== Table (with compact title inside the card) ===== -->
 <div class="row g-4">
   <div class="col-12">
     <div class="card report-card border-0 shadow-sm">
@@ -151,14 +145,15 @@
         <table class="table report-table align-middle mb-0">
           <thead class="sticky-top bg-white">
             <tr>
-              <th class="text-center" style="width:70px">#</th>
+              <th class="text-center" style="width:90px">#</th>
               <th>{{ __('messages.product') }}</th>
-              <th style="width:240px">{{ __('messages.category') }}</th>
-              <th style="width:220px">{{ __('messages.total_quantity') }}</th>
-              <th style="width:160px">{{ __('messages.month') }}</th>
+              <th class="text-center" style="width:240px">{{ __('messages.category') }}</th>
+              <th class="text-center" style="width:260px">{{ __('messages.total_quantity') }}</th>
+              <th class="text-center" style="width:160px">{{ __('messages.month') }}</th>
               <th style="width:120px">{{ __('messages.year') }}</th>
             </tr>
           </thead>
+
           <tbody>
             @forelse($topProducts as $i => $item)
               @php
@@ -167,34 +162,42 @@
                 $pct  = min(100, round(($qty / $maxQty) * 100));
               @endphp
               <tr>
+                <!-- Rank: medal + always-visible number -->
                 <td class="text-center">
-                  @if($rank <= 3)
-                    <span class="rank-badge rank-{{ $rank }}">
+                  <!-- @if($rank <= 3)
+                    <span class="rank-badge rank-{{ $rank }}" aria-hidden="true">
                       {{ ['🥇','🥈','🥉'][$rank-1] }}
                     </span>
-                  @else
-                    <span class="rank-chip">{{ $rank }}</span>
-                  @endif
+                  @endif -->
+                  <span class="rank-chip ms-1">#{{ $rank }}</span>
                 </td>
 
+                <!-- Product -->
                 <td class="fw-semibold">
                   {{ $item->product->name ?? 'N/A' }}
                 </td>
 
-                <td>
+                <!-- Category (centered) -->
+                <td class="text-center">
                   <span class="cat-chip">
                     <i class="bi bi-tag me-1"></i>{{ $item->category_name }}
                   </span>
                 </td>
 
-                <td>
-                  <div class="qty-cell">
+                <!-- Quantity (centered) -->
+                <td class="text-center">
+                  <div class="qty-cell justify-content-center">
                     <div class="qty-bar" style="--pct: {{ $pct }}%"></div>
                     <span class="qty-label fw-bold">{{ $qty }}</span>
                   </div>
                 </td>
 
-                <td>{{ \Carbon\Carbon::create()->month($item->month)->format('F') }}</td>
+                <!-- Month (centered) -->
+                <td class="text-center">
+                  {{ \Carbon\Carbon::create()->month($item->month)->format('F') }}
+                </td>
+
+                <!-- Year -->
                 <td>{{ $item->year }}</td>
               </tr>
             @empty
