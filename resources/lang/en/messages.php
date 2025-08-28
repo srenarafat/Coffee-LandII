@@ -13,6 +13,7 @@ return [
     'pos' => 'POS',
     'dashboard' => 'Dashboard',
     'category' => 'Category',
+    'menu_items' => 'Menu Items',
     'all_categories' => 'All Categories',
     'Sale report' => 'Sale Report',
     'setting' => 'Setting',

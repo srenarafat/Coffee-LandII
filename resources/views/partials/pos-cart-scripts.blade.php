@@ -12,17 +12,26 @@
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
                 if (!customizerForm) return;
+
+                // reset to ADD mode
                 customizerForm.action = customizerAddAction;
                 customizerForm.dataset.mode = 'add';
+
+                // payload
                 document.getElementById('customizerCartKey').value = '';
                 document.getElementById('customizerProductId').value = this.dataset.id;
                 document.getElementById('customizerQty').value = 1;
                 document.getElementById('customizerImage').src = this.dataset.image;
                 document.getElementById('customizerName').textContent = this.dataset.name || '';
-                priceEl.textContent = this.dataset.priceMedium || '';
-                customizerForm.dataset.priceSmall  = this.dataset.priceSmall || '';
-                customizerForm.dataset.priceMedium = this.dataset.priceMedium || '';
-                customizerForm.dataset.priceLarge  = this.dataset.priceLarge || '';
+
+                // set price text + capture clean base price (no prefix)
+                priceEl.textContent = this.dataset.priceMedium || this.dataset.price || '';
+                priceEl.dataset.basePrice = (this.dataset.priceMedium || this.dataset.price || '').replace(/^[A-Z]:\s*/, '');
+
+                // expose per-size prices for the customizer script
+                customizerForm.dataset.priceSmall  = this.dataset.priceSmall  || '';
+                customizerForm.dataset.priceMedium = this.dataset.priceMedium || this.dataset.price || '';
+                customizerForm.dataset.priceLarge  = this.dataset.priceLarge  || '';
 
                 // defaults for silent options
                 const sizeSel  = document.getElementById('sizeValue');
@@ -94,12 +103,6 @@
                 if (this.value < 1) this.value = 1;
             });
         }
-
-        // Quantity plus/minus controls are handled in
-        // `product-customizer.blade.php`. The listeners previously here
-        // caused the value to increment twice (e.g., 1 → 3). By removing them
-        // we ensure the customizer is the sole source of quantity changes.
-
     }
 
     function scrollCartToBottom() {
@@ -118,7 +121,6 @@
             }
         });
     }
-
 
     function attachCartFormHandlers() {
         // add/increase/decrease in cart
@@ -186,42 +188,56 @@
             btn.dataset.listener = 'true';
             btn.addEventListener('click', function () {
                 if (!customizerForm) return;
+
                 const item = JSON.parse(btn.dataset.item || '{}');
                 const row = btn.closest('tr');
                 const updateUrl = row.querySelector('.update-url')?.value || customizerAddAction;
+
+                // switch to EDIT mode
                 customizerForm.action = updateUrl;
                 customizerForm.dataset.mode = 'edit';
+
+                // payload
                 document.getElementById('customizerCartKey').value = btn.dataset.cartKey;
                 document.getElementById('customizerProductId').value = item.product_id;
                 document.getElementById('customizerQty').value = item.quantity || 1;
                 document.getElementById('customizerImage').src = item.image_url || '';
                 document.getElementById('customizerName').textContent = item.name || '';
-                document.getElementById('customizerPrice').textContent = item.price_display || '';
+
+                // price text + base
                 priceEl.textContent = item.price_display || '';
-                customizerForm.dataset.priceSmall  = item.price_small_display || '';
+                priceEl.dataset.basePrice = (item.price_display || '').replace(/^[A-Z]:\s*/, '');
+
+                // per-size display prices (optional)
+                customizerForm.dataset.priceSmall  = item.price_small_display  || '';
                 customizerForm.dataset.priceMedium = item.price_medium_display || item.price_display || '';
-                customizerForm.dataset.priceLarge  = item.price_large_display || '';
+                customizerForm.dataset.priceLarge  = item.price_large_display  || '';
+
+                // options
                 const sizeSel  = document.getElementById('sizeValue');
                 const sugarInp = document.getElementById('sugarValueInput');
                 const iceSel   = document.getElementById('iceValue');
                 const noteInp  = document.getElementById('customizerNote');
+
                 const size  = item.size || 'medium';
                 const sugar = item.sugar_level != null ? String(item.sugar_level) : '100';
                 const ice   = item.ice_option || 'normal';
+
                 sizeSel.value = size;
                 sugarInp.value = sugar;
                 iceSel.value = ice;
                 noteInp.value = item.note || '';
+
                 ['size','sugar','ice'].forEach(g=>{
                     document.querySelectorAll(`#customizerModal .opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));
                 });
                 document.querySelector(`#customizerModal .opt-tile[data-group="size"][data-value="${size}"]`)?.classList.add('active');
                 document.querySelector(`#customizerModal .opt-tile[data-group="sugar"][data-value="${sugar}"]`)?.classList.add('active');
                 document.querySelector(`#customizerModal .opt-tile[data-group="ice"][data-value="${ice}"]`)?.classList.add('active');
+
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
             });
         });
-
 
         // table modal opener
         const openTable = document.getElementById('openTableModal');
@@ -264,14 +280,12 @@
                 });
             });
         });
-
     }
 
     attachCustomizerButtons();
     attachCustomizerForm();
     attachCartFormHandlers();
     if (selectedTableNumber) highlightTableButtons(selectedTableNumber);
-
 
     // live search keeps handlers
     document.getElementById('searchInput').addEventListener('keyup', function() {

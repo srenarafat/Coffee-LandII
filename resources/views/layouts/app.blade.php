@@ -253,7 +253,7 @@ html, body {
         <a href="{{ route('admin.products.index') }}"
            class="sidebar-icon d-flex flex-column align-items-center text-decoration-none {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
             <i class="bi bi-box-seam fs-5"></i>
-            <small class="mt-1 fw-bold">{{ __('messages.product') }}</small>
+            <small class="mt-1 fw-bold">{{ __('messages.Menu Items') }}</small>
         </a>
 
 

@@ -13,6 +13,7 @@ return [
     'pos' => 'ប្រព័ន្ធលក់',
     'dashboard' => 'ផ្ទាំងគ្រប់គ្រង',
     'category' => 'ប្រភេទ',
+    'menu_items' => 'ម៉ឺនុយ',
     'all_categories' => 'ប្រភេទទំនិញ',
     'Sale report' => 'របាយការណ៍',
     'setting' => 'ការកំណត់',
