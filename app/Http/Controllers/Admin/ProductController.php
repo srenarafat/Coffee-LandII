@@ -60,6 +60,7 @@ class ProductController extends Controller
             'price_small' => 'nullable|numeric',
             'price_medium'=> 'nullable|numeric',
             'price_large' => 'nullable|numeric',
+            'import_price'=> 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
@@ -74,7 +75,14 @@ class ProductController extends Controller
 
         $validator->validate();
 
-        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'category_id', 'description']);
+        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'import_price', 'category_id', 'description']);
+
+        foreach (['price', 'price_small', 'price_medium', 'price_large', 'import_price'] as $field) {
+            if ($data[$field] !== null) {
+                $data[$field] = (float) $data[$field];
+            }
+        }
+        $data['category_id'] = (int) $data['category_id'];
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('product_images', 'public');
@@ -105,6 +113,7 @@ class ProductController extends Controller
             'price_small' => 'nullable|numeric',
             'price_medium'=> 'nullable|numeric',
             'price_large' => 'nullable|numeric',
+            'import_price'=> 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
@@ -119,7 +128,14 @@ class ProductController extends Controller
 
         $validator->validate();
 
-        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'category_id', 'description']);
+        $data = $request->only(['name', 'price', 'price_small', 'price_medium', 'price_large', 'import_price', 'category_id', 'description']);
+
+        foreach (['price', 'price_small', 'price_medium', 'price_large', 'import_price'] as $field) {
+            if ($data[$field] !== null) {
+                $data[$field] = (float) $data[$field];
+            }
+        }
+        $data['category_id'] = (int) $data['category_id'];database/migrations/2025_10_27_000900_add_import_price_to_products_table.php
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('product_images', 'public');

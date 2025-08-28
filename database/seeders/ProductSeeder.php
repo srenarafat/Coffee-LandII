@@ -19,12 +19,14 @@ class ProductSeeder extends Seeder
         Product::create([
             'name' => 'Seafood Noodle',
             'price' => 12.50,
+            'import_price' => 8.00,
             'category_id' => $category->id,
         ]);
 
         Product::create([
             'name' => 'Beef Noodle',
             'price' => 10.00,
+            'import_price' => 6.50,
             'category_id' => $category->id,
         ]);
     }

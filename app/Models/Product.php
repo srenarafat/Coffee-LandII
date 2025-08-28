@@ -12,6 +12,7 @@ class Product extends Model
     protected $fillable = [
         'name', 'price', 'price_small', 'price_medium', 'price_large',
         'category_id', 'image', 'stock', 'promotion_flag', 'is_active',
+        'import_price',
     ];
 
     protected $casts = [
