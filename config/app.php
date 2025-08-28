@@ -21,7 +21,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'locale' => env('APP_LOCALE', 'kh'), // ✅ Default to Khmer
+    'locale' => 'en',
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'), // ✅ Use English if no Khmer text found
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'), // Optional, can leave as is

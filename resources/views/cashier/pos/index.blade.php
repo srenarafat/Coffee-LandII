@@ -145,10 +145,13 @@
       <div class="d-flex align-items-center gap-3 ms-auto">
         {{-- 🌐 Language Switcher --}}
         <form action="{{ route('lang.switch') }}" method="GET">
-          @php $next = app()->getLocale() === 'kh' ? 'en' : 'kh';
-               $flag = $next === 'kh' ? 'cambodia.png' : 'united-kingdom.png'; @endphp
+          @php
+              $current = app()->getLocale();
+              $flag = $current === 'kh' ? 'cambodia.png' : 'united-kingdom.png';
+              $next = $current === 'kh' ? 'en' : 'kh';
+          @endphp
           <button type="submit" name="locale" value="{{ $next }}"
-                  class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2">
+                  class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2">config/app.php
             <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18" alt="lang">
           </button>
         </form>
