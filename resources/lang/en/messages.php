@@ -4,6 +4,7 @@ return [
     'product' => 'Product',
     'qty' => 'Quantity',
     'price' => 'Price',
+    'import_price' => 'Import Price',
     'total_items' => 'Total Items',
     'grand_total' => 'Grand Total',
     'checkout' => 'Checkout',

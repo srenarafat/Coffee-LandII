@@ -85,7 +85,7 @@
                         <th style="width: 100px;">{{ __('messages.image') }}</th>
                         <th>{{ __('messages.name') }}</th>
                         {{-- 🆕 Import Price column (after Name) --}}
-                        <th>Import Price</th>
+                        <th>{{ __('messages.import_price') }}</th>
                         <th>{{ __('messages.price') }}</th>
                         <th>{{ __('messages.category') }}</th>
                         <th>{{ __('messages.status') }}</th>

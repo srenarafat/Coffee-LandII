@@ -25,11 +25,19 @@
                         <input type="text" name="name" class="form-control shadow-sm" placeholder="e.g. Latte" value="{{ old('name') }}" required>
                     </div>
 
+                    <!-- Import Price -->
+                    <div class="col-md-6">
+                        <label class="form-label">{{ __('messages.import_price') }} ($)</label>
+                        <input type="number" name="import_price" class="form-control shadow-sm" step="0.01" value="{{ old('import_price') }}">
+                    </div>
+                    
                     <!-- Base Price -->
                     <div class="col-md-6">
                         <label class="form-label">{{ __('messages.price') }} ($)</label>
                         <input type="number" name="price" class="form-control shadow-sm" placeholder="e.g. 2.50" step="0.01" value="{{ old('price') }}" required>
                     </div>
+
+                    
 
                     <!-- Size Prices -->
                     <div class="col-md-4">

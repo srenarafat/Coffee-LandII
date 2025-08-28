@@ -135,7 +135,7 @@ class ProductController extends Controller
                 $data[$field] = (float) $data[$field];
             }
         }
-        $data['category_id'] = (int) $data['category_id'];database/migrations/2025_10_27_000900_add_import_price_to_products_table.php
+        $data['category_id'] = (int) $data['category_id'];
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('product_images', 'public');

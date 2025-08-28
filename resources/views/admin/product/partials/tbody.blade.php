@@ -9,6 +9,10 @@
         @endif
     </td>
       <td class="fw-semibold text-center">{{ $prod->name }}</td>
+      <td>
+        @php $ip = $prod->import_price; @endphp
+        {{ $ip !== null ? (optional($setting)->currency ?? '$').number_format($ip, 2) : '-' }}
+    </td>
     <td>{{ optional($setting)->currency ?? '$' }}{{ number_format($prod->price, 2) }}</td>
     <td>{{ $prod->category->name ?? 'N/A' }}</td>
     <td>

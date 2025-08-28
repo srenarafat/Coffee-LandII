@@ -4,6 +4,7 @@ return [
     'product' => 'ផលិតផល',
     'qty' => 'ចំនួន',
     'price' => 'តម្លៃ',
+    'import_price' => 'តម្លៃដើម',
     'total_items' => 'ចំនួនទំនិញសរុប',
     'grand_total' => 'តម្លៃសរុប',
     'checkout' => 'បង់ប្រាក់',  
