@@ -12,9 +12,11 @@ class CustomerScreenLocaleTest extends TestCase
 
     public function test_customer_screen_shows_khmer_after_switch(): void
     {
+        config(['app.locale' => 'en']);
+
         $user = User::factory()->create(['role' => 'cashier']);
 
-        $this->actingAs($user)->get('/lang/switch?locale=kh');
+        $this->actingAs($user)->get('/lang/switch');
 
         $response = $this->actingAs($user)->get('/customer-screen');
 

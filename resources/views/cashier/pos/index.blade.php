@@ -145,27 +145,12 @@
       <div class="d-flex align-items-center gap-3 ms-auto">
         {{-- 🌐 Language Switcher --}}
         <form action="{{ route('lang.switch') }}" method="GET">
-          <div class="dropdown">
-            <button class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2"
-                    type="button" id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              @php $flag = app()->getLocale() === 'kh' ? 'cambodia.png' : 'united-kingdom.png'; @endphp
-              <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18" alt="lang">
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="langDropdown">
-              <li>
-                <button class="dropdown-item d-flex align-items-center" type="submit" name="locale" value="en">
-                  <img src="{{ asset('images/flags/united-kingdom.png') }}" width="24" height="18" class="me-2" alt="">
-                  English
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item d-flex align-items-center" type="submit" name="locale" value="kh">
-                  <img src="{{ asset('images/flags/cambodia.png') }}" width="24" height="18" class="me-2" alt="">
-                  ភាសាខ្មែរ
-                </button>
-              </li>
-            </ul>
-          </div>
+          @php $next = app()->getLocale() === 'kh' ? 'en' : 'kh';
+               $flag = $next === 'kh' ? 'united-kingdom' : 'cambodia.png.png'; @endphp
+          <button type="submit" name="locale" value="{{ $next }}"
+                  class="btn btn-outline-light border shadow-sm d-flex align-items-center px-2">
+            <img src="{{ asset('images/flags/' . $flag) }}" width="24" height="18" alt="lang">
+          </button>
         </form>
 
         {{-- 🔍 Search (preserves category in query) --}}

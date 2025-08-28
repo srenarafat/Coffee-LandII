@@ -8,9 +8,10 @@ class LanguageController extends Controller
 {
     public function switch(Request $request)
 {
-        $locale = $request->input('locale');
+        $locale = $request->input('locale') ??
+                  (app()->getLocale() === 'kh' ? 'en' : 'kh');
 
-    if (in_array($locale, ['en', 'kh'])) {
+        if (in_array($locale, ['en', 'kh'])) {
             session(['locale' => $locale]);
         }
 

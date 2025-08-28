@@ -22,10 +22,10 @@ class LocaleSwitchTest extends TestCase
             ->get('/admin/dashboard')
             ->assertSee('Dashboard');
 
-        // Switch to Khmer
+        // Toggle to Khmer
         $this->actingAs($user)
             ->from('/admin/dashboard')
-            ->get('/lang/switch?locale=kh')
+            ->get('/lang/switch')
             ->assertRedirect('/admin/dashboard');
 
         // Locale should persist and show Khmer labels on subsequent pages
