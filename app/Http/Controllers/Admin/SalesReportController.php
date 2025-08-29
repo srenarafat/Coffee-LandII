@@ -82,6 +82,12 @@ class SalesReportController extends Controller
         $logoBase64 = $this->getBase64Image(public_path('images/coffeeland-logo.png'));
         $scanBase64 = $this->getBase64Image(public_path('images/scan.png'));
 
+        $backRoute = match (auth()->user()->role) {
+            'superadmin' => route('superadmin.sales.report'),
+            'admin' => route('admin.sales.report'),
+            'cashier' => route('cashier.sales.history'),
+        };
+
         $view = auth()->user()->role === 'cashier'
             ? 'cashier.sales.invoice'
             : 'admin.sales.invoice';
@@ -92,6 +98,7 @@ class SalesReportController extends Controller
             'logoBase64' => $logoBase64,
             'scanBase64' => $scanBase64,
             'qrBase64' => $qrBase64,
+            'backRoute' => $backRoute,
         ]);
     }
 

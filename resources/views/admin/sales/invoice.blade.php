@@ -33,10 +33,6 @@
 
 <body>
 
-    <div class="d-print-none" style="text-align:right; margin:10px;">
-        <button onclick="window.print()">Print</button>
-    </div>
-
     @php
         $currency = optional($setting)->currency ?? '$';
         $rate = $sale->exchange_rate;
@@ -234,6 +230,14 @@
         </div>
 
     </div>
+    
+    <script>
+        window.addEventListener('load', () => window.print());
+        window.addEventListener('afterprint', () => {
+            const target = document.referrer || @json($backRoute);
+            window.location.href = target;
+        });
+    </script>
 </body>
 
 </html>
