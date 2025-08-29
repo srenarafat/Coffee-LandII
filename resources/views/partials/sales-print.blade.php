@@ -13,9 +13,12 @@
         };
     };
     
-    $routePrefix = auth()->user()->role === 'superadmin'
-        ? 'superadmin'
-        : (auth()->user()->role === 'admin' ? 'admin' : null);
+    $routePrefix = match (auth()->user()->role) {
+        'superadmin' => 'superadmin',
+        'admin' => 'admin',
+        'cashier' => 'cashier',
+        default => null,
+    };
 @endphp
 
 <!-- Header: Logo + Date + Export Buttons -->
@@ -68,7 +71,7 @@
         <tr>
             <td>
                 @if($routePrefix)
-                    <a href="{{ route($routePrefix . '.reports.sales.invoice', ['sale' => $sale->id]) }}">
+                    <a href="{{ route($routePrefix . '.sales.invoice', $sale->id) }}">
                         {{ $sale->invoice_no }}
                     </a>
                 @else

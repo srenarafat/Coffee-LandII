@@ -82,7 +82,11 @@ class SalesReportController extends Controller
         $logoBase64 = $this->getBase64Image(public_path('images/coffeeland-logo.png'));
         $scanBase64 = $this->getBase64Image(public_path('images/scan.png'));
 
-        return view('admin.sales.invoice', [
+        $view = auth()->user()->role === 'cashier'
+            ? 'cashier.sales.invoice'
+            : 'admin.sales.invoice';
+
+        return view($view, [
             'sale' => $sale,
             'setting' => $setting,
             'logoBase64' => $logoBase64,

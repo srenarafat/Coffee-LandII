@@ -235,7 +235,8 @@ Route::middleware(['auth', 'role:cashier'])->prefix('cashier')->name('cashier.')
     Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
     Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
     Route::get('invoice/{sale}/print', [InvoiceController::class, 'printView'])->name('invoice.print');
-    
+    Route::get('sales/{sale}/invoice', [SalesReportController::class, 'showInvoice'])->name('sales.invoice');
+
     Route::get('ingredient-stock/export', [IngredientStockController::class, 'exportCsv'])->name('ingredient-stock.export');
     Route::get('ingredient-stock/pdf', [IngredientStockController::class, 'exportPdf'])->name('ingredient-stock.pdf');
     Route::resource('ingredient-stock', IngredientStockController::class)->only(['index', 'create', 'store']);
