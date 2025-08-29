@@ -118,10 +118,12 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
     Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
     Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
-    
+    Route::get('sales/{sale}/invoice', [SalesReportController::class, 'showInvoice'])->name('sales.invoice');
+
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
     Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
+    Route::get('reports/sales/invoice/{sale}', [InvoiceController::class, 'printView'])->name('reports.sales.invoice');
     Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
     Route::post('ingredient-stock/adjust', [IngredientStockController::class, 'adjust'])->name('ingredient-stock.adjust');
     Route::get('reports/sales/today', [SalesReportController::class, 'today'])->name('reports.sales.today');
@@ -177,12 +179,15 @@ Route::get('fix-category-structure', [CategoryController::class, 'fixStructure']
     Route::get('invoice/{sale}/pdf', [InvoiceController::class, 'download'])->name('invoice.download');
     Route::get('invoice/{sale}/pdf-snappy', [InvoiceController::class, 'download'])->name('invoice.download.snappy');
     Route::get('invoice/{sale}/print-view', [InvoiceController::class, 'printView'])->name('invoice.print');
+    Route::get('sales/{sale}/invoice', [SalesReportController::class, 'showInvoice'])->name('sales.invoice');
+
 
     Route::get('sales-report', [SalesReportController::class, 'index'])->name('sales.report');
     Route::get('reports/sales/export', [SalesReportController::class, 'export'])->name('reports.sales.export');
     Route::get('reports/sales/print', [SalesReportController::class, 'print'])->name('reports.sales.print');
 
-    
+    Route::get('reports/sales/invoice/{sale}', [InvoiceController::class, 'printView'])->name('reports.sales.invoice');
+
     Route::get('ingredient-stock/low', [IngredientStockController::class, 'low'])->name('ingredient-stock.low');
     Route::post('ingredient-stock/adjust', [IngredientStockController::class, 'adjust'])->name('ingredient-stock.adjust');
 

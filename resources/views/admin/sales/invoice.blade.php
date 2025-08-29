@@ -32,9 +32,10 @@
 </head>
 
 <body>
-    @unless(request('auto'))
-        <button type="button" onclick="window.print()">Print</button>
-    @endunless
+
+    <div class="d-print-none" style="text-align:right; margin:10px;">
+        <button onclick="window.print()">Print</button>
+    </div>
 
     @php
         $currency = optional($setting)->currency ?? '$';
@@ -234,17 +235,5 @@
 
     </div>
 </body>
-
-@if(request('auto'))
-<script>
-window.onload = function(){ window.print(); };
-window.onafterprint = function(){
-  if (window.opener) {
-    window.opener.location.href = "{{ in_array(auth()->user()->role, ['admin', 'superadmin']) ? route('admin.pos.index') : route('cashier.pos.index') }}";
-  }
-  window.close();
-};
-</script>
-@endif
 
 </html>

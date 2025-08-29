@@ -12,6 +12,10 @@
             default => strtoupper(substr($s, 0, 1)),
         };
     };
+    
+    $routePrefix = auth()->user()->role === 'superadmin'
+        ? 'superadmin'
+        : (auth()->user()->role === 'admin' ? 'admin' : null);
 @endphp
 
 <!-- Header: Logo + Date + Export Buttons -->
@@ -62,7 +66,15 @@
     <tbody>
         @forelse ($sales as $sale)
         <tr>
-            <td>{{ $sale->invoice_no }}</td>
+            <td>
+                @if($routePrefix)
+                    <a href="{{ route($routePrefix . '.reports.sales.invoice', ['sale' => $sale->id]) }}">
+                        {{ $sale->invoice_no }}
+                    </a>
+                @else
+                    {{ $sale->invoice_no }}
+                @endif
+            </td>
             <td>{{ $sale->user->name ?? '-' }}</td>
             <td class="text-nowrap">{{ $sale->created_at->format('d M Y, H:i') }}</td>
             @php

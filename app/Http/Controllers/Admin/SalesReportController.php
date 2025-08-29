@@ -9,10 +9,12 @@ use App\Models\User;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Setting;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class SalesReportController extends Controller
 {
@@ -62,6 +64,31 @@ class SalesReportController extends Controller
     {
         $request->merge(['print' => 1]);
         return $this->index($request);
+    }
+
+    public function showInvoice(Sale $sale)
+    {
+        $setting = Setting::first();
+        $currency = $setting->currency ?? '$';
+
+        $sale->load(['items.product', 'user']);
+
+        $qrSvg = QrCode::format('svg')
+            ->size(100)
+            ->encoding('UTF-8')
+            ->generate("Invoice #{$sale->id} | Total: {$currency}" . number_format($sale->total, 2));
+        $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+
+        $logoBase64 = $this->getBase64Image(public_path('images/coffeeland-logo.png'));
+        $scanBase64 = $this->getBase64Image(public_path('images/scan.png'));
+
+        return view('admin.sales.invoice', [
+            'sale' => $sale,
+            'setting' => $setting,
+            'logoBase64' => $logoBase64,
+            'scanBase64' => $scanBase64,
+            'qrBase64' => $qrBase64,
+        ]);
     }
 
     protected function buildSalesQuery(Request $request)
@@ -371,5 +398,12 @@ class SalesReportController extends Controller
             ->setOption('encoding', 'UTF-8')
             ->setOption('enable-local-file-access', true)
             ->download('top_quantity_sales.pdf');
+    }
+    
+    private function getBase64Image($path)
+    {
+        return file_exists($path)
+            ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path))
+            : null;
     }
 }
