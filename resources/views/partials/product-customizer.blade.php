@@ -220,7 +220,7 @@
     box-shadow:0 0 0 2px rgba(13,110,253,.14) inset, 0 2px 8px rgba(13,110,253,.08);
     color:#0b5ed7;
   }
-  .chip-check{ position:absolute; opacity:0; pointer-events:none; }
+  .chip-check{ position:absolute; opacity:0; }
 </style>
 
 <script>
@@ -286,9 +286,8 @@ if (!window.__customizerBound__) {
         const cb = lbl.querySelector('.chip-check');
         // sync initial state
         lbl.classList.toggle('active', cb.checked);
-        // click toggles
-        lbl.addEventListener('click', (ev) => {
-          if (ev.target.tagName !== 'INPUT') cb.checked = !cb.checked;
+        // keep label state synced with checkbox
+        cb.addEventListener('change', () => {
           lbl.classList.toggle('active', cb.checked);
         });
       });
