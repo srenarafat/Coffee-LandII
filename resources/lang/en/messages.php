@@ -172,7 +172,7 @@ return [
     'time' => 'Time',
     'type' => 'Type',
     'wifi' => 'Wi-Fi',
-    
+
     'category_added_successfully' => 'Category added successfully.',
     'category_updated_successfully' => ':name 🎉 Category updated successfully.',
     'category_deleted_successfully' => 'Category deleted successfully.',
@@ -225,7 +225,7 @@ return [
     'table' => 'Table',
     'select_table' => 'Select Table',
     'table_number' => 'Table Number',
-    
+
     'ingredient' => 'Ingredient',
     'unit' => 'Unit',
     'total_in' => 'Total In',
@@ -264,7 +264,7 @@ return [
     'tip_change_unit' => 'Tip: to change unit of this ingredient, use the Unit field above.',
 
     'insufficient_payment' => 'Insufficient payment.',
-    
+
     'todays_sales' => "Today's Sales",
     'orders' => 'Orders',
     'items_sold' => 'Items Sold',
@@ -282,5 +282,7 @@ return [
     'no_ice' => 'No Ice',
     'more_ice' => 'More Ice',
     'add_to_cart' => 'Add to Cart',
+    'showing_results' => 'Showing results',
+    'items' => 'Items',
 
 ];

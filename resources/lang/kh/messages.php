@@ -7,7 +7,7 @@ return [
     'import_price' => 'តម្លៃដើម',
     'total_items' => 'ចំនួនទំនិញសរុប',
     'grand_total' => 'តម្លៃសរុប',
-    'checkout' => 'បង់ប្រាក់',  
+    'checkout' => 'បង់ប្រាក់',
     'search_placeholder' => 'ស្វែងរកផលិតផល...',
     'all' => 'ទាំងអស់',
     'empty' => 'ទំនិញទទេ',
@@ -172,7 +172,7 @@ return [
     'time' => 'ម៉ោង',
     'type' => 'ប្រភេទ',
     'wifi' => 'Wi-Fi',
-    
+
     'category_added_successfully' => 'បន្ថែមប្រភេទបានជោគជ័យ',
     'category_updated_successfully' => ':name 🎉 កែប្រែប្រភេទបានជោគជ័យ',
     'category_deleted_successfully' => 'លុបប្រភេទបានជោគជ័យ',
@@ -225,7 +225,7 @@ return [
     'table' => 'តុ',
     'select_table' => 'ជ្រើសតុ',
     'table_number' => 'លេខតុ',
-    
+
     'ingredient' => 'គ្រឿងផ្សំ',
     'unit' => 'ឯកតា',
     'total_in' => 'បញ្ចូលសរុប',
@@ -264,7 +264,7 @@ return [
     'tip_change_unit' => 'ណែនាំ៖ ដើម្បីប្តូរឯកតារបស់គ្រឿងផ្សំនេះ សូមប្រើវាល "ឯកតា" ខាងលើ។',
 
     'insufficient_payment' => 'ប្រាក់មិនគ្រប់គ្រាន់សម្រាប់ការទូទាត់។',
-    
+
     'todays_sales' => 'ការលក់ថ្ងៃនេះ',
     'orders' => 'ការបញ្ជាទិញ',
     'items_sold' => 'ចំនួនទំនិញលក់',
@@ -282,4 +282,6 @@ return [
     'no_ice' => 'គ្មានទឹកកក',
     'more_ice' => 'ទឹកកកច្រើន',
     'add_to_cart' => 'បន្ថែមទៅកន្ត្រក',
+    'showing_results' => 'បង្ហាញលទ្ធផល',
+    'items' => 'ធាតុ',
 ];
