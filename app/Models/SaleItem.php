@@ -16,10 +16,12 @@ class SaleItem extends Model
         'size',
         'sugar_level',
         'ice_option',
+        'options',
     ];
 
-    protected $casts = [];
-
+    protected $casts = [
+        'options' => 'array',
+    ];
     public function sale()
     {
         return $this->belongsTo(Sale::class);

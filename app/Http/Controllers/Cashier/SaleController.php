@@ -454,6 +454,7 @@ class SaleController extends Controller
                     'size'        => $item['size'] ?? 'medium',
                     'sugar_level' => $item['sugar_level'] ?? null,
                     'ice_option'  => $item['ice_option'] ?? null,
+                    'options'     => $item['options'] ?? null,
                 ]);
             }
 
