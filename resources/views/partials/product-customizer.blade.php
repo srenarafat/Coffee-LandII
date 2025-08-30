@@ -63,7 +63,7 @@
               </div>
             </div>
 
-          {{-- sugar --}}
+            {{-- sugar --}}
             <div class="mb-2">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="form-label mb-0 small">{{ __('messages.sugar_level') }}</label>
@@ -79,7 +79,7 @@
               </div>
             </div>
 
-           {{-- ice --}}
+            {{-- ice --}}
             <div class="mb-2">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label class="form-label mb-0 small">{{ __('messages.ice_level') ?? __('messages.ice') }}</label>
@@ -91,26 +91,36 @@
                 <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
                 <button type="button" class="opt-tile" data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
               </div>
-              </div>
+            </div>
           </div>
 
-          {{-- food options --}}
+          {{-- food options (styled like drink tiles; still checkboxes) --}}
           <div class="food-options d-none mb-2">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="optNoVeg" name="options[]" value="No Vegetables">
-              <label class="form-check-label small" for="optNoVeg">No Vegetables</label>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label mb-0 small">{{ __('messages.options') ?? 'Options' }}</label>
+              <span class="badge rounded-pill bg-body-secondary text-muted border">Optional</span>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="optNoSweet" name="options[]" value="No Sweet">
-              <label class="form-check-label small" for="optNoSweet">No Sweet</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="optNoSalty" name="options[]" value="No Salty">
-              <label class="form-check-label small" for="optNoSalty">No Salty</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="optNoSpicy" name="options[]" value="No Spicy">
-              <label class="form-check-label small" for="optNoSpicy">No Spicy</label>
+
+            <div class="chip-grid">
+              <label class="opt-chip">
+                <input type="checkbox" class="chip-check" id="optNoVeg"   name="options[]" value="No Vegetables">
+                <span>No Vegetables</span>
+              </label>
+
+              <label class="opt-chip">
+                <input type="checkbox" class="chip-check" id="optNoSweet" name="options[]" value="No Sweet">
+                <span>No Sweet</span>
+              </label>
+
+              <label class="opt-chip">
+                <input type="checkbox" class="chip-check" id="optNoSalty" name="options[]" value="No Salty">
+                <span>No Salty</span>
+              </label>
+
+              <label class="opt-chip">
+                <input type="checkbox" class="chip-check" id="optNoSpicy" name="options[]" value="No Spicy">
+                <span>No Spicy</span>
+              </label>
             </div>
           </div>
 
@@ -186,6 +196,31 @@
   .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   .qty-input[type=number]{ -moz-appearance:textfield; }
   .qty-control:focus-within{ box-shadow:0 0 0 3px rgba(25,135,84,.18); }
+
+  /* === Food chips (multi-select) === */
+  .chip-grid{
+    display:grid; gap:.42rem;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+  @media (min-width:576px){
+    .chip-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+  }
+  .opt-chip{
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid #e7e9ee; border-radius:10px;
+    background: linear-gradient(#f9fafc, #f3f6fb);
+    color:#1f2937; font-weight:600; padding:.5rem .6rem;
+    cursor:pointer; user-select:none; min-height:40px;
+    transition:all .15s ease;
+  }
+  .opt-chip:hover{ background:linear-gradient(#f6f8fb,#eef3fb); border-color:#d6dde7; }
+  .opt-chip.active{
+    background:linear-gradient(#eaf2ff,#dbe8ff);
+    border-color:#b6d2ff;
+    box-shadow:0 0 0 2px rgba(13,110,253,.14) inset, 0 2px 8px rgba(13,110,253,.08);
+    color:#0b5ed7;
+  }
+  .chip-check{ position:absolute; opacity:0; pointer-events:none; }
 </style>
 
 <script>
@@ -217,14 +252,14 @@ if (!window.__customizerBound__) {
         const base = (priceEl?.dataset?.basePrice || priceEl?.textContent || '').replace(/^[A-Z]:\s*/, '');
         price = base;
       }
-      
+
       const hasSizePricing = form?.dataset?.priceSmall || form?.dataset?.priceMedium || form?.dataset?.priceLarge;
       if (priceEl) priceEl.textContent = hasSizePricing ? `${label}: ${price}` : price;
     };
 
     const clampQty = (n) => Math.max(1, (parseInt(n, 10) || 1));
 
-    // Single delegated click handler
+    // Single delegated click handler for drink tiles & qty
     modalEl.addEventListener('click', (e) => {
       // Option tiles
       const tile = e.target.closest('.opt-tile');
@@ -243,6 +278,22 @@ if (!window.__customizerBound__) {
       if (e.target.closest('#qtyMinus')) qtyEl.value = clampQty((qtyEl.value || 1) * 1 - 1);
     });
 
+    // --- Food option chips (checkboxes styled as tiles) ---
+    const initChips = () => {
+      const grid = document.querySelector('#customizerModal .chip-grid');
+      if (!grid) return;
+      grid.querySelectorAll('.opt-chip').forEach(lbl => {
+        const cb = lbl.querySelector('.chip-check');
+        // sync initial state
+        lbl.classList.toggle('active', cb.checked);
+        // click toggles
+        lbl.addEventListener('click', (ev) => {
+          if (ev.target.tagName !== 'INPUT') cb.checked = !cb.checked;
+          lbl.classList.toggle('active', cb.checked);
+        });
+      });
+    };
+
     // Reset defaults each time the dialog opens unless editing
     modalEl.addEventListener('show.bs.modal', () => {
       // capture a clean base price once when opening
@@ -251,7 +302,7 @@ if (!window.__customizerBound__) {
         priceEl.dataset.basePrice = clean;
       }
 
-      if (form?.dataset?.mode === 'edit') { updatePrice(); return; }
+      if (form?.dataset?.mode === 'edit') { updatePrice(); initChips(); return; }
 
       sizeIn.value  = 'medium';
       sugarIn.value = '100';
@@ -266,6 +317,10 @@ if (!window.__customizerBound__) {
       modalEl.querySelector('.opt-tile[data-group="size"][data-value="medium"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="sugar"][data-value="100"]')?.classList.add('active');
       modalEl.querySelector('.opt-tile[data-group="ice"][data-value="normal"]')?.classList.add('active');
+
+      // clear chips and sync
+      document.querySelectorAll('#customizerModal .chip-check').forEach(cb => cb.checked = false);
+      initChips();
       updatePrice();
     });
   });
