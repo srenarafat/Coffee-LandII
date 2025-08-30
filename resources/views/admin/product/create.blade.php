@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@php
+    $foodCategory = \App\Models\Category::where('name', 'Food')->first();
+    $foodCategoryIds = $foodCategory ? \App\Models\Category::descendantsAndSelfIds($foodCategory->id) : [];
+@endphp
+
 @section('content')
 <div class="container-fluid mt-4">
     <div class="card shadow-sm">
@@ -39,18 +44,21 @@
 
                     
 
-                    <!-- Size Prices -->
-                    <div class="col-md-4">
-                        <label class="form-label">{{ __('messages.small') }} {{ __('messages.price') }} ($)</label>
-                        <input type="number" name="price_small" class="form-control shadow-sm" step="0.01" value="{{ old('price_small') }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">{{ __('messages.medium') }} {{ __('messages.price') }} ($)</label>
-                        <input type="number" name="price_medium" class="form-control shadow-sm" step="0.01" value="{{ old('price_medium') }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">{{ __('messages.large') }} {{ __('messages.price') }} ($)</label>
-                        <input type="number" name="price_large" class="form-control shadow-sm" step="0.01" value="{{ old('price_large') }}">
+                    <div id="size-price-group" class="col-12">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ __('messages.small') }} {{ __('messages.price') }} ($)</label>
+                                <input type="number" name="price_small" class="form-control shadow-sm" step="0.01" value="{{ old('price_small') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ __('messages.medium') }} {{ __('messages.price') }} ($)</label>
+                                <input type="number" name="price_medium" class="form-control shadow-sm" step="0.01" value="{{ old('price_medium') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ __('messages.large') }} {{ __('messages.price') }} ($)</label>
+                                <input type="number" name="price_large" class="form-control shadow-sm" step="0.01" value="{{ old('price_large') }}">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Product Image -->
@@ -113,5 +121,30 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        const categorySelect = document.querySelector('select[name="category_id"]');
+        const sizeGroup = document.getElementById('size-price-group');
+        const foodIds = @json($foodCategoryIds);
+
+        function toggleSizeGroup() {
+            const selected = parseInt(categorySelect.value, 10);
+            if (foodIds.includes(selected)) {
+                sizeGroup.style.display = 'none';
+                sizeGroup.querySelectorAll('input').forEach(input => {
+                    input.disabled = true;
+                    input.value = '';
+                });
+            } else {
+                sizeGroup.style.display = '';
+                sizeGroup.querySelectorAll('input').forEach(input => {
+                    input.disabled = false;
+                });
+            }
+        }
+
+        categorySelect.addEventListener('change', toggleSizeGroup);
+        toggleSizeGroup();
+    });
 </script>
 @endpush

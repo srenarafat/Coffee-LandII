@@ -4,6 +4,9 @@
     const customizerForm = document.getElementById('customizerForm');
     const customizerAddAction = customizerForm ? customizerForm.action : '';
     const priceEl = document.getElementById('customizerPrice');
+    const sizeInput = document.getElementById('sizeValue');
+    const sugarInput = document.getElementById('sugarValueInput');
+    const iceInput   = document.getElementById('iceValue');
 
     // open customizer with DEFAULTS (size=medium, sugar=100, ice=normal, note empty)
     function attachCustomizerButtons() {
@@ -16,6 +19,8 @@
                 // reset to ADD mode
                 customizerForm.action = customizerAddAction;
                 customizerForm.dataset.mode = 'add';
+                const isFood = this.dataset.isFood === 'true';
+                customizerForm.dataset.isFood = isFood ? 'true' : 'false';
 
                 // payload
                 document.getElementById('customizerCartKey').value = '';
@@ -28,21 +33,40 @@
                 priceEl.textContent = this.dataset.priceMedium || this.dataset.price || '';
                 priceEl.dataset.basePrice = (this.dataset.priceMedium || this.dataset.price || '').replace(/^[A-Z]:\s*/, '');
 
-                // expose per-size prices for the customizer script
-                customizerForm.dataset.priceSmall  = this.dataset.priceSmall  || '';
-                customizerForm.dataset.priceMedium = this.dataset.priceMedium || this.dataset.price || '';
-                customizerForm.dataset.priceLarge  = this.dataset.priceLarge  || '';
+                // expose per-size prices for the customizer script unless Food
+                if (!isFood) {
+                    customizerForm.dataset.priceSmall  = this.dataset.priceSmall  || '';
+                    customizerForm.dataset.priceMedium = this.dataset.priceMedium || this.dataset.price || '';
+                    customizerForm.dataset.priceLarge  = this.dataset.priceLarge  || '';
+                } else {
+                    customizerForm.dataset.priceSmall = '';
+                    customizerForm.dataset.priceMedium = '';
+                    customizerForm.dataset.priceLarge = '';
+                }
 
                 // defaults for silent options
-                const sizeSel  = document.getElementById('sizeValue');
-                const sugarInp = document.getElementById('sugarValueInput');
-                const iceSel   = document.getElementById('iceValue');
+                const sizeSel  = sizeInput;
+                const sugarInp = sugarInput;
+                const iceSel   = iceInput;
                 const noteInp  = document.getElementById('customizerNote');
 
-                sizeSel.value  = 'medium';
-                sugarInp.value = '100';
-                iceSel.value   = 'normal';
-                noteInp.value  = '';
+                if (sizeSel) sizeSel.value  = 'medium';
+                if (sugarInp) sugarInp.value = '100';
+                if (iceSel)   iceSel.value   = 'normal';
+                if (noteInp)  noteInp.value  = '';
+
+                const drinkOptions = document.querySelector('.drink-options');
+                if (isFood) {
+                    drinkOptions?.classList.add('d-none');
+                    sizeSel?.remove();
+                    sugarInp?.remove();
+                    iceSel?.remove();
+                } else {
+                    drinkOptions?.classList.remove('d-none');
+                    if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
+                    if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
+                    if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                }
 
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
             });
@@ -57,15 +81,15 @@
                 e.preventDefault();
 
                 // build FD and strip defaults (except size) so they are not added to the cart line
-                const sizeSel  = document.getElementById('sizeValue');
-                const sugarInp = document.getElementById('sugarValueInput');
-                const iceSel   = document.getElementById('iceValue');
+                const sizeSel  = sizeInput;
+                const sugarInp = sugarInput;
+                const iceSel   = iceInput;
                 const noteInp  = document.getElementById('customizerNote');
 
                 const fd = new FormData(form);
                 // always submit the selected size, even if it's the default "medium"
-                if (String(sugarInp.value) === '100') fd.delete('sugar_level');
-                if (iceSel.value === 'normal') fd.delete('ice_option');
+                if (sugarInp && String(sugarInp.value) === '100') fd.delete('sugar_level');
+                if (iceSel && iceSel.value === 'normal') fd.delete('ice_option');
                 if (!noteInp.value.trim()) fd.delete('note');
                 if (form.dataset.mode === 'edit') {
                     fd.append('action', 'overwrite');

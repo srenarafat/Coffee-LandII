@@ -49,46 +49,48 @@
             </div>
           </div>
 
-          {{-- size --}}
-          <div class="mb-2">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0 small">{{ __('messages.drink_size') }}</label>
-              <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
+          <div class="drink-options">
+            {{-- size --}}
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0 small">{{ __('messages.drink_size') }}</label>
+                <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
+              </div>
+              <div class="opt-grid compact">
+                <button type="button" class="opt-tile" data-group="size"  data-value="small">{{ __('messages.small') }}</button>
+                <button type="button" class="opt-tile active" data-group="size" data-value="medium">{{ __('messages.medium') }}</button>
+                <button type="button" class="opt-tile" data-group="size"  data-value="large">{{ __('messages.large') }}</button>
+              </div>
             </div>
-            <div class="opt-grid compact">
-              <button type="button" class="opt-tile" data-group="size"  data-value="small">{{ __('messages.small') }}</button>
-              <button type="button" class="opt-tile active" data-group="size" data-value="medium">{{ __('messages.medium') }}</button>
-              <button type="button" class="opt-tile" data-group="size"  data-value="large">{{ __('messages.large') }}</button>
-            </div>
-          </div>
 
           {{-- sugar --}}
-          <div class="mb-2">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0 small">{{ __('messages.sugar_level') }}</label>
-              <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0 small">{{ __('messages.sugar_level') }}</label>
+                <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
+              </div>
+              <div class="opt-grid compact">
+                <button type="button" class="opt-tile"        data-group="sugar" data-value="10">10%</button>
+                <button type="button" class="opt-tile"        data-group="sugar" data-value="30">30%</button>
+                <button type="button" class="opt-tile"        data-group="sugar" data-value="50">50%</button>
+                <button type="button" class="opt-tile"        data-group="sugar" data-value="70">70%</button>
+                <button type="button" class="opt-tile active" data-group="sugar" data-value="100">100%</button>
+                <button type="button" class="opt-tile"        data-group="sugar" data-value="150">150%</button>
+              </div>
             </div>
-            <div class="opt-grid compact">
-              <button type="button" class="opt-tile"        data-group="sugar" data-value="10">10%</button>
-              <button type="button" class="opt-tile"        data-group="sugar" data-value="30">30%</button>
-              <button type="button" class="opt-tile"        data-group="sugar" data-value="50">50%</button>
-              <button type="button" class="opt-tile"        data-group="sugar" data-value="70">70%</button>
-              <button type="button" class="opt-tile active" data-group="sugar" data-value="100">100%</button>
-              <button type="button" class="opt-tile"        data-group="sugar" data-value="150">150%</button>
-            </div>
-          </div>
 
-          {{-- ice --}}
-          <div class="mb-2">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0 small">{{ __('messages.ice_level') ?? __('messages.ice') }}</label>
-              <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
-            </div>
-            <div class="opt-grid compact">
-              <button type="button" class="opt-tile" data-group="ice" data-value="none">{{ __('messages.no_ice') }}</button>
-              <button type="button" class="opt-tile" data-group="ice" data-value="less">{{ __('messages.ice_less') }}</button>
-              <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
-              <button type="button" class="opt-tile" data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
+           {{-- ice --}}
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0 small">{{ __('messages.ice_level') ?? __('messages.ice') }}</label>
+                <span class="badge rounded-pill bg-body-secondary text-muted border">1 Required</span>
+              </div>
+              <div class="opt-grid compact">
+                <button type="button" class="opt-tile" data-group="ice" data-value="none">{{ __('messages.no_ice') }}</button>
+                <button type="button" class="opt-tile" data-group="ice" data-value="less">{{ __('messages.ice_less') }}</button>
+                <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
+                <button type="button" class="opt-tile" data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
+              </div>
             </div>
           </div>
 
@@ -195,7 +197,9 @@ if (!window.__customizerBound__) {
         const base = (priceEl?.dataset?.basePrice || priceEl?.textContent || '').replace(/^[A-Z]:\s*/, '');
         price = base;
       }
-      if (priceEl) priceEl.textContent = `${label}: ${price}`;
+      
+      const hasSizePricing = form?.dataset?.priceSmall || form?.dataset?.priceMedium || form?.dataset?.priceLarge;
+      if (priceEl) priceEl.textContent = hasSizePricing ? `${label}: ${price}` : price;
     };
 
     const clampQty = (n) => Math.max(1, (parseInt(n, 10) || 1));

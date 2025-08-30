@@ -54,7 +54,10 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $food = Category::where('name', 'Food')->first();
+        $foodIds = $food ? Category::descendantsAndSelfIds($food->id) : [];
+
+        $rules = [
             'name'        => 'required',
             'price'       => 'required|numeric',
             'price_small' => 'nullable|numeric',
@@ -64,7 +67,18 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
-        ]);
+        ];
+
+        if (in_array((int) $request->category_id, $foodIds)) {
+            unset($rules['price_small'], $rules['price_medium'], $rules['price_large']);
+            $request->merge([
+                'price_small'  => null,
+                'price_medium' => null,
+                'price_large'  => null,
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($request) {
             $category = Category::find($request->category_id);
@@ -107,7 +121,10 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $validator = Validator::make($request->all(), [
+        $food = Category::where('name', 'Food')->first();
+        $foodIds = $food ? Category::descendantsAndSelfIds($food->id) : [];
+
+        $rules = [
             'name'        => 'required',
             'price'       => 'required|numeric',
             'price_small' => 'nullable|numeric',
@@ -117,7 +134,18 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
-        ]);
+        ];
+
+        if (in_array((int) $request->category_id, $foodIds)) {
+            unset($rules['price_small'], $rules['price_medium'], $rules['price_large']);
+            $request->merge([
+                'price_small'  => null,
+                'price_medium' => null,
+                'price_large'  => null,
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($request) {
             $category = Category::find($request->category_id);

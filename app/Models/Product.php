@@ -77,7 +77,31 @@ class Product extends Model
 
         return $category ? $category->isTreeActive() : false;
     }
-    
+
+    /**
+     * Get the root category name for this product.
+     */
+    public function categoryRootName(): ?string
+    {
+        $category = $this->relationLoaded('category')
+            ? $this->category
+            : $this->category()->with('parent')->first();
+
+        while ($category && $category->parent) {
+            $category = $category->parent;
+        }
+
+        return $category?->name;
+    }
+
+    /**
+     * Whether the product belongs to the "Food" root category.
+     */
+    public function isFood(): bool
+    {
+        return strcasecmp($this->categoryRootName() ?? '', 'Food') === 0;
+    }
+
     public function priceForSize(string $size): float
     {
         $size = strtolower($size);

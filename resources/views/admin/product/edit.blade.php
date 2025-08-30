@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@php
+    $foodCategory = \App\Models\Category::where('name', 'Food')->first();
+    $foodCategoryIds = $foodCategory ? \App\Models\Category::descendantsAndSelfIds($foodCategory->id) : [];
+@endphp
+
 @section('content')
 <div class="container-fluid mt-4">
   <div class="card shadow-sm">
@@ -58,7 +63,7 @@
         </div>
 
         {{-- Row 3: S | M | L --}}
-        <div class="row g-4 mt-1">
+        <div id="size-price-group" class="row g-4 mt-1">
           <div class="col-md-4">
             <label class="form-label">{{ __('messages.small') }} {{ __('messages.price') }} ($)</label>
             <input type="number" step="0.01" name="price_small" class="form-control shadow-sm"
@@ -119,4 +124,33 @@
     border-color:#4E342E; box-shadow:0 0 0 0.15rem rgba(78,52,46,.25);
   }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const categorySelect = document.querySelector('select[name="category_id"]');
+    const sizeGroup = document.getElementById('size-price-group');
+    const foodIds = @json($foodCategoryIds);
+
+    function toggleSizeGroup() {
+      const selected = parseInt(categorySelect.value, 10);
+      if (foodIds.includes(selected)) {
+        sizeGroup.style.display = 'none';
+        sizeGroup.querySelectorAll('input').forEach(input => {
+          input.disabled = true;
+          input.value = '';
+        });
+      } else {
+        sizeGroup.style.display = '';
+        sizeGroup.querySelectorAll('input').forEach(input => {
+          input.disabled = false;
+        });
+      }
+    }
+
+    categorySelect.addEventListener('change', toggleSizeGroup);
+    toggleSizeGroup();
+  });
+</script>
 @endpush
