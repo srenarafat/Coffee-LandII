@@ -24,6 +24,7 @@
             data-price-large="{{ $product->price_large !== null ? $currency . number_format($product->price_large, 2) : '' }}"
             data-image="{{ asset('storage/' . $product->image) }}"
             data-is-food="{{ $product->isFood() ? 'true' : 'false' }}"
+            data-is-water="{{ $product->isWater() ? 'true' : 'false' }}"
             style="color:#fff;width:36px;height:36px;background-color:#5f4545;bottom:10px;right:10px;">
         <i class="bi bi-plus fs-6"></i>
     </button>

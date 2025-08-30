@@ -19,8 +19,10 @@
                 // reset to ADD mode
                 customizerForm.action = customizerAddAction;
                 customizerForm.dataset.mode = 'add';
-                const isFood = this.dataset.isFood === 'true';
-                customizerForm.dataset.isFood = isFood ? 'true' : 'false';
+                const isFood  = this.dataset.isFood === 'true';
+                const isWater = this.dataset.isWater === 'true';
+                customizerForm.dataset.isFood  = isFood ? 'true' : 'false';
+                customizerForm.dataset.isWater = isWater ? 'true' : 'false';
 
                 // payload
                 document.getElementById('customizerCartKey').value = '';
@@ -56,6 +58,8 @@
                 if (noteInp)  noteInp.value  = '';
 
                 const drinkOptions = document.querySelector('.drink-options');
+                const sugarBlock = document.querySelector('.drink-options [data-group="sugar"]')?.closest('div.mb-2');
+                const iceBlock   = document.querySelector('.drink-options [data-group="ice"]')?.closest('div.mb-2');
                 if (isFood) {
                     drinkOptions?.classList.add('d-none');
                     sizeSel?.remove();
@@ -64,8 +68,17 @@
                 } else {
                     drinkOptions?.classList.remove('d-none');
                     if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
-                    if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
-                    if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                    if (isWater) {
+                        sugarBlock?.classList.add('d-none');
+                        iceBlock?.classList.add('d-none');
+                        sugarInp?.remove();
+                        iceSel?.remove();
+                    } else {
+                        sugarBlock?.classList.remove('d-none');
+                        iceBlock?.classList.remove('d-none');
+                        if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
+                        if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                    }
                 }
 
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('customizerModal')).show();
@@ -214,8 +227,10 @@
                 if (!customizerForm) return;
 
                 const item = JSON.parse(btn.dataset.item || '{}');
-                const isFood = btn.dataset.isFood === 'true';
-                customizerForm.dataset.isFood = isFood ? 'true' : 'false';
+                const isFood  = btn.dataset.isFood === 'true';
+                const isWater = btn.dataset.isWater === 'true';
+                customizerForm.dataset.isFood  = isFood ? 'true' : 'false';
+                customizerForm.dataset.isWater = isWater ? 'true' : 'false';
                 const row = btn.closest('tr');
                 const updateUrl = row.querySelector('.update-url')?.value || customizerAddAction;
 
@@ -249,6 +264,9 @@
                 const iceSel   = iceInput;
                 const noteInp  = document.getElementById('customizerNote');
                 const drinkOptions = document.querySelector('.drink-options');
+                const sugarBlock = document.querySelector('.drink-options [data-group="sugar"]')?.closest('div.mb-2');
+                const iceBlock   = document.querySelector('.drink-options [data-group="ice"]')?.closest('div.mb-2');
+
 
                 if (isFood) {
                     drinkOptions?.classList.add('d-none');
@@ -258,8 +276,17 @@
                 } else {
                     drinkOptions?.classList.remove('d-none');
                     if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
-                    if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
-                    if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                    if (isWater) {
+                        sugarBlock?.classList.add('d-none');
+                        iceBlock?.classList.add('d-none');
+                        sugarInp?.remove();
+                        iceSel?.remove();
+                    } else {
+                        sugarBlock?.classList.remove('d-none');
+                        iceBlock?.classList.remove('d-none');
+                        if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
+                        if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                    }
                 }
 
                 const size  = item.size || 'medium';

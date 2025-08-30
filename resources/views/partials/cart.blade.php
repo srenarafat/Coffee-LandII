@@ -50,10 +50,15 @@
                                 if (!($productModel && $productModel->isFood())) {
                                     $options[] = strtolower($size ?: 'medium');
                                 }
-                                if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
+                                if (array_key_exists('sugar_level', $item)
+                                    && $item['sugar_level'] !== null
+                                    && (int)$item['sugar_level'] !== 100
+                                    && !($productModel && $productModel->isWater())) {
                                     $options[] = ((int)$item['sugar_level']).'%';
                                 }
-                                if (!empty($item['ice_option']) && strtolower($item['ice_option']) !== 'normal') {
+                                if (!empty($item['ice_option'])
+                                    && strtolower($item['ice_option']) !== 'normal'
+                                    && !($productModel && $productModel->isWater())) {
                                     $options[] = strtolower($item['ice_option']);
                                 }
                             @endphp
@@ -67,10 +72,15 @@
         if (!($productModel && $productModel->isFood())) {
             $optionsList[] = ucfirst($size ?: 'medium') . ' Size';
         }
-        if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
+        if (array_key_exists('sugar_level', $item)
+            && $item['sugar_level'] !== null
+            && (int)$item['sugar_level'] !== 100
+            && !($productModel && $productModel->isWater())) {
             $optionsList[] = 'Sugar: ' . (int)$item['sugar_level'] . '%';
         }
-        if (!empty($item['ice_option']) && strtolower($item['ice_option']) !== 'normal') {
+        if (!empty($item['ice_option'])
+            && strtolower($item['ice_option']) !== 'normal'
+            && !($productModel && $productModel->isWater())) {
             $optionsList[] = ucfirst($item['ice_option']) . ' Ice';
         }
         if (!empty($item['note'])) {
@@ -120,6 +130,9 @@
     } else {
         $editPayload['size'] = $item['size'] ?? 'medium';
     }
+    if ($productModel && $productModel->isWater()) {
+        unset($editPayload['sugar_level'], $editPayload['ice_option']);
+    }
     $editPayload['image_url']     = !empty($item['image']) ? asset('storage/'.$item['image']) : '';
     $editPayload['price_display'] = (optional($setting)->currency ?? '$') . number_format($item['price'] ?? 0, 2);
     $currency = optional($setting)->currency ?? '$';
@@ -134,6 +147,7 @@
         class="btn btn-sm btn-outline-secondary edit-item-btn"
         data-cart-key="{{ $key }}"
         data-is-food="{{ $productModel && $productModel->isFood() ? 'true' : 'false' }}"
+        data-is-water="{{ $productModel && $productModel->isWater() ? 'true' : 'false' }}"
         data-notes='@json($item["note"] ? [$item["note"]] : [])'
         data-item='@json($editPayload)'>
     {{ __('messages.edit') }}

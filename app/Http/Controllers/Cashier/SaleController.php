@@ -114,6 +114,10 @@ class SaleController extends Controller
         if ($product->isFood()) {
             $size = '';
         }
+        if ($product->isWater()) {
+            $sugar = null;
+            $ice   = '';
+        }
 
         $cart = session()->get('cart', []);
 
@@ -134,6 +138,9 @@ class SaleController extends Controller
             ];
             if (!$product->isFood()) {
                 $cart[$key]['size'] = $size;
+            }
+            if ($product->isWater()) {
+                unset($cart[$key]['sugar_level'], $cart[$key]['ice_option']);
             }
         }
 
@@ -214,9 +221,13 @@ class SaleController extends Controller
                     $sugar = $request->input('sugar_level');
                     $ice   = $request->input('ice_option', '');
                     $note  = trim($request->input('note', ''));
-                    
+
                     if ($product->isFood()) {
                         $size = '';
+                    }
+                    if ($product->isWater()) {
+                        $sugar = null;
+                        $ice   = '';
                     }
 
                     $cart[$id]['quantity']    = $qty;
@@ -228,6 +239,9 @@ class SaleController extends Controller
                         unset($cart[$id]['size']);
                     } else {
                         $cart[$id]['size'] = $size;
+                    }
+                    if ($product->isWater()) {
+                        unset($cart[$id]['sugar_level'], $cart[$id]['ice_option']);
                     }
 
                     $newKey = $this->makeCartKey($productId, $size, $sugar, $ice, $note);

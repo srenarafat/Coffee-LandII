@@ -102,6 +102,35 @@ class Product extends Model
         return strcasecmp($this->categoryRootName() ?? '', 'Food') === 0;
     }
 
+     /**
+     * Determine if the product has a category ancestor with the given name.
+     */
+    public function hasCategoryAncestor(string $name): bool
+    {
+        $category = $this->relationLoaded('category')
+            ? $this->category
+            : $this->category()->with('parent')->first();
+
+        while ($category) {
+            if (strcasecmp($category->name, $name) === 0) {
+                return true;
+            }
+            $category = $category->relationLoaded('parent')
+                ? $category->parent
+                : $category->parent()->first();
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether the product belongs to the "Water" category tree.
+     */
+    public function isWater(): bool
+    {
+        return $this->hasCategoryAncestor('Water');
+    }
+
     public function priceForSize(string $size): float
     {
         $size = strtolower($size);
