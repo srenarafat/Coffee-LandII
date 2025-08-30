@@ -42,10 +42,14 @@
                                 $total     += $lineTotal;
                                 $itemCount += $item['quantity'];
 
+                                $productModel = \App\Models\Product::find($item['product_id']);
+
                                 // Build options array, treating missing size as medium
                                 $options = [];
                                 $size = $item['size'] ?? null;
-                                $options[] = strtolower($size ?: 'medium');
+                                if (!($productModel && $productModel->isFood())) {
+                                    $options[] = strtolower($size ?: 'medium');
+                                }
                                 if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
                                     $options[] = ((int)$item['sugar_level']).'%';
                                 }
@@ -60,7 +64,9 @@
     @php
         $optionsList = [];
         $size = $item['size'] ?? null;
-        $optionsList[] = ucfirst($size ?: 'medium') . ' Size';
+        if (!($productModel && $productModel->isFood())) {
+            $optionsList[] = ucfirst($size ?: 'medium') . ' Size';
+        }
         if (array_key_exists('sugar_level', $item) && $item['sugar_level'] !== null && (int)$item['sugar_level'] !== 100) {
             $optionsList[] = 'Sugar: ' . (int)$item['sugar_level'] . '%';
         }
@@ -109,10 +115,13 @@
                                     @php
     // Build safe payload for the editor
     $editPayload = $item; // $item is an array from the session
-    $editPayload['size']         = $item['size'] ?? 'medium';
+    if ($productModel && $productModel->isFood()) {
+        $editPayload['size'] = '';
+    } else {
+        $editPayload['size'] = $item['size'] ?? 'medium';
+    }
     $editPayload['image_url']     = !empty($item['image']) ? asset('storage/'.$item['image']) : '';
     $editPayload['price_display'] = (optional($setting)->currency ?? '$') . number_format($item['price'] ?? 0, 2);
-    $productModel = \App\Models\Product::find($item['product_id']);
     $currency = optional($setting)->currency ?? '$';
     if ($productModel) {
         $editPayload['price_small_display']  = $productModel->price_small !== null ? $currency . number_format($productModel->price_small, 2) : '';

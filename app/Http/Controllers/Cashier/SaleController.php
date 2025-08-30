@@ -111,6 +111,10 @@ class SaleController extends Controller
         $ice         = $data['ice_option'] ?? '';
         $note        = trim($data['note'] ?? '');
 
+        if ($product->isFood()) {
+            $size = '';
+        }
+
         $cart = session()->get('cart', []);
 
         $key = $this->makeCartKey($product->id, $size, $sugar, $ice, $note);
@@ -124,11 +128,13 @@ class SaleController extends Controller
                 'price'       => $product->priceForSize($size),
                 'quantity'    => $quantity,
                 'image'       => $product->image, // keep image for UI
-                'size'        => $size,
                 'sugar_level' => $sugar,
                 'ice_option'  => $ice,
                 'note'        => $note,
             ];
+            if (!$product->isFood()) {
+                $cart[$key]['size'] = $size;
+            }
         }
 
         session()->put('cart', $cart);
@@ -208,13 +214,21 @@ class SaleController extends Controller
                     $sugar = $request->input('sugar_level');
                     $ice   = $request->input('ice_option', '');
                     $note  = trim($request->input('note', ''));
+                    
+                    if ($product->isFood()) {
+                        $size = '';
+                    }
 
                     $cart[$id]['quantity']    = $qty;
-                    $cart[$id]['size']        = $size;
                     $cart[$id]['price']       = $product->priceForSize($size);
                     $cart[$id]['sugar_level'] = $sugar;
                     $cart[$id]['ice_option']  = $ice;
                     $cart[$id]['note']        = $note;
+                    if ($product->isFood()) {
+                        unset($cart[$id]['size']);
+                    } else {
+                        $cart[$id]['size'] = $size;
+                    }
 
                     $newKey = $this->makeCartKey($productId, $size, $sugar, $ice, $note);
                     if ($newKey !== $id) {
@@ -287,7 +301,7 @@ class SaleController extends Controller
             $item   = $cart[$id];
             $newKey = $this->makeCartKey(
                 $item['product_id'],
-                $item['size'] ?? 'medium',
+                $item['size'] ?? '',
                 $item['sugar_level'] ?? null,
                 $item['ice_option'] ?? '',
                 $item['note']
