@@ -13,6 +13,7 @@ use App\Models\Shop;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SaleController extends Controller
@@ -346,6 +347,18 @@ class SaleController extends Controller
             if (!$product || !$product->is_active || !$product->isSellable()) {     // ⬅️ guard
                 return back()->with('error', 'Some items belong to an inactive category.');
             }
+        }
+
+        $validator = Validator::make($request->all(), [
+            'cash_usd'  => 'numeric|max:100',
+            'cash_riel' => 'numeric|max:400000',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->with('error', __('messages.payment_limit_exceeded'))
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $subtotal        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);

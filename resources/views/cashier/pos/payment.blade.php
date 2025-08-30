@@ -77,12 +77,12 @@ body {
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
                         <input type="text" inputmode="decimal" name="cash_usd" id="cashInputUsd" class="form-control payment-input"
-                            value="0">
+                            value="0" max="100">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} (៛)</label>
                         <input type="text" inputmode="decimal" name="cash_riel" id="cashInputRiel" class="form-control payment-input"
-                            value="0">
+                            value="0" max="400000">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }})</label>
@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
 
+        clampValues();
         selectedInput.dispatchEvent(new Event('input'));
     };
 
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedInput) return;
         selectedInput.value = '0';
         selectedInput.focus(); // ✅ keep caret visible
+        clampValues();
         selectedInput.dispatchEvent(new Event('input'));
     };
 
@@ -235,18 +237,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+      
+    function clampValues() {
+        let usd = parseFloat(cashInputUsd.value) || 0;
+        if (usd > 100) {
+            cashInputUsd.value = '100';
+            usd = 100;
+            showToast("{{ __('messages.payment_limit_exceeded') }}");
+        }
+
+        let riel = parseFloat(cashInputRiel.value) || 0;
+        if (riel > 400000) {
+            cashInputRiel.value = '400000';
+            riel = 400000;
+            showToast("{{ __('messages.payment_limit_exceeded') }}");
+        }
+
+        return { usd, riel };
+    }
+
     function updateChange() {
         const discountPercent = parseFloat(discountInput.value) || 0;
         const discountedTotal = originalTotal * ((100 - discountPercent) / 100);
 
-
-        const usd = parseFloat(cashInputUsd.value) || 0;
-        const riel = parseFloat(cashInputRiel.value) || 0;
-
+        const { usd, riel } = clampValues();
 
         const totalPaidUsd = usd + (riel / exchangeRate);
         const change = totalPaidUsd - discountedTotal;
-
 
         totalAmount.textContent = discountedTotal.toFixed(2);
         changeUsd.value = change >= 0 ? change.toFixed(2) : '0';
@@ -254,6 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
+    
     [discountInput, cashInputUsd, cashInputRiel].forEach(input => {
         input.addEventListener('input', updateChange);
     });
