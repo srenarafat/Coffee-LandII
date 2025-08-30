@@ -214,6 +214,8 @@
                 if (!customizerForm) return;
 
                 const item = JSON.parse(btn.dataset.item || '{}');
+                const isFood = btn.dataset.isFood === 'true';
+                customizerForm.dataset.isFood = isFood ? 'true' : 'false';
                 const row = btn.closest('tr');
                 const updateUrl = row.querySelector('.update-url')?.value || customizerAddAction;
 
@@ -232,25 +234,42 @@
                 priceEl.textContent = item.price_display || '';
                 priceEl.dataset.basePrice = (item.price_display || '').replace(/^[A-Z]:\s*/, '');
 
-                // per-size display prices (optional)
-                customizerForm.dataset.priceSmall  = item.price_small_display  || '';
-                customizerForm.dataset.priceMedium = item.price_medium_display || item.price_display || '';
-                customizerForm.dataset.priceLarge  = item.price_large_display  || '';
+                if (!isFood) {
+                    customizerForm.dataset.priceSmall  = item.price_small_display  || '';
+                    customizerForm.dataset.priceMedium = item.price_medium_display || item.price_display || '';
+                    customizerForm.dataset.priceLarge  = item.price_large_display  || '';
+                } else {
+                    customizerForm.dataset.priceSmall = '';
+                    customizerForm.dataset.priceMedium = '';
+                    customizerForm.dataset.priceLarge = '';
+                }
 
-                // options
-                const sizeSel  = document.getElementById('sizeValue');
-                const sugarInp = document.getElementById('sugarValueInput');
-                const iceSel   = document.getElementById('iceValue');
+                const sizeSel  = sizeInput;
+                const sugarInp = sugarInput;
+                const iceSel   = iceInput;
                 const noteInp  = document.getElementById('customizerNote');
+                const drinkOptions = document.querySelector('.drink-options');
+
+                if (isFood) {
+                    drinkOptions?.classList.add('d-none');
+                    sizeSel?.remove();
+                    sugarInp?.remove();
+                    iceSel?.remove();
+                } else {
+                    drinkOptions?.classList.remove('d-none');
+                    if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
+                    if (sugarInp && !customizerForm.contains(sugarInp)) customizerForm.appendChild(sugarInp);
+                    if (iceSel && !customizerForm.contains(iceSel)) customizerForm.appendChild(iceSel);
+                }
 
                 const size  = item.size || 'medium';
                 const sugar = item.sugar_level != null ? String(item.sugar_level) : '100';
                 const ice   = item.ice_option || 'normal';
 
-                sizeSel.value = size;
-                sugarInp.value = sugar;
-                iceSel.value = ice;
-                noteInp.value = item.note || '';
+                if (sizeSel) sizeSel.value = size;
+                if (sugarInp) sugarInp.value = sugar;
+                if (iceSel)   iceSel.value = ice;
+                if (noteInp)  noteInp.value = item.note || '';
 
                 ['size','sugar','ice'].forEach(g=>{
                     document.querySelectorAll(`#customizerModal .opt-tile[data-group="${g}"]`).forEach(x=>x.classList.remove('active'));

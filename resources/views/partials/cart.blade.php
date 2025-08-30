@@ -124,6 +124,7 @@
 <button type="button"
         class="btn btn-sm btn-outline-secondary edit-item-btn"
         data-cart-key="{{ $key }}"
+        data-is-food="{{ $productModel && $productModel->isFood() ? 'true' : 'false' }}"
         data-notes='@json($item["note"] ? [$item["note"]] : [])'
         data-item='@json($editPayload)'>
     {{ __('messages.edit') }}
