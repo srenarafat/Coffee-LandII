@@ -252,6 +252,7 @@ return [
 
     'your_order' => 'ការកម្មង់របស់អ្នក',
     'loading' => 'កំពុងរង់ចាំ...',
+    'options' => 'ជម្រើស',
     'thank_you' => 'សូមអរគុណ!',
     'now_serving' => 'កំពុងបម្រើ',
     'order_number' => 'ល.រ',

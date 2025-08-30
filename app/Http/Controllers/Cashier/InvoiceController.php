@@ -21,6 +21,13 @@ class InvoiceController extends Controller
         $currency = $setting->currency ?? '$';
         // Load relationships
         $sale->load(['items.product', 'user']);
+        $sale->items->each(function ($item) {
+            $opts = $item->options ?? $item->meta ?? null;
+            if (is_string($opts)) {
+                $opts = json_decode($opts, true);
+            }
+            $item->options = is_array($opts) ? ($opts['options'] ?? $opts) : [];
+        });
 
         // Generate QR code as SVG base64
         $qrSvg = QrCode::format('svg')
@@ -72,6 +79,13 @@ class InvoiceController extends Controller
 
         // Ensure relationships are loaded so the view has access
         $sale->load(['items.product', 'user']);
+        $sale->items->each(function ($item) {
+            $opts = $item->options ?? $item->meta ?? null;
+            if (is_string($opts)) {
+                $opts = json_decode($opts, true);
+            }
+            $item->options = is_array($opts) ? ($opts['options'] ?? $opts) : [];
+        });
 
         // Generate QR code (optional for the view)
         $qrSvg = QrCode::format('svg')

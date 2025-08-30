@@ -97,7 +97,7 @@
           {{-- food options (styled like drink tiles; still checkboxes) --}}
           <div class="food-options d-none mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0 small">{{ __('messages.options') ?? 'Options' }}</label>
+              <label class="form-label mb-0 small">{{ __('messages.options') }}</label>
               <span class="badge rounded-pill bg-body-secondary text-muted border">Optional</span>
             </div>
 

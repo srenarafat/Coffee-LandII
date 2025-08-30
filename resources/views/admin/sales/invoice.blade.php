@@ -123,6 +123,9 @@
                                 }
                             }
                         }
+                        foreach ($item->options ?? [] as $opt) {
+                            $lines[] = $opt;
+                        }
                     @endphp
                     <tr>
                         <td style="vertical-align: top;">{{ $index + 1 }}</td>

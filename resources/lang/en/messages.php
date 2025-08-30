@@ -252,6 +252,7 @@ return [
 
     'your_order' => 'Your Order',
     'loading' => 'Loading...',
+    'options' => 'Options',
     'thank_you' => 'Thank you!',
     'now_serving' => 'Now Serving',
     'order_number' => 'Order Number',

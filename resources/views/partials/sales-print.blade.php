@@ -88,6 +88,9 @@
             <td class="text-center">
                 @foreach ($sale->items as $item)
                     {{ $item->product->name }}@unless($item->product->isFood()) ({{ $sizeToAbbr($item->size) }})@endunless x{{ $item->quantity }}<br>
+                    foreach ($item->options ?? [] as $opt)
+                        &nbsp;&nbsp;• {{ $opt }}<br>
+                    @endforeach
                 @endforeach
             </td>
 

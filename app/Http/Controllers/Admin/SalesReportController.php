@@ -72,6 +72,13 @@ class SalesReportController extends Controller
         $currency = $setting->currency ?? '$';
 
         $sale->load(['items.product', 'user']);
+        $sale->items->each(function ($item) {
+            $opts = $item->options ?? $item->meta ?? null;
+            if (is_string($opts)) {
+                $opts = json_decode($opts, true);
+            }
+            $item->options = is_array($opts) ? ($opts['options'] ?? $opts) : [];
+        });
 
         $qrSvg = QrCode::format('svg')
             ->size(100)
