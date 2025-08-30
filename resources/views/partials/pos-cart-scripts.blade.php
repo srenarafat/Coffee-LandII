@@ -60,13 +60,18 @@
                 const drinkOptions = document.querySelector('.drink-options');
                 const sugarBlock = document.querySelector('.drink-options [data-group="sugar"]')?.closest('div.mb-2');
                 const iceBlock   = document.querySelector('.drink-options [data-group="ice"]')?.closest('div.mb-2');
+                const foodOptions = document.querySelector('.food-options');
+                const foodChecks  = foodOptions?.querySelectorAll('input[type="checkbox"]');
+                foodChecks?.forEach(cb => cb.checked = false);
                 if (isFood) {
                     drinkOptions?.classList.add('d-none');
                     sizeSel?.remove();
                     sugarInp?.remove();
                     iceSel?.remove();
+                    foodOptions?.classList.remove('d-none');
                 } else {
                     drinkOptions?.classList.remove('d-none');
+                    foodOptions?.classList.add('d-none');
                     if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
                     if (isWater) {
                         sugarBlock?.classList.add('d-none');
@@ -266,15 +271,22 @@
                 const drinkOptions = document.querySelector('.drink-options');
                 const sugarBlock = document.querySelector('.drink-options [data-group="sugar"]')?.closest('div.mb-2');
                 const iceBlock   = document.querySelector('.drink-options [data-group="ice"]')?.closest('div.mb-2');
-
+                const foodOptions = document.querySelector('.food-options');
+                const foodChecks  = foodOptions?.querySelectorAll('input[type="checkbox"]');
+                foodChecks?.forEach(cb => cb.checked = false);
 
                 if (isFood) {
                     drinkOptions?.classList.add('d-none');
                     sizeSel?.remove();
                     sugarInp?.remove();
                     iceSel?.remove();
+                    foodOptions?.classList.remove('d-none');
+                    (item.options || []).forEach(opt => {
+                        foodChecks?.forEach(cb => { if (cb.value === opt) cb.checked = true; });
+                    });
                 } else {
                     drinkOptions?.classList.remove('d-none');
+                    foodOptions?.classList.add('d-none');
                     if (sizeSel && !customizerForm.contains(sizeSel)) customizerForm.appendChild(sizeSel);
                     if (isWater) {
                         sugarBlock?.classList.add('d-none');

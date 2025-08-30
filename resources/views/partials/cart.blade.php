@@ -86,6 +86,11 @@
         if (!empty($item['note'])) {
             $optionsList[] = $item['note']; // ✅ just the note text
         }
+        if (!empty($item['options']) && is_array($item['options'])) {
+            foreach ($item['options'] as $opt) {
+                $optionsList[] = $opt;
+            }
+        }
     @endphp
 
     @if($optionsList)
@@ -125,6 +130,7 @@
                                     @php
     // Build safe payload for the editor
     $editPayload = $item; // $item is an array from the session
+    $editPayload['options'] = $item['options'] ?? [];
     if ($productModel && $productModel->isFood()) {
         $editPayload['size'] = '';
     } else {

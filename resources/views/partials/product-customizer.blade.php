@@ -91,6 +91,26 @@
                 <button type="button" class="opt-tile active" data-group="ice" data-value="normal">{{ __('messages.ice_normal') }}</button>
                 <button type="button" class="opt-tile" data-group="ice" data-value="more">{{ __('messages.more_ice') ?? 'More Ice' }}</button>
               </div>
+              </div>
+          </div>
+
+          {{-- food options --}}
+          <div class="food-options d-none mb-2">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="optNoVeg" name="options[]" value="No Vegetables">
+              <label class="form-check-label small" for="optNoVeg">No Vegetables</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="optNoSweet" name="options[]" value="No Sweet">
+              <label class="form-check-label small" for="optNoSweet">No Sweet</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="optNoSalty" name="options[]" value="No Salty">
+              <label class="form-check-label small" for="optNoSalty">No Salty</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="optNoSpicy" name="options[]" value="No Spicy">
+              <label class="form-check-label small" for="optNoSpicy">No Spicy</label>
             </div>
           </div>
 

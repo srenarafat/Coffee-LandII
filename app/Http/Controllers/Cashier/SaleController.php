@@ -93,6 +93,8 @@ class SaleController extends Controller
             'sugar_level'  => 'nullable|integer|min:0|max:150',
             'ice_option'   => 'nullable|string',
             'note'         => 'nullable|string',
+            'options'      => 'nullable|array',
+            'options.*'    => 'string',
         ]);
 
         $product  = Product::with('category.parent')->findOrFail($data['product_id']);
@@ -110,6 +112,7 @@ class SaleController extends Controller
         $sugar       = $data['sugar_level'] ?? null;
         $ice         = $data['ice_option'] ?? '';
         $note        = trim($data['note'] ?? '');
+        $options     = $product->isFood() ? ($data['options'] ?? []) : [];
 
         if ($product->isFood()) {
             $size = '';
@@ -121,7 +124,7 @@ class SaleController extends Controller
 
         $cart = session()->get('cart', []);
 
-        $key = $this->makeCartKey($product->id, $size, $sugar, $ice, $note);
+        $key = $this->makeCartKey($product->id, $size, $sugar, $ice, $note, $options);
 
         if (isset($cart[$key])) {
             $cart[$key]['quantity'] += $quantity;
@@ -138,6 +141,9 @@ class SaleController extends Controller
             ];
             if (!$product->isFood()) {
                 $cart[$key]['size'] = $size;
+            }
+            if ($product->isFood()) {
+                $cart[$key]['options'] = $options;
             }
             if ($product->isWater()) {
                 unset($cart[$key]['sugar_level'], $cart[$key]['ice_option']);
@@ -157,9 +163,9 @@ class SaleController extends Controller
         return back()->with('success', $product->name . ' added to cart.');
     }
 
-    private function makeCartKey($productId, $size, $sugar, $ice, $note)
+    private function makeCartKey($productId, $size, $sugar, $ice, $note, $options = [])
     {
-        return md5($productId . '|' . $size . '|' . ($sugar ?? '') . '|' . $ice . '|' . $note);
+        return md5($productId . '|' . $size . '|' . ($sugar ?? '') . '|' . $ice . '|' . $note . '|' . implode(',', $options));
     }
 
     public function removeItem(Request $request, $id)
@@ -192,6 +198,8 @@ class SaleController extends Controller
             'sugar_level' => 'nullable|integer|min:0|max:150',
             'ice_option'  => 'nullable|string',
             'note'        => 'nullable|string',
+            'options'     => 'nullable|array',
+            'options.*'   => 'string',
         ]);
 
         $id     = $request->input('cart_key');
@@ -216,11 +224,12 @@ class SaleController extends Controller
                 } elseif ($action === 'decrease') {
                     $cart[$id]['quantity'] = max(1, $cart[$id]['quantity'] - 1);
                     } elseif ($action === 'overwrite') {
-                    $qty   = max(1, (int) $request->input('quantity', $cart[$id]['quantity']));
-                    $size  = $request->input('size', 'medium');
-                    $sugar = $request->input('sugar_level');
-                    $ice   = $request->input('ice_option', '');
-                    $note  = trim($request->input('note', ''));
+                    $qty     = max(1, (int) $request->input('quantity', $cart[$id]['quantity']));
+                    $size    = $request->input('size', 'medium');
+                    $sugar   = $request->input('sugar_level');
+                    $ice     = $request->input('ice_option', '');
+                    $note    = trim($request->input('note', ''));
+                    $options = $product->isFood() ? ($request->input('options', [])) : [];
 
                     if ($product->isFood()) {
                         $size = '';
@@ -237,14 +246,16 @@ class SaleController extends Controller
                     $cart[$id]['note']        = $note;
                     if ($product->isFood()) {
                         unset($cart[$id]['size']);
+                        $cart[$id]['options'] = $options;
                     } else {
                         $cart[$id]['size'] = $size;
+                        unset($cart[$id]['options']);
                     }
                     if ($product->isWater()) {
                         unset($cart[$id]['sugar_level'], $cart[$id]['ice_option']);
                     }
 
-                    $newKey = $this->makeCartKey($productId, $size, $sugar, $ice, $note);
+                    $newKey = $this->makeCartKey($productId, $size, $sugar, $ice, $note, $options);
                     if ($newKey !== $id) {
                         if (isset($cart[$newKey])) {
                             $cart[$newKey]['quantity'] += $cart[$id]['quantity'];
@@ -318,7 +329,8 @@ class SaleController extends Controller
                 $item['size'] ?? '',
                 $item['sugar_level'] ?? null,
                 $item['ice_option'] ?? '',
-                $item['note']
+                $item['note'],
+                $item['options'] ?? []
             );
 
             if ($newKey !== $id) {
