@@ -105,12 +105,14 @@
 
                         // Build the same cleaned list shown in cart:
                         $lines = [];
-                        $lines[] = ucfirst($size) . ' Size';
-                        if ($sugar !== null && (int)$sugar !== 100) {
-                            $lines[] = 'Sugar: ' . ((int)$sugar) . '%';
-                        }
-                        if ($ice && strtolower($ice) !== 'normal') {
-                            $lines[] = ucfirst($ice) . ' Ice';
+                        if (!$item->product->isFood()) {
+                            $lines[] = ucfirst($size) . ' Size';
+                            if ($sugar !== null && (int)$sugar !== 100) {
+                                $lines[] = 'Sugar: ' . ((int)$sugar) . '%';
+                            }
+                            if ($ice && strtolower($ice) !== 'normal') {
+                                $lines[] = ucfirst($ice) . ' Ice';
+                            }
                         }
 
                         // Notes can be an array or a string; show only the text (no "Note:")

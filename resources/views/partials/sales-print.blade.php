@@ -87,7 +87,7 @@
 
             <td class="text-center">
                 @foreach ($sale->items as $item)
-                    {{ $item->product->name }} ({{ $sizeToAbbr($item->size) }}) x{{ $item->quantity }}<br>
+                    {{ $item->product->name }}@unless($item->product->isFood()) ({{ $sizeToAbbr($item->size) }})@endunless x{{ $item->quantity }}<br>
                 @endforeach
             </td>
 

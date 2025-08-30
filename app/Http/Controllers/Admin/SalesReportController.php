@@ -177,7 +177,7 @@ class SalesReportController extends Controller
 
             foreach ($sales as $sale) {
                 $itemNames = $sale->items
-                    ->map(fn($item) => $item->product->name . ' (' . $this->sizeAbbr($item->size) . ') x' . $item->quantity)
+                    ->map(fn($item) => $item->product->name . ($item->product->isFood() ? '' : ' (' . $this->sizeAbbr($item->size) . ')') . ' x' . $item->quantity)
                     ->implode(', ');
 
                 $categories = $sale->items->map(function ($item) {
