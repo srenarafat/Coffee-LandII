@@ -1,7 +1,7 @@
 @props(['sales', 'exportRoute', 'printRoute', 'filter' => null, 'totalAmount' => 0])
 
 @php
-    // Abbreviate size to S/M/L (default M); accepts 's','small','m','medium','l','large', etc.
+    // Abbreviate size to S/M/L (default M)
     $sizeToAbbr = function ($size) {
         if (!$size) return 'M';
         $s = strtolower($size);
@@ -12,12 +12,12 @@
             default => strtoupper(substr($s, 0, 1)),
         };
     };
-    
+
     $routePrefix = match (auth()->user()->role) {
         'superadmin' => 'superadmin',
-        'admin' => 'admin',
-        'cashier' => 'cashier',
-        default => null,
+        'admin'      => 'admin',
+        'cashier'    => 'cashier',
+        default      => null,
     };
 @endphp
 
@@ -35,12 +35,10 @@
             {{ __('messages.date') }}: {{ now()->format('d M Y, H:i') }}
         </div>
         <div class="d-flex justify-content-md-end gap-2 {{ request('print') ? 'd-none' : '' }}">
-            <a href="{{ $exportRoute }}"
-               class="btn btn-success btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
+            <a href="{{ $exportRoute }}" class="btn btn-success btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
                 ⬇️ {{ __('messages.export_csv') }}
             </a>
-            <a href="{{ $printRoute }}"
-               class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
+            <a href="{{ $printRoute }}" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 shadow-sm">
                 🖨️ {{ __('messages.print') }}
             </a>
         </div>
@@ -88,10 +86,28 @@
 
             <td class="text-center">
                 @foreach ($sale->items as $item)
-                    {{ $item->product->name }}@unless($item->product->isFood()) ({{ $sizeToAbbr($item->size) }})@endunless x{{ $item->quantity }}<br>
-                    foreach ($item->options ?? [] as $opt)
-                        &nbsp;&nbsp;• {{ $opt }}<br>
-                    @endforeach
+                    {{ $item->product->name }}
+                    @unless(method_exists($item->product, 'isFood') && $item->product->isFood())
+                        ({{ $sizeToAbbr($item->size) }})
+                    @endunless
+                    x{{ $item->quantity }}<br>
+
+                    @php
+                        // options may be array/string/null
+                        $opts = $item->options ?? [];
+                        if (is_string($opts)) {
+                            $decoded = json_decode($opts, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) $opts = $decoded;
+                            else $opts = array_filter([trim($opts)]);
+                        }
+                    @endphp
+                    @if(is_array($opts))
+                        @foreach($opts as $opt)
+                            @if(is_string($opt) && trim($opt) !== '')
+                                &nbsp;&nbsp;• {{ $opt }}<br>
+                            @endif
+                        @endforeach
+                    @endif
                 @endforeach
             </td>
 
