@@ -74,7 +74,7 @@
         <hr style="border-top: 1px dashed #000; margin: 10px 0;">
 
         {{-- Items --}}
-        <table style="margin-bottom: 10px;">
+        <table id="invoiceItems" style="margin-bottom: 10px;">
             <thead>
                 <tr>
                     <th style="text-align: left; width: 25px;">SN</th>

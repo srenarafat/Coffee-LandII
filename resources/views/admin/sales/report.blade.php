@@ -137,9 +137,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // ===== Try to extract basics from text (robust to markup changes) =====
                     const grab = (label) => {
-                        const rx = new RegExp(label + '\\s*:?\\s*(.+)');
+                        const rx = new RegExp(label + '\\s*:?\\s*(.+)', 'i');
                         const m = bodyText.match(rx);
                         return (m && m[1]) ? m[1].trim() : '—';
+                    };
+
+                    // Get all lines matching a label (case‑insensitive)
+                    const grabLines = (label) => {
+                        return bodyText.split('\n')
+                            .filter(l => l.toLowerCase().includes(label.toLowerCase()));
+                    };
+
+                    // Extract amount while keeping leading or trailing currency symbol
+                    const parseAmount = (line) => {
+                        const m = line.match(/([^0-9\s:])?\s*([0-9.,]+)\s*([^0-9\s])?/);
+                        if (!m) return '—';
+                        const symbol = m[1] || m[3] || '';
+                        const amount = m[2];
+                        return m[1] ? `${symbol}${amount}` : `${amount}${m[3] ? ' ' + symbol : ''}`;
                     };
 
                     // Invoice No (your invoice view usually shows "No: 827")
@@ -156,12 +171,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('docGrand').textContent = grab('Grand Total');
                     document.getElementById('docSubtotal').textContent = grab('Subtotal');
                     document.getElementById('docDiscount').textContent = grab('Discount');
-                    document.getElementById('docCashUsd').textContent = grab('Cash Received \\(USD\\)');
-                    document.getElementById('docCashRiel').textContent = grab('Cash Received \\(Riel\\)');
-                    document.getElementById('docChangeUsd').textContent = grab('Change \\(USD\\)');
-                    document.getElementById('docChangeRiel').textContent = grab('Change \\(Riel\\)');
                     document.getElementById('docPayment').textContent = grab('Payment Method');
                     document.getElementById('docTableName').textContent = grab('Table');
+
+                    // Cash/Change lines: search broadly and parse currency separately
+                    grabLines('Cash Received').forEach(line => {
+                        const amount = parseAmount(line);
+                        if (/riel/i.test(line) || line.includes('៛')) {
+                            document.getElementById('docCashRiel').textContent = amount;
+                        } else {
+                            document.getElementById('docCashUsd').textContent = amount;
+                        }
+                    });
+
+                    grabLines('Change').forEach(line => {
+                        const amount = parseAmount(line);
+                        if (/riel/i.test(line) || line.includes('៛')) {
+                            document.getElementById('docChangeRiel').textContent = amount;
+                        } else {
+                            document.getElementById('docChangeUsd').textContent = amount;
+                        }
+                    });
 
                     // ===== Build table rows from invoice content =====
                     const docTbody = document.querySelector('#docTable tbody');
@@ -170,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Try to locate rows in the source invoice (common patterns)
                     // 1) If the invoice has a table, use it
                     let sourceRows = [];
-                    const sourceTbody = doc.querySelector('tbody');
+                    const sourceTbody = doc.querySelector('#invoiceItems tbody');
                     if (sourceTbody) {
                         sourceRows = Array.from(sourceTbody.querySelectorAll('tr')).filter(tr => tr.children.length >= 3);
                     }
@@ -227,6 +257,30 @@ document.addEventListener('DOMContentLoaded', function () {
                             docTbody.appendChild(tr);
                         });
                     }
+                    // ===== Compute subtotal if not provided =====
+                    const subtotalEl = document.getElementById('docSubtotal');
+                    let subtotalVal;
+                    if (subtotalEl.textContent === '—') {
+                        subtotalVal = 0;
+                        docTbody.querySelectorAll('tr').forEach(tr => {
+                            const totalCell = tr.children[4];
+                            if (totalCell) {
+                                subtotalVal += parseFloat(totalCell.textContent.replace(/[^0-9.\-]/g, '')) || 0;
+                            }
+                        });
+                        const currencyMatch = document.getElementById('docGrand').textContent.match(/[^0-9.,\-\s]/);
+                        const currencySymbol = currencyMatch ? currencyMatch[0] : '';
+                        subtotalEl.textContent = currencySymbol + subtotalVal.toFixed(2);
+                    } else {
+                        subtotalVal = parseFloat(subtotalEl.textContent.replace(/[^0-9.\-]/g, '')) || 0;
+                    }
+
+                    const grandVal = parseFloat(document.getElementById('docGrand').textContent.replace(/[^0-9.\-]/g, '')) || 0;
+                    const discountVal = parseFloat(document.getElementById('docDiscount').textContent.replace(/[^0-9.\-]/g, '')) || 0;
+                    if (Math.abs((grandVal - discountVal) - subtotalVal) > 0.01) {
+                        console.warn('Subtotal does not match Grand Total minus Discount');
+                    }
+
 
                     // ===== Options/notes block (collect bullet lines like "• No Salty")
                     const bulletLines = bodyText.split('\n').filter(l => /^[•\-]\s/.test(l));
