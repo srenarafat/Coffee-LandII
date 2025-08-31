@@ -102,7 +102,7 @@
             </div>
 
             <div class="modal-footer bg-light">
-                <a href="#" id="reportPdfLink" class="btn btn-primary" target="_blank">⬇️ Export PDF</a>
+                <a href="#" id="reportPdfLink" class="btn btn-primary" target="_blank" rel="noopener">⬇️ Export PDF</a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>

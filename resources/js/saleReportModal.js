@@ -9,7 +9,12 @@ export default function saleReportModal({ routePrefix }) {
             docTbody.innerHTML = loadingRow;
 
             // Set the download link to the document-style PDF for this sale
-            document.getElementById('reportPdfLink').href = `/${routePrefix}/sales/${saleId}/document/pdf`;
+            const pdfLink = document.getElementById('reportPdfLink');
+            pdfLink.href = `/${routePrefix}/sales/${saleId}/document/pdf`;
+            pdfLink.addEventListener('click', e => {
+                e.preventDefault();
+                window.open(pdfLink.href, '_blank', 'noopener');
+            });
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
                 .then(res => res.text())
