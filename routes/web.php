@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\IngredientStockController;
 use App\Http\Controllers\Cashier\SaleController as PosController;
 use App\Http\Controllers\Cashier\InvoiceController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\SaleDocumentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\SystemLogController;
@@ -82,6 +83,11 @@ Route::prefix('profile')->name('profile.')->middleware(['auth'])->group(function
 Route::get('/profile-info', [ProfileController::class, 'info'])
     ->middleware('auth')
     ->name('profile.info');
+
+Route::middleware(['auth', 'role:superadmin|admin|cashier'])
+    ->get('{role}/sales/{sale}/document/pdf', [SaleDocumentController::class, 'pdf'])
+    ->where('role', '^(superadmin|admin|cashier)$')
+    ->name('sales.document.pdf');
 
 // ✅ Super Admin Routes
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
