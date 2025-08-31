@@ -62,7 +62,7 @@
             <th style="white-space: nowrap;">{{ __('messages.price_unit') }}</th>
             <th style="white-space: nowrap;">{{ __('messages.discount') }}</th>
             <th style="white-space: nowrap;">{{ __('messages.total') }}</th>
-            <th style="white-space: nowrap;">{{ __('messages.actions') }}</th>
+            <th class="d-print-none" style="white-space: nowrap;">{{ __('messages.actions') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -121,7 +121,7 @@
 
             <td>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->discount ?? 0, 2) }}</td>
             <td><strong>{{ optional($setting)->currency ?? '$' }}{{ number_format($sale->total, 2) }}</strong></td>
-            <td>
+            <td class="d-print-none">
                 <button type="button" class="btn btn-sm btn-primary view-invoice" data-sale-id="{{ $sale->id }}">
                     View
                 </button>
@@ -129,7 +129,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="10" class="text-center text-muted">No sales data available.</td>
+            <td colspan="{{ request('print') ? 9 : 10 }}" class="text-center text-muted">No sales data available.</td>
         </tr>
         @endforelse
     </tbody>
