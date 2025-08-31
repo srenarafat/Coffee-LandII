@@ -47,12 +47,46 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
                 .then(res => res.text())
                 .then(html => {
-                    document.querySelector('#invoiceModal .modal-body').innerHTML = html;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Scope or remove any style tags to prevent leaking styles
+                    doc.querySelectorAll('style').forEach(style => {
+                        const scopedCSS = style.textContent.split('}').map(rule => {
+                            const parts = rule.split('{');
+                            if (parts.length < 2) return '';
+                            const selectors = parts[0];
+                            const declarations = parts[1];
+                            if (selectors.trim().startsWith('@')) {
+                                return selectors + '{' + declarations + '}';
+                            }
+                            const prefixed = selectors.split(',').map(sel => {
+                                sel = sel.trim();
+                                if (sel === 'body' || sel === 'html') {
+                                    return '.invoice-content';
+                                }
+                                return `.invoice-content ${sel}`;
+                            }).join(', ');
+                            return `${prefixed}{${declarations}}`;
+                        }).join('');
+                        const scopedStyle = doc.createElement('style');
+                        scopedStyle.textContent = scopedCSS;
+                        style.replaceWith(scopedStyle);
+                    });
+
+                    const modalBody = document.querySelector('#invoiceModal .modal-body');
+                    modalBody.innerHTML = `<div class="invoice-content">${doc.body.innerHTML}</div>`;
+
                     document.getElementById('invoicePdfLink').href = `/${routePrefix}/invoice/${saleId}/pdf`;
                     const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
                     modal.show();
                 });
         });
+    });
+    
+    const invoiceModal = document.getElementById('invoiceModal');
+    invoiceModal.addEventListener('hidden.bs.modal', function () {
+        invoiceModal.querySelector('.modal-body').innerHTML = '';
     });
 });
 </script>
