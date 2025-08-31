@@ -8,6 +8,7 @@ export default function saleReportModal({ routePrefix }) {
             const docTbody = document.querySelector('#docTable tbody');
             docTbody.innerHTML = loadingRow;
 
+            // Set the download link to the document-style PDF for this sale
             document.getElementById('reportPdfLink').href = `/${routePrefix}/sales/${saleId}/document/pdf`;
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
