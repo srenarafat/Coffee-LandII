@@ -164,7 +164,7 @@
 @push('styles')
 <style>
 @media print {
-    page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 10mm; }
     thead { display: table-header-group; }
     tbody tr { page-break-inside: avoid; }
     html, body {

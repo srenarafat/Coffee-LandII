@@ -15,6 +15,8 @@ return [
             'margin-right' => '5mm',
             'margin-bottom' => '5mm',
             'margin-left' => '5mm',
+            'page-size'   => 'A4',
+            'orientation' => 'landscape',
         ],
         'env' => [],
     ],

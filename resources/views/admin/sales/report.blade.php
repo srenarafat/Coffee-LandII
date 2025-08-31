@@ -5,21 +5,21 @@
     <div class="card shadow-sm">
         <div class="card-body print-area">
             @include('partials.sales-print', [
-                'sales' => $sales,
-                'totalAmount' => $totalAmount,
-                'exportRoute' => auth()->user()->role === 'superadmin'
+                'sales'        => $sales,
+                'totalAmount'  => $totalAmount,
+                'exportRoute'  => auth()->user()->role === 'superadmin'
                     ? route('superadmin.reports.sales.export', request()->except('page'))
                     : route('admin.reports.sales.export', request()->except('page')),
-                'printRoute' => auth()->user()->role === 'superadmin'
+                'printRoute'   => auth()->user()->role === 'superadmin'
                     ? route('superadmin.reports.sales.print', request()->all())
                     : route('admin.reports.sales.print', request()->all()),
-                'filter' => view('admin.sales.filter', ['users' => $users, 'categories' => $categories])->render(),
+                'filter'       => view('admin.sales.filter', ['users' => $users, 'categories' => $categories])->render(),
             ])
         </div>
     </div>
 </div>
 
-<!-- ===== Document-Style Report Modal (replaces invoice look) ===== -->
+<!-- ===== Document-Style Report Modal ===== -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
@@ -106,7 +106,6 @@
 
 @push('styles')
 <style>
-/* Subtle, clean document look */
 #reportModal .table th, 
 #reportModal .table td { vertical-align: middle; }
 #reportModal .card { border-radius: 12px; }
@@ -119,62 +118,49 @@
 document.addEventListener('DOMContentLoaded', function () {
     const routePrefix = "{{ auth()->user()->role === 'superadmin' ? 'superadmin' : 'admin' }}";
 
-    // Reuse existing buttons (they already have .view-invoice and data-sale-id)
     document.querySelectorAll('.view-invoice').forEach(btn => {
         btn.addEventListener('click', function () {
             const saleId = this.dataset.saleId;
-            const pdfHref = `/${routePrefix}/invoice/${saleId}/pdf`;
-            document.getElementById('reportPdfLink').href = pdfHref;
+            document.getElementById('reportPdfLink').href = `/${routePrefix}/invoice/${saleId}/pdf`;
 
-            // Fetch the existing invoice HTML (server code unchanged)
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
                 .then(res => res.text())
                 .then(html => {
-                    // Parse the invoice HTML we already have and map it to a doc-style view
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
+                    const parser   = new DOMParser();
+                    const doc      = parser.parseFromString(html, 'text/html');
                     const bodyText = doc.body ? doc.body.innerText : '';
 
-                    // ===== Try to extract basics from text (robust to markup changes) =====
+                    // ---- helpers ----
                     const grab = (label) => {
                         const rx = new RegExp(label + '\\s*:?\\s*(.+)', 'i');
-                        const m = bodyText.match(rx);
+                        const m  = bodyText.match(rx);
                         return (m && m[1]) ? m[1].trim() : '—';
                     };
-
-                    // Get all lines matching a label (case‑insensitive)
-                    const grabLines = (label) => {
-                        return bodyText.split('\n')
-                            .filter(l => l.toLowerCase().includes(label.toLowerCase()));
-                    };
-
-                    // Extract amount while keeping leading or trailing currency symbol
+                    const grabLines = (label) => bodyText.split('\n')
+                        .filter(l => l.toLowerCase().includes(label.toLowerCase()));
                     const parseAmount = (line) => {
                         const m = line.match(/([^0-9\s:])?\s*([0-9.,]+)\s*([^0-9\s])?/);
                         if (!m) return '—';
-                        const symbol = m[1] || m[3] || '';
-                        const amount = m[2];
-                        return m[1] ? `${symbol}${amount}` : `${amount}${m[3] ? ' ' + symbol : ''}`;
+                        const sym = m[1] || m[3] || '';
+                        const amt = m[2];
+                        return m[1] ? `${sym}${amt}` : `${amt}${m[3] ? ' ' + sym : ''}`;
                     };
+                    const hasLetters = (s) => /[\p{L}]/u.test(s || '');
 
-                    // Invoice No (your invoice view usually shows "No: 827")
+                    // ---- header fields ----
                     let invoiceNo = '—';
                     const mNo = bodyText.match(/No\:\s*([A-Za-z0-9\-\_]+)/);
                     if (mNo) invoiceNo = mNo[1];
-
-                    // Fill header fields
                     document.getElementById('docInvoiceNo').textContent = invoiceNo;
-                    document.getElementById('docDate').textContent = grab('Date');
-                    document.getElementById('docCashier').textContent = grab('Cashier');
+                    document.getElementById('docDate').textContent     = grab('Date');
+                    document.getElementById('docCashier').textContent  = grab('Cashier');
 
-                    // Payment/summary fields (will gracefully show "—" if not found)
-                    document.getElementById('docGrand').textContent = grab('Grand Total');
-                    document.getElementById('docSubtotal').textContent = grab('Subtotal');
-                    document.getElementById('docDiscount').textContent = grab('Discount');
-                    document.getElementById('docPayment').textContent = grab('Payment Method');
-                    document.getElementById('docTableName').textContent = grab('Table');
+                    document.getElementById('docGrand').textContent      = grab('Grand Total');
+                    document.getElementById('docSubtotal').textContent   = grab('Subtotal');
+                    document.getElementById('docDiscount').textContent   = grab('Discount');
+                    document.getElementById('docPayment').textContent    = grab('Payment Method');
+                    document.getElementById('docTableName').textContent  = grab('Table');
 
-                    // Cash/Change lines: search broadly and parse currency separately
                     grabLines('Cash Received').forEach(line => {
                         const amount = parseAmount(line);
                         if (/riel/i.test(line) || line.includes('៛')) {
@@ -183,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             document.getElementById('docCashUsd').textContent = amount;
                         }
                     });
-
                     grabLines('Change').forEach(line => {
                         const amount = parseAmount(line);
                         if (/riel/i.test(line) || line.includes('៛')) {
@@ -193,120 +178,131 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
 
-                    // ===== Build table rows from invoice content =====
+                    // ---- build table rows (robust) ----
                     const docTbody = document.querySelector('#docTable tbody');
-                    docTbody.innerHTML = ''; // clear
+                    docTbody.innerHTML = '';
 
-                    // Try to locate rows in the source invoice (common patterns)
-                    // 1) If the invoice has a table, use it
-                    let sourceRows = [];
-                    const sourceTbody = doc.querySelector('#invoiceItems tbody');
-                    if (sourceTbody) {
-                        sourceRows = Array.from(sourceTbody.querySelectorAll('tr')).filter(tr => tr.children.length >= 3);
+                    const tables = Array.from(doc.querySelectorAll('table'));
+                    const norm   = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+                    let invoiceTable = null;
+                    // Prefer table with recognizable headers
+                    for (const t of tables) {
+                        let hs = Array.from(t.querySelectorAll('thead th'));
+                        if (!hs.length) {
+                            const fr = t.querySelector('tr');
+                            if (fr) hs = Array.from(fr.querySelectorAll('th,td'));
+                        }
+                        const headerText = hs.map(h => norm(h.textContent));
+                        const hasItem  = headerText.some(h => /(item|ឥវ៉ាន់|មុខទំនិញ)/.test(h));
+                        const hasQty   = headerText.some(h => /(qty|quantity|បរិមាណ)/.test(h));
+                        const hasPrice = headerText.some(h => /(price|unit|តម្លៃ)/.test(h));
+                        const hasTot   = headerText.some(h => /(total|សរុប)/.test(h));
+                        if (hasItem && hasQty && hasPrice && hasTot) { invoiceTable = t; break; }
+                    }
+                    // Fallback: pick the widest table
+                    if (!invoiceTable) {
+                        invoiceTable = tables.sort((a,b) => {
+                            const ca = (a.querySelector('tr')?.querySelectorAll('td,th').length) || 0;
+                            const cb = (b.querySelector('tr')?.querySelectorAll('td,th').length) || 0;
+                            return cb - ca;
+                        })[0];
                     }
 
-                    // 2) Fallback: parse text lines for items if no structured table
-                    if (sourceRows.length === 0) {
-                        // Very generic fallback: look for numbered lines like "1  Vanilla Frappe  1  $3.80  $3.80"
-                        const lines = bodyText.split('\n').map(s => s.trim()).filter(Boolean);
-                        let sn = 0;
-                        lines.forEach(line => {
-                            const m = line.match(/^(\d+)\s+(.+?)\s+(\d+)\s+\$?([\d\.\,]+)\s+\$?([\d\.\,]+)$/);
-                            if (m) {
-                                sn++;
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = `
-                                    <td>${sn}</td>
-                                    <td>${m[2]}</td>
-                                    <td class="text-center">${m[3]}</td>
-                                    <td class="text-end">${m[4]}</td>
-                                    <td class="text-end">${m[5]}</td>
-                                `;
-                                docTbody.appendChild(tr);
-                            }
-                        });
-                    } else {
-                        // Map invoice table rows to the document table shape
-                        let sn = 0;
-                        sourceRows.forEach(row => {
-                            const cells = Array.from(row.children).map(td => td.innerText.trim());
-                            if (!cells.length) return;
-                            sn++;
-                            // Try to guess columns: item name usually in col 1, qty in col 2 or 3, totals at end
-                            const guessQty = (arr) => {
-                                for (let i = 1; i < arr.length; i++) {
-                                    if (/^\d+$/.test(arr[i])) return arr[i];
-                                }
-                                return '1';
-                            };
-                            const qty = guessQty(cells);
-                            const price = cells.find(t => /\$/.test(t)) || '';
-                            const total = cells.reverse().find(t => /\$/.test(t)) || price;
-                            cells.reverse(); // restore
+                    // Collect body rows
+                    let rows = Array.from(invoiceTable?.querySelectorAll('tbody tr') || []);
+                    if (!rows.length) {
+                        const all = Array.from(invoiceTable?.querySelectorAll('tr') || []);
+                        rows = all.slice(1);
+                    }
 
-                            const itemName = cells[0] || '—';
+                    let snAuto = 0;
+                    rows.forEach(r => {
+                        const tds = Array.from(r.querySelectorAll('td,th'));
+                        if (!tds.length) return;
 
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>${sn}</td>
-                                <td>${itemName}</td>
-                                <td class="text-center">${qty}</td>
-                                <td class="text-end">${price}</td>
-                                <td class="text-end">${total}</td>
+                        const texts = tds.map(td => td.innerText.trim());
+
+                        // SN = first pure integer from the left, else auto
+                        let sn = texts.find(x => /^\d+$/.test(x));
+                        if (!sn) sn = String(++snAuto);
+
+                        // Item = first cell that contains letters (Khmer/Latin), not pure number or money
+                        let itemCell = texts.find(x => hasLetters(x) && !/^[\d\$\s.,៛]+$/.test(x));
+                        if (!itemCell) {
+                            // fallback: take second cell if it exists
+                            itemCell = texts[1] || '—';
+                        }
+
+                        // Qty = the integer that is NOT the SN and typically small
+                        let qty = texts.find(x => /^\d+$/.test(x) && x !== sn) || '1';
+
+                        // Money-like cells
+                        const moneyCells = texts.filter(x => /[\$៛]|^\d+([.,]\d{2,})$/.test(x));
+                        const price = moneyCells[0] || '';
+                        const total = moneyCells[moneyCells.length - 1] || price;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${sn}</td>
+                            <td>${itemCell}</td>
+                            <td class="text-center">${qty}</td>
+                            <td class="text-end">${price}</td>
+                            <td class="text-end">${total}</td>
+                        `;
+                        docTbody.appendChild(tr);
+
+                        // Append bullets (options) under this row
+                        const bullets = Array.from(r.querySelectorAll('li'))
+                            .map(li => li.textContent.trim())
+                            .filter(Boolean);
+                        if (bullets.length) {
+                            const opt = document.createElement('tr');
+                            opt.innerHTML = `
+                              <td></td>
+                              <td colspan="4">
+                                <ul class="mb-0">${bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+                              </td>
                             `;
-                            docTbody.appendChild(tr);
-                        });
+                            docTbody.appendChild(opt);
+                        }
+                    });
+
+                    if (!docTbody.children.length) {
+                        docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No items found in invoice.</td></tr>`;
                     }
-                    // ===== Compute subtotal if not provided =====
+
+                    // Notes / Options summary (hide default flags)
+                    const hideFlags = new Set(['No Vegetables','No Sweet','No Salty','No Spicy']);
+                    const allBullets = Array.from(doc.querySelectorAll('li'))
+                        .map(li => li.textContent.trim())
+                        .filter(t => t && !hideFlags.has(t));
+                    document.getElementById('docOptions').innerHTML = allBullets.length
+                        ? `<ul class="mb-0">${allBullets.map(b => `<li>${b}</li>`).join('')}</ul>` : '—';
+
+                    // Subtotal auto-calc if missing
                     const subtotalEl = document.getElementById('docSubtotal');
-                    let subtotalVal;
                     if (subtotalEl.textContent === '—') {
-                        subtotalVal = 0;
-                        docTbody.querySelectorAll('tr').forEach(tr => {
-                            const totalCell = tr.children[4];
-                            if (totalCell) {
-                                subtotalVal += parseFloat(totalCell.textContent.replace(/[^0-9.\-]/g, '')) || 0;
-                            }
+                        let subtotal = 0;
+                        document.querySelectorAll('#docTable tbody tr').forEach(tr => {
+                            const t = tr.children[4];
+                            if (t) subtotal += parseFloat((t.textContent || '').replace(/[^0-9.\-]/g,'')) || 0;
                         });
-                        const currencyMatch = document.getElementById('docGrand').textContent.match(/[^0-9.,\-\s]/);
-                        const currencySymbol = currencyMatch ? currencyMatch[0] : '';
-                        subtotalEl.textContent = currencySymbol + subtotalVal.toFixed(2);
-                    } else {
-                        subtotalVal = parseFloat(subtotalEl.textContent.replace(/[^0-9.\-]/g, '')) || 0;
+                        const sym = (document.getElementById('docGrand').textContent.match(/[^0-9.,\-\s]/) || [''])[0];
+                        subtotalEl.textContent = `${sym || ''}${subtotal.toFixed(2)}`;
                     }
 
-                    const grandVal = parseFloat(document.getElementById('docGrand').textContent.replace(/[^0-9.\-]/g, '')) || 0;
-                    const discountVal = parseFloat(document.getElementById('docDiscount').textContent.replace(/[^0-9.\-]/g, '')) || 0;
-                    if (Math.abs((grandVal - discountVal) - subtotalVal) > 0.01) {
-                        console.warn('Subtotal does not match Grand Total minus Discount');
-                    }
-
-
-                    // ===== Options/notes block (collect bullet lines like "• No Salty")
-                    const bulletLines = bodyText
-                        .split('\n')
-                        .filter(l => /^[•\-]\s/.test(l))
-                        .map(l => l.replace(/^([•\-]\s)/, '').trim());
-                    const filteredLines = bulletLines.filter(line => !['No Vegetables','No Sweet','No Salty','No Spicy'].includes(line.trim()));
-                    document.getElementById('docOptions').innerHTML = filteredLines.length
-                        ? `<ul class="mb-0">${filteredLines.map(l => `<li>${l}</li>`).join('')}</ul>`
-                        : '—';
-
-                    // Show modal
-                    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('reportModal')).show();
                 })
                 .catch(() => {
-                    // Simple error message in table area if fetch fails
                     const docTbody = document.querySelector('#docTable tbody');
                     docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Failed to load sale details.</td></tr>`;
-                    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('reportModal')).show();
                 });
         });
     });
 
-    // Clear the modal contents when closed
+    // Reset when closed
     const reportModal = document.getElementById('reportModal');
     reportModal.addEventListener('hidden.bs.modal', function () {
         document.querySelector('#docTable tbody').innerHTML =
