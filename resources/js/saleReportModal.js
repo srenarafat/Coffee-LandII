@@ -13,7 +13,11 @@ export default function saleReportModal({ routePrefix }) {
             pdfLink.href = `/${routePrefix}/sales/${saleId}/document/pdf`;
             pdfLink.addEventListener('click', e => {
                 e.preventDefault();
-                window.open(pdfLink.href, '_blank', 'noopener');
+                const w = window.open(pdfLink.href, '_blank', 'noopener');
+                w.addEventListener('load', () => {
+                    w.print();
+                    w.addEventListener('afterprint', () => w.close());
+                });
             });
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
