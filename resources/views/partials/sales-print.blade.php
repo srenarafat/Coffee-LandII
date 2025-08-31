@@ -100,6 +100,10 @@
                             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) $opts = $decoded;
                             else $opts = array_filter([trim($opts)]);
                         }
+                        if (is_array($opts)) {
+                            $hiddenOpts = ['No Vegetables','No Sweet','No Salty','No Spicy'];
+                            $opts = array_filter($opts, fn($o) => !in_array($o, $hiddenOpts, true));
+                        }
                     @endphp
                     @if(is_array($opts))
                         @foreach($opts as $opt)

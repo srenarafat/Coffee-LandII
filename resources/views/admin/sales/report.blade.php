@@ -283,9 +283,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
                     // ===== Options/notes block (collect bullet lines like "• No Salty")
-                    const bulletLines = bodyText.split('\n').filter(l => /^[•\-]\s/.test(l));
-                    document.getElementById('docOptions').innerHTML = bulletLines.length
-                        ? `<ul class="mb-0">${bulletLines.map(l => `<li>${l.replace(/^([•\-]\s)/,'')}</li>`).join('')}</ul>`
+                    const bulletLines = bodyText
+                        .split('\n')
+                        .filter(l => /^[•\-]\s/.test(l))
+                        .map(l => l.replace(/^([•\-]\s)/, '').trim());
+                    const filteredLines = bulletLines.filter(line => !['No Vegetables','No Sweet','No Salty','No Spicy'].includes(line.trim()));
+                    document.getElementById('docOptions').innerHTML = filteredLines.length
+                        ? `<ul class="mb-0">${filteredLines.map(l => `<li>${l}</li>`).join('')}</ul>`
                         : '—';
 
                     // Show modal

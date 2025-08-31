@@ -113,6 +113,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const routePrefix = 'cashier';
+    const excludeBullets = ['No Vegetables','No Sweet','No Salty','No Spicy'];
 
     // Use the existing "View" buttons from partials.sales-print
     document.querySelectorAll('.view-invoice').forEach(btn => {
@@ -223,7 +224,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         `;
                         docTbody.appendChild(tr);
 
-                        const bullets = Array.from(r.querySelectorAll('li')).map(li => li.textContent.trim()).filter(Boolean);
+                        const bullets = Array.from(r.querySelectorAll('li'))
+                            .map(li => li.textContent.trim())
+                            .filter(b => b && !excludeBullets.includes(b));
                         if (bullets.length) {
                             const opt = document.createElement('tr');
                             opt.innerHTML = `
@@ -240,7 +243,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No items found in invoice.</td></tr>`;
                     }
 
-                    const allBullets = Array.from(doc.querySelectorAll('li')).map(li => li.textContent.trim()).filter(Boolean);
+                    const allBullets = Array.from(doc.querySelectorAll('li'))
+                        .map(li => li.textContent.trim())
+                        .filter(b => b && !excludeBullets.includes(b));
                     document.getElementById('docOptions').innerHTML = allBullets.length
                       ? `<ul class="mb-0">${allBullets.map(b => `<li>${b}</li>`).join('')}</ul>`
                       : '—';
