@@ -43,12 +43,36 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch(`/cashier/sales/${saleId}/invoice`)
                 .then(res => res.text())
                 .then(html => {
-                    document.querySelector('#invoiceModal .modal-body').innerHTML = html;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const styles = [...doc.querySelectorAll('style')];
+                    styles.forEach(style => {
+                        style.textContent = style.textContent.replace(/(^|\})\s*([^@\}][^{]+)/g, (match, p1, p2) => {
+                            const selectors = p2.split(',').map(s => `.invoice-content ${s.trim()}`).join(', ');
+                            return `${p1} ${selectors}`;
+                        });
+                        style.remove();
+                    });
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'invoice-content';
+                    wrapper.innerHTML = doc.body.innerHTML;
+                    styles.forEach(style => wrapper.prepend(style));
+
+                    const modalBody = document.querySelector('#invoiceModal .modal-body');
+                    modalBody.innerHTML = '';
+                    modalBody.appendChild(wrapper);
+
                     document.getElementById('invoicePdfLink').href = `/cashier/invoice/${saleId}/pdf`;
                     const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
                     modal.show();
                 });
         });
+    });
+    
+    document.getElementById('invoiceModal').addEventListener('hidden.bs.modal', function () {
+        document.querySelector('#invoiceModal .modal-body').innerHTML = '';
     });
 });
 </script>
