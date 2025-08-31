@@ -8,7 +8,7 @@ export default function saleReportModal({ routePrefix }) {
             const docTbody = document.querySelector('#docTable tbody');
             docTbody.innerHTML = loadingRow;
 
-            document.getElementById('reportPdfLink').href = `/${routePrefix}/invoice/${saleId}/pdf`;
+            document.getElementById('reportPdfLink').href = `/${routePrefix}/sales/${saleId}/document/pdf`;
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
                 .then(res => res.text())
