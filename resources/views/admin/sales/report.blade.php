@@ -111,6 +111,7 @@
 @endsection
 
 @push('styles')
+@vite('resources/css/report-print.css')
 <style>
 /* pull header closer */
 #reportModal .doc-header { margin-bottom: .5rem !important; }

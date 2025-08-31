@@ -108,6 +108,7 @@
 @endsection
 
 @push('styles')
+@vite('resources/css/report-print.css')
 <style>
 /* header spacing */
 #reportModal .doc-header { margin-bottom: .5rem !important; }

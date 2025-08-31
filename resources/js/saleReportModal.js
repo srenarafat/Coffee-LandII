@@ -13,11 +13,15 @@ export default function saleReportModal({ routePrefix }) {
             pdfLink.href = `/${routePrefix}/sales/${saleId}/document/pdf`;
             pdfLink.addEventListener('click', e => {
                 e.preventDefault();
-                const w = window.open(pdfLink.href, '_blank', 'noopener');
-                w.addEventListener('load', () => {
-                    w.print();
-                    w.addEventListener('afterprint', () => w.close());
-                });
+                const container = document.createElement('div');
+                container.className = 'report-print-area';
+                const header = document.querySelector('#reportModal .modal-header');
+                const body   = document.querySelector('#reportModal .modal-body');
+                if (header) container.appendChild(header.cloneNode(true));
+                if (body)   container.appendChild(body.cloneNode(true));
+                document.body.appendChild(container);
+                window.print();
+                container.remove();
             });
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
