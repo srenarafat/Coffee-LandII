@@ -68,6 +68,9 @@ class SalesReportController extends Controller
 
     public function showInvoice(Sale $sale)
     {
+        if (auth()->user()->role === 'cashier' && $sale->user_id !== auth()->id()) {
+            abort(403);
+        }
         $setting = Setting::first();
         $currency = $setting->currency ?? '$';
 

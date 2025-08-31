@@ -506,6 +506,11 @@ class SaleController extends Controller
 
     public function history(Request $request)
     {
+        $data = $request->validate([
+            'from' => 'nullable|date',
+            'to'   => 'nullable|date|after_or_equal:from',
+        ]);
+
         $query = Sale::with(['items.product.category', 'user'])
             ->where('user_id', auth()->id());
 
@@ -514,12 +519,12 @@ class SaleController extends Controller
             ->orderBy('name')
             ->get();
 
-        if ($request->from) {
-            $query->whereDate('created_at', '>=', $request->from);
+        if (!empty($data['from'])) {
+            $query->whereDate('created_at', '>=', $data['from']);
         }
 
-        if ($request->to) {
-            $query->whereDate('created_at', '<=', $request->to);
+        if (!empty($data['to'])) {
+            $query->whereDate('created_at', '<=', $data['to']);
         }
 
         if (request('category_id')) {
