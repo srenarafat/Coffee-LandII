@@ -53,12 +53,12 @@ class InvoiceController extends Controller
         return SnappyPdf::loadHTML($html)
         ->setOption('encoding', 'UTF-8')
         ->setOption('enable-local-file-access', true)
+        ->setOption('disable-smart-shrinking', false)
         ->setOption('page-width', '80mm')  // ✅ correct way
-        ->setOption('page-height', '200mm') // ✅ estimate height (adjust if needed)
-        ->setOption('margin-top', '0mm')
-        ->setOption('margin-bottom', '0mm')
-        ->setOption('margin-left', '0mm')
-        ->setOption('margin-right', '0mm')
+        ->setOption('margin-top', '5mm')
+        ->setOption('margin-bottom', '5mm')
+        ->setOption('margin-left', '5mm')
+        ->setOption('margin-right', '5mm')
         ->download("invoice-{$sale->id}.pdf");
 
     }

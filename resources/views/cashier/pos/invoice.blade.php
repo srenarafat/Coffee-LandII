@@ -28,6 +28,12 @@
     /* small bullet list like in cart */
     .line-list { margin: 2px 0 0 14px; padding: 0; list-style: disc; }
     .line-list li { font-size: 10px; line-height: 1.25; color:#555; margin: 1px 0; }
+    
+    @media print {
+        @page { size: 80mm auto; margin: 5mm; }
+        thead { display: table-header-group; }
+        tbody tr { page-break-inside: avoid; }
+    }
     </style>
 </head>
 
