@@ -25,7 +25,8 @@
             </div>
 
             <div class="modal-body p-4">
-                <div class="doc-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <!-- compact header; table appears immediately below -->
+                <div class="doc-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-2">
                     <div>
                         <div class="h6 fw-bold mb-1">COFFEE LAND</div>
                         <div class="text-muted small">Sale detail (document view)</div>
@@ -34,6 +35,7 @@
                         <div><span class="fw-semibold">Date:</span> <span id="docDate">—</span></div>
                         <div><span class="fw-semibold">Cashier:</span> <span id="docCashier">—</span></div>
                         <div><span class="fw-semibold">Invoice #:</span> <span id="docInvoiceNo">—</span></div>
+                        <div>Table: <span id="docTableName">—</span></div>
                     </div>
                 </div>
 
@@ -49,7 +51,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -83,7 +91,6 @@
                                     <div>Change (USD): <span id="docChangeUsd">—</span></div>
                                     <div>Change (Riel): <span id="docChangeRiel">—</span></div>
                                     <div>Payment Method: <span id="docPayment">—</span></div>
-                                    <div>Table: <span id="docTableName">—</span></div>
                                 </div>
                             </div>
                         </div>
@@ -102,8 +109,30 @@
 
 @push('styles')
 <style>
-#reportModal .table th, 
-#reportModal .table td { vertical-align: middle; }
+/* header spacing */
+#reportModal .doc-header { margin-bottom: .5rem !important; }
+
+/* table: tidy borders + sticky header */
+#reportModal .table { border-color: #e5e7eb; }
+#reportModal .table th, #reportModal .table td { vertical-align: middle; border-color: #e5e7eb; }
+#reportModal .table thead th { position: sticky; top: 0; background-color: #f8f9fa; }
+#reportModal .table tbody tr + tr td { border-top: 4px solid #f8f9fa; }
+
+/* alignment: Item left; SN/Qty/Price/Total centered */
+#reportModal #docTable th:nth-child(2), 
+#reportModal #docTable td:nth-child(2) { text-align: left; word-break: break-word; white-space: normal; }
+#reportModal #docTable th:nth-child(1),
+#reportModal #docTable td:nth-child(1),
+#reportModal #docTable th:nth-child(3),
+#reportModal #docTable td:nth-child(3),
+#reportModal #docTable th:nth-child(4),
+#reportModal #docTable td:nth-child(4),
+#reportModal #docTable th:nth-child(5),
+#reportModal #docTable td:nth-child(5) { text-align: center; }
+
+/* chips under item stay left with the item */
+#reportModal .chipline { display: flex; gap: .375rem; justify-content: flex-start; flex-wrap: wrap; }
+
 #reportModal .card { border-radius: 12px; }
 #reportModal .modal-content { border-radius: 14px; }
 </style>
@@ -113,165 +142,204 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const routePrefix = 'cashier';
-    const excludeBullets = ['No Vegetables','No Sweet','No Salty','No Spicy'];
+    const loadingRow = '<tr><td colspan="5" class="text-center text-muted"><div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+    const hideFlags = new Set(['No Vegetables','No Sweet','No Salty','No Spicy']);
 
-    // Use the existing "View" buttons from partials.sales-print
     document.querySelectorAll('.view-invoice').forEach(btn => {
         btn.addEventListener('click', function () {
             const saleId = this.dataset.saleId;
+            const docTbody = document.querySelector('#docTable tbody');
+            docTbody.innerHTML = loadingRow;
+
             document.getElementById('reportPdfLink').href = `/${routePrefix}/invoice/${saleId}/pdf`;
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
                 .then(res => res.text())
                 .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
+                    const parser   = new DOMParser();
+                    const doc      = parser.parseFromString(html, 'text/html');
                     const bodyText = doc.body ? doc.body.innerText : '';
 
-                    // Extract "Label: value"
+                    // helpers
                     const grab = (label) => {
-                        const rx = new RegExp(label + '\\s*:?\\s*(.+)');
-                        const m = bodyText.match(rx);
+                        const rx = new RegExp(label + '\\s*:?\\s*(.+)', 'i');
+                        const m  = bodyText.match(rx);
                         return (m && m[1]) ? m[1].trim() : '—';
                     };
+                    const parseAmountLoose = (line) => {
+                        const num = (line.match(/[0-9][0-9.,]*/) || [''])[0].replace(/,/g,'');
+                        const sym = (line.match(/[\$៛]/) || [''])[0];
+                        return num ? `${sym || ''}${Number(num).toFixed(2)}` : '—';
+                    };
+                    const hasLetters = (s) => /[\p{L}]/u.test(s || '');
 
-                    // Header
-                    let invoiceNo = '—';
+                    // header fields
                     const mNo = bodyText.match(/No\:\s*([A-Za-z0-9\-\_]+)/);
-                    if (mNo) invoiceNo = mNo[1];
-                    document.getElementById('docInvoiceNo').textContent = invoiceNo;
+                    document.getElementById('docInvoiceNo').textContent = mNo ? mNo[1] : '—';
                     document.getElementById('docDate').textContent     = grab('Date');
                     document.getElementById('docCashier').textContent  = grab('Cashier');
+                    document.getElementById('docTableName').textContent= grab('Table');
 
-                    // Summary
-                    document.getElementById('docGrand').textContent      = grab('Grand Total');
-                    document.getElementById('docSubtotal').textContent   = grab('Subtotal');
-                    document.getElementById('docDiscount').textContent   = grab('Discount');
-                    document.getElementById('docCashUsd').textContent    = grab('Cash Received \\(USD\\)');
-                    document.getElementById('docCashRiel').textContent   = grab('Cash Received \\(Riel\\)');
-                    document.getElementById('docChangeUsd').textContent  = grab('Change \\(USD\\)');
-                    document.getElementById('docChangeRiel').textContent = grab('Change \\(Riel\\)');
-                    document.getElementById('docPayment').textContent    = grab('Payment Method');
-                    document.getElementById('docTableName').textContent  = grab('Table');
+                    // amounts
+                    document.getElementById('docGrand').textContent     = grab('Grand Total');
+                    document.getElementById('docSubtotal').textContent  = grab('Subtotal');
+                    const disc = grab('Discount');
+                    document.getElementById('docDiscount').textContent  = disc === '—' ? '$0.00' : disc;
+                    document.getElementById('docPayment').textContent   = grab('Payment Method');
 
-                    // ===== Build table from invoice content (robust) =====
-                    const docTbody = document.querySelector('#docTable tbody');
+                    // robust cash/change parsing
+                    const cashUsdMatch    = bodyText.match(/Cash\s*Received\s*\((?:USD|\$)\)\s*:\s*([^\n]+)/i);
+                    const cashRielMatch   = bodyText.match(/Cash\s*Received\s*\((?:Riel|៛)\)\s*:\s*([^\n]+)/i);
+                    const changeUsdMatch  = bodyText.match(/Change\s*\((?:USD|\$)\)\s*:\s*([^\n]+)/i);
+                    const changeRielMatch = bodyText.match(/Change\s*\((?:Riel|៛)\)\s*:\s*([^\n]+)/i);
+
+                    document.getElementById('docCashUsd').textContent   = cashUsdMatch    ? parseAmountLoose(cashUsdMatch[0])   : '$0.00';
+                    document.getElementById('docCashRiel').textContent  = cashRielMatch   ? parseAmountLoose(cashRielMatch[0])  : '៛0.00';
+                    document.getElementById('docChangeUsd').textContent = changeUsdMatch  ? parseAmountLoose(changeUsdMatch[0]) : '$0.00';
+                    document.getElementById('docChangeRiel').textContent= changeRielMatch ? parseAmountLoose(changeRielMatch[0]): '៛0.00';
+
+                    // ===== Build table (robust) =====
                     docTbody.innerHTML = '';
 
                     const tables = Array.from(doc.querySelectorAll('table'));
-                    const norm = s => (s || '').replace(/\s+/g,' ').trim().toLowerCase();
+                    const norm   = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
                     let invoiceTable = null;
                     for (const t of tables) {
-                        let headers = Array.from(t.querySelectorAll('thead th'));
-                        if (!headers.length) {
-                            const firstRow = t.querySelector('tr');
-                            if (firstRow) headers = Array.from(firstRow.querySelectorAll('th,td'));
+                        let hs = Array.from(t.querySelectorAll('thead th'));
+                        if (!hs.length) {
+                            const fr = t.querySelector('tr');
+                            if (fr) hs = Array.from(fr.querySelectorAll('th,td'));
                         }
-                        const headerText = headers.map(h => norm(h.textContent));
-                        const hasItem = headerText.some(h => /(item|ឥវ៉ាន់|មុខទំនិញ)/.test(h));
-                        const hasQty  = headerText.some(h => /(qty|quantity|បរិមាណ)/.test(h));
-                        const hasPrice= headerText.some(h => /(price|unit|តម្លៃ)/.test(h));
-                        const hasTot  = headerText.some(h => /(total|សរុប)/.test(h));
+                        const headerText = hs.map(h => norm(h.textContent));
+                        const hasItem  = headerText.some(h => /(item|ឥវ៉ាន់|មុខទំនិញ)/.test(h));
+                        const hasQty   = headerText.some(h => /(qty|quantity|បរិមាណ)/.test(h));
+                        const hasPrice = headerText.some(h => /(price|unit|តម្លៃ)/.test(h));
+                        const hasTot   = headerText.some(h => /(total|សរុប)/.test(h));
                         if (hasItem && hasQty && hasPrice && hasTot) { invoiceTable = t; break; }
                     }
-                    if (!invoiceTable) invoiceTable = tables[0];
+                    if (!invoiceTable) {
+                        invoiceTable = tables.sort((a,b) => {
+                            const ca = (a.querySelector('tr')?.querySelectorAll('td,th').length) || 0;
+                            const cb = (b.querySelector('tr')?.querySelectorAll('td,th').length) || 0;
+                            return cb - ca;
+                        })[0];
+                    }
 
-                    const headerCells = (() => {
-                        let hs = Array.from(invoiceTable.querySelectorAll('thead th'));
-                        if (!hs.length) {
-                            const firstRow = invoiceTable.querySelector('tr');
-                            if (firstRow) hs = Array.from(firstRow.querySelectorAll('th,td'));
-                        }
-                        return hs;
-                    })();
-
-                    const findIndex = (reArray, def=-1) => {
-                        const idx = headerCells.findIndex(h => reArray.some(re => re.test(norm(h.textContent))));
-                        return idx >= 0 ? idx : def;
-                    };
-
-                    const idxSN    = findIndex([/(sn|s\/n|ល\.រ)/i], 0);
-                    const idxItem  = findIndex([/(item|ឥវ៉ាន់|មុខទំនិញ)/i], 1);
-                    const idxQty   = findIndex([/(qty|quantity|បរិមាណ)/i], 2);
-                    const idxPrice = findIndex([/(price|unit|តម្លៃ)/i], 3);
-                    const idxTotal = findIndex([/(total|សរុប)/i], 4);
-
-                    let rows = Array.from(invoiceTable.querySelectorAll('tbody tr'));
+                    let rows = Array.from(invoiceTable?.querySelectorAll('tbody tr') || []);
                     if (!rows.length) {
-                        const all = Array.from(invoiceTable.querySelectorAll('tr'));
+                        const all = Array.from(invoiceTable?.querySelectorAll('tr') || []);
                         rows = all.slice(1);
                     }
 
                     let snAuto = 0;
                     rows.forEach(r => {
-                        const cells = Array.from(r.querySelectorAll('td,th')).map(td => td.innerText.trim());
-                        if (!cells.length) return;
+                        const tds = Array.from(r.querySelectorAll('td,th'));
+                        if (!tds.length) return;
 
-                        const sn    = (cells[idxSN]    ?? (++snAuto)).toString();
-                        const item  = (cells[idxItem]  ?? '').toString() || '—';
-                        const qty   = (cells[idxQty]   ?? '').toString() || '1';
-                        const price = (cells[idxPrice] ?? '').toString();
-                        const total = (cells[idxTotal] ?? price).toString();
+                        const texts = tds.map(td => td.innerText.trim());
+
+                        // SN
+                        let sn = texts.find(x => /^\d+$/.test(x));
+                        if (!sn) sn = String(++snAuto);
+
+                        // Item name (strip inline modifiers)
+                        let itemTdEl = tds.find(td => hasLetters(td.innerText) && !/^[\d\$\s.,៛]+$/.test(td.innerText)) || tds[1];
+                        let itemName = '—';
+                        if (itemTdEl) {
+                            const clone = itemTdEl.cloneNode(true);
+                            clone.querySelectorAll('ul,ol,li,small,span.badge').forEach(n => n.remove());
+                            itemName = (clone.innerText || '').replace(/\s+/g,' ').trim()
+                                .replace(/\b(Small|Medium|Large)\s*Size\b/ig,'')
+                                .replace(/\bSugar\s*:?\s*\d+%/ig,'')
+                                .replace(/\bLess\s*Ice\b/ig,'')
+                                .replace(/\bNo\s+(Salty|Spicy|Sweet|Vegetables)\b/ig,'')
+                                .replace(/\s{2,}/g,' ')
+                                .trim();
+                        }
+
+                        // Qty
+                        let qty = texts.find(x => /^\d+$/.test(x) && x !== sn) || '1';
+
+                        // Price & Total
+                        const moneyCells = texts.filter(x => /[\$៛]|^\d+([.,]\d{2,})$/.test(x));
+                        const price = moneyCells[0] || '';
+                        const total = moneyCells[moneyCells.length - 1] || price;
+
+                        // Row modifiers → chips (left with item)
+                        const bullets = Array.from(r.querySelectorAll('li')).map(li => li.textContent.trim()).filter(Boolean);
+                        let modifiersHtml = '';
+                        if (bullets.length) {
+                            let size = '';
+                            const sugarIce = [];
+                            const others = [];
+                            bullets.forEach(b => {
+                                const lower = b.toLowerCase();
+                                if (/small/.test(lower)) size = 'S';
+                                else if (/medium/.test(lower)) size = 'M';
+                                else if (/large/.test(lower)) size = 'L';
+                                else if (/sugar|ice/.test(lower)) sugarIce.push(b);
+                                else others.push(b);
+                            });
+                            const chips = [];
+                            if (size) chips.push(`<span class="badge rounded-pill bg-body-secondary text-muted border lh-sm">${size}</span>`);
+                            if (sugarIce.length) chips.push(`<span class="small text-muted lh-sm">${sugarIce.join(' • ')}</span>`);
+                            if (others.length) chips.push(others.map(o => `<span class="badge rounded-pill bg-body-secondary text-muted border lh-sm">${o}</span>`).join(''));
+                            modifiersHtml = chips.length ? `<div class="chipline mt-1">${chips.join('')}</div>` : '';
+                        }
 
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${sn}</td>
-                            <td>${item}</td>
-                            <td class="text-center">${qty}</td>
-                            <td class="text-end">${price}</td>
-                            <td class="text-end">${total}</td>
+                            <td>${itemName}${modifiersHtml}</td>
+                            <td>${qty}</td>
+                            <td>${price}</td>
+                            <td>${total}</td>
                         `;
                         docTbody.appendChild(tr);
-
-                        const bullets = Array.from(r.querySelectorAll('li'))
-                            .map(li => li.textContent.trim())
-                            .filter(b => b && !excludeBullets.includes(b));
-                        if (bullets.length) {
-                            const opt = document.createElement('tr');
-                            opt.innerHTML = `
-                              <td></td>
-                              <td colspan="4">
-                                <ul class="mb-0">${bullets.map(b => `<li>${b}</li>`).join('')}</ul>
-                              </td>
-                            `;
-                            docTbody.appendChild(opt);
-                        }
                     });
 
                     if (!docTbody.children.length) {
                         docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No items found in invoice.</td></tr>`;
                     }
 
+                    // Order-level notes (exclude default flags)
                     const allBullets = Array.from(doc.querySelectorAll('li'))
+                        .filter(li => !invoiceTable?.contains(li))
                         .map(li => li.textContent.trim())
-                        .filter(b => b && !excludeBullets.includes(b));
+                        .filter(t => t && !hideFlags.has(t));
                     document.getElementById('docOptions').innerHTML = allBullets.length
-                      ? `<ul class="mb-0">${allBullets.map(b => `<li>${b}</li>`).join('')}</ul>`
-                      : '—';
+                        ? `<ul class="mb-0">${allBullets.map(b => `<li>${b}</li>`).join('')}</ul>` : '—';
 
-                    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
-                    modal.show();
+                    // Subtotal if missing
+                    const subtotalEl = document.getElementById('docSubtotal');
+                    if (subtotalEl.textContent === '—') {
+                        let subtotal = 0;
+                        document.querySelectorAll('#docTable tbody tr').forEach(tr => {
+                            const t = tr.children[4];
+                            if (t) subtotal += parseFloat((t.textContent || '').replace(/[^0-9.\-]/g,'')) || 0;
+                        });
+                        const sym = (document.getElementById('docGrand').textContent.match(/[^0-9.,\-\s]/) || [''])[0];
+                        subtotalEl.textContent = `${sym || ''}${subtotal.toFixed(2)}`;
+                    }
+
+                    new bootstrap.Modal(document.getElementById('reportModal')).show();
                 })
                 .catch(() => {
-                    const docTbody = document.querySelector('#docTable tbody');
                     docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Failed to load sale details.</td></tr>`;
-                    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('reportModal')).show();
                 });
         });
     });
 
-    // Clear on close
+    // reset on close
     const reportModal = document.getElementById('reportModal');
     reportModal.addEventListener('hidden.bs.modal', function () {
-        document.querySelector('#docTable tbody').innerHTML =
-            '<tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>';
+        document.querySelector('#docTable tbody').innerHTML = loadingRow;
         document.getElementById('docOptions').textContent = '—';
-        [
-          'docInvoiceNo','docDate','docCashier','docGrand','docSubtotal','docDiscount',
-          'docCashUsd','docCashRiel','docChangeUsd','docChangeRiel','docPayment','docTableName'
-        ].forEach(id => document.getElementById(id).textContent = '—');
+        ['docInvoiceNo','docDate','docCashier','docGrand','docSubtotal','docDiscount',
+         'docCashUsd','docCashRiel','docChangeUsd','docChangeRiel','docPayment','docTableName']
+         .forEach(id => document.getElementById(id).textContent = '—');
     });
 });
 </script>

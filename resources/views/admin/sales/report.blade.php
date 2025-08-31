@@ -29,7 +29,7 @@
             </div>
 
             <div class="modal-body p-4">
-                <div class="doc-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div class="doc-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-2">
                     <div>
                         <div class="h6 fw-bold mb-1">COFFEE LAND</div>
                         <div class="text-muted small">Sale detail (document view)</div>
@@ -38,6 +38,7 @@
                         <div><span class="fw-semibold">Date:</span> <span id="docDate">—</span></div>
                         <div><span class="fw-semibold">Cashier:</span> <span id="docCashier">—</span></div>
                         <div><span class="fw-semibold">Invoice #:</span> <span id="docInvoiceNo">—</span></div>
+                        <div>Table: <span id="docTableName">—</span></div>
                     </div>
                 </div>
 
@@ -53,7 +54,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -87,7 +94,6 @@
                                     <div>Change (USD): <span id="docChangeUsd">—</span></div>
                                     <div>Change (Riel): <span id="docChangeRiel">—</span></div>
                                     <div>Payment Method: <span id="docPayment">—</span></div>
-                                    <div>Table: <span id="docTableName">—</span></div>
                                 </div>
                             </div>
                         </div>
@@ -106,8 +112,31 @@
 
 @push('styles')
 <style>
-#reportModal .table th, 
-#reportModal .table td { vertical-align: middle; }
+/* pull header closer */
+#reportModal .doc-header { margin-bottom: .5rem !important; }
+
+/* borders + sticky header */
+#reportModal .table { border-color: #e5e7eb; }
+#reportModal .table th, #reportModal .table td { vertical-align: middle; border-color: #e5e7eb; }
+#reportModal .table thead th { position: sticky; top: 0; background-color: #f8f9fa; }
+#reportModal .table tbody tr + tr td { border-top: 4px solid #f8f9fa; }
+
+/* alignment: Item left, others centered */
+#reportModal #docTable th:nth-child(2), 
+#reportModal #docTable td:nth-child(2) { text-align: left; word-break: break-word; white-space: normal; }
+
+#reportModal #docTable th:nth-child(1),
+#reportModal #docTable td:nth-child(1),
+#reportModal #docTable th:nth-child(3),
+#reportModal #docTable td:nth-child(3),
+#reportModal #docTable th:nth-child(4),
+#reportModal #docTable td:nth-child(4),
+#reportModal #docTable th:nth-child(5),
+#reportModal #docTable td:nth-child(5) { text-align: center; }
+
+/* chips under item stay left with the name */
+#reportModal .chipline { display: flex; gap: .375rem; justify-content: flex-start; flex-wrap: wrap; }
+
 #reportModal .card { border-radius: 12px; }
 #reportModal .modal-content { border-radius: 14px; }
 </style>
@@ -117,10 +146,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const routePrefix = "{{ auth()->user()->role === 'superadmin' ? 'superadmin' : 'admin' }}";
+    const loadingRow = '<tr><td colspan="5" class="text-center text-muted"><div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
 
     document.querySelectorAll('.view-invoice').forEach(btn => {
         btn.addEventListener('click', function () {
             const saleId = this.dataset.saleId;
+            const docTbody = document.querySelector('#docTable tbody');
+            docTbody.innerHTML = loadingRow;
+
             document.getElementById('reportPdfLink').href = `/${routePrefix}/invoice/${saleId}/pdf`;
 
             fetch(`/${routePrefix}/sales/${saleId}/invoice`)
@@ -130,63 +163,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     const doc      = parser.parseFromString(html, 'text/html');
                     const bodyText = doc.body ? doc.body.innerText : '';
 
-                    // ---- helpers ----
+                    // helpers
                     const grab = (label) => {
                         const rx = new RegExp(label + '\\s*:?\\s*(.+)', 'i');
                         const m  = bodyText.match(rx);
                         return (m && m[1]) ? m[1].trim() : '—';
                     };
-                    const grabLines = (label) => bodyText.split('\n')
-                        .filter(l => l.toLowerCase().includes(label.toLowerCase()));
-                    const parseAmount = (line) => {
-                        const m = line.match(/([^0-9\s:])?\s*([0-9.,]+)\s*([^0-9\s])?/);
-                        if (!m) return '—';
-                        const sym = m[1] || m[3] || '';
-                        const amt = m[2];
-                        return m[1] ? `${sym}${amt}` : `${amt}${m[3] ? ' ' + sym : ''}`;
+                    const parseAmountLoose = (line) => {
+                        const num = (line.match(/[0-9][0-9.,]*/) || [''])[0].replace(/,/g,'');
+                        const sym = (line.match(/[\$៛]/) || [''])[0];
+                        return num ? `${sym || ''}${Number(num).toFixed(2)}` : '—';
                     };
                     const hasLetters = (s) => /[\p{L}]/u.test(s || '');
 
-                    // ---- header fields ----
-                    let invoiceNo = '—';
+                    // header fields
                     const mNo = bodyText.match(/No\:\s*([A-Za-z0-9\-\_]+)/);
-                    if (mNo) invoiceNo = mNo[1];
-                    document.getElementById('docInvoiceNo').textContent = invoiceNo;
+                    document.getElementById('docInvoiceNo').textContent = mNo ? mNo[1] : '—';
                     document.getElementById('docDate').textContent     = grab('Date');
                     document.getElementById('docCashier').textContent  = grab('Cashier');
 
-                    document.getElementById('docGrand').textContent      = grab('Grand Total');
-                    document.getElementById('docSubtotal').textContent   = grab('Subtotal');
-                    document.getElementById('docDiscount').textContent   = grab('Discount');
-                    document.getElementById('docPayment').textContent    = grab('Payment Method');
-                    document.getElementById('docTableName').textContent  = grab('Table');
+                    document.getElementById('docGrand').textContent     = grab('Grand Total');
+                    document.getElementById('docSubtotal').textContent  = grab('Subtotal');
+                    const d = grab('Discount');
+                    document.getElementById('docDiscount').textContent  = d === '—' ? '$0.00' : d;
+                    document.getElementById('docPayment').textContent   = grab('Payment Method');
+                    document.getElementById('docTableName').textContent = grab('Table');
 
-                    grabLines('Cash Received').forEach(line => {
-                        const amount = parseAmount(line);
-                        if (/riel/i.test(line) || line.includes('៛')) {
-                            document.getElementById('docCashRiel').textContent = amount;
-                        } else {
-                            document.getElementById('docCashUsd').textContent = amount;
-                        }
-                    });
-                    grabLines('Change').forEach(line => {
-                        const amount = parseAmount(line);
-                        if (/riel/i.test(line) || line.includes('៛')) {
-                            document.getElementById('docChangeRiel').textContent = amount;
-                        } else {
-                            document.getElementById('docChangeUsd').textContent = amount;
-                        }
-                    });
+                    // cash/change
+                    const cashUsdMatch    = bodyText.match(/Cash\s*Received\s*\((?:USD|\$)\)\s*:\s*([^\n]+)/i);
+                    const cashRielMatch   = bodyText.match(/Cash\s*Received\s*\((?:Riel|៛)\)\s*:\s*([^\n]+)/i);
+                    const changeUsdMatch  = bodyText.match(/Change\s*\((?:USD|\$)\)\s*:\s*([^\n]+)/i);
+                    const changeRielMatch = bodyText.match(/Change\s*\((?:Riel|៛)\)\s*:\s*([^\n]+)/i);
 
-                    // ---- build table rows (robust) ----
-                    const docTbody = document.querySelector('#docTable tbody');
+                    document.getElementById('docCashUsd').textContent   = cashUsdMatch    ? parseAmountLoose(cashUsdMatch[0])   : '$0.00';
+                    document.getElementById('docCashRiel').textContent  = cashRielMatch   ? parseAmountLoose(cashRielMatch[0])  : '៛0.00';
+                    document.getElementById('docChangeUsd').textContent = changeUsdMatch  ? parseAmountLoose(changeUsdMatch[0]) : '$0.00';
+                    document.getElementById('docChangeRiel').textContent= changeRielMatch ? parseAmountLoose(changeRielMatch[0]): '៛0.00';
+
+                    // build table
                     docTbody.innerHTML = '';
 
                     const tables = Array.from(doc.querySelectorAll('table'));
                     const norm   = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
                     let invoiceTable = null;
-                    // Prefer table with recognizable headers
                     for (const t of tables) {
                         let hs = Array.from(t.querySelectorAll('thead th'));
                         if (!hs.length) {
@@ -200,7 +220,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         const hasTot   = headerText.some(h => /(total|សរុប)/.test(h));
                         if (hasItem && hasQty && hasPrice && hasTot) { invoiceTable = t; break; }
                     }
-                    // Fallback: pick the widest table
                     if (!invoiceTable) {
                         invoiceTable = tables.sort((a,b) => {
                             const ca = (a.querySelector('tr')?.querySelectorAll('td,th').length) || 0;
@@ -209,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         })[0];
                     }
 
-                    // Collect body rows
                     let rows = Array.from(invoiceTable?.querySelectorAll('tbody tr') || []);
                     if (!rows.length) {
                         const all = Array.from(invoiceTable?.querySelectorAll('tr') || []);
@@ -223,64 +241,80 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         const texts = tds.map(td => td.innerText.trim());
 
-                        // SN = first pure integer from the left, else auto
+                        // SN
                         let sn = texts.find(x => /^\d+$/.test(x));
                         if (!sn) sn = String(++snAuto);
 
-                        // Item = first cell that contains letters (Khmer/Latin), not pure number or money
-                        let itemCell = texts.find(x => hasLetters(x) && !/^[\d\$\s.,៛]+$/.test(x));
-                        if (!itemCell) {
-                            // fallback: take second cell if it exists
-                            itemCell = texts[1] || '—';
+                        // Item name (strip inline modifiers)
+                        let itemTdEl = tds.find(td => hasLetters(td.innerText) && !/^[\d\$\s.,៛]+$/.test(td.innerText)) || tds[1];
+                        let itemName = '—';
+                        if (itemTdEl) {
+                            const clone = itemTdEl.cloneNode(true);
+                            clone.querySelectorAll('ul,ol,li,small,span.badge').forEach(n => n.remove());
+                            itemName = (clone.innerText || '').replace(/\s+/g,' ').trim()
+                                .replace(/\b(Small|Medium|Large)\s*Size\b/ig,'')
+                                .replace(/\bSugar\s*:?\s*\d+%/ig,'')
+                                .replace(/\bLess\s*Ice\b/ig,'')
+                                .replace(/\bNo\s+(Salty|Spicy|Sweet|Vegetables)\b/ig,'')
+                                .replace(/\s{2,}/g,' ')
+                                .trim();
                         }
 
-                        // Qty = the integer that is NOT the SN and typically small
+                        // Qty
                         let qty = texts.find(x => /^\d+$/.test(x) && x !== sn) || '1';
 
-                        // Money-like cells
+                        // Price & Total
                         const moneyCells = texts.filter(x => /[\$៛]|^\d+([.,]\d{2,})$/.test(x));
                         const price = moneyCells[0] || '';
                         const total = moneyCells[moneyCells.length - 1] || price;
 
+                        // Modifiers as chips (left with item)
+                        const bullets = Array.from(r.querySelectorAll('li')).map(li => li.textContent.trim()).filter(Boolean);
+                        let modifiersHtml = '';
+                        if (bullets.length) {
+                            let size = '';
+                            const sugarIce = [];
+                            const others = [];
+                            bullets.forEach(b => {
+                                const lower = b.toLowerCase();
+                                if (/small/.test(lower)) size = 'S';
+                                else if (/medium/.test(lower)) size = 'M';
+                                else if (/large/.test(lower)) size = 'L';
+                                else if (/sugar|ice/.test(lower)) sugarIce.push(b);
+                                else others.push(b);
+                            });
+                            const chips = [];
+                            if (size) chips.push(`<span class="badge rounded-pill bg-body-secondary text-muted border lh-sm">${size}</span>`);
+                            if (sugarIce.length) chips.push(`<span class="small text-muted lh-sm">${sugarIce.join(' • ')}</span>`);
+                            if (others.length) chips.push(others.map(o => `<span class="badge rounded-pill bg-body-secondary text-muted border lh-sm">${o}</span>`).join(''));
+                            modifiersHtml = chips.length ? `<div class="chipline mt-1">${chips.join('')}</div>` : '';
+                        }
+
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${sn}</td>
-                            <td>${itemCell}</td>
-                            <td class="text-center">${qty}</td>
-                            <td class="text-end">${price}</td>
-                            <td class="text-end">${total}</td>
+                            <td>${itemName}${modifiersHtml}</td>
+                            <td>${qty}</td>
+                            <td>${price}</td>
+                            <td>${total}</td>
                         `;
                         docTbody.appendChild(tr);
-
-                        // Append bullets (options) under this row
-                        const bullets = Array.from(r.querySelectorAll('li'))
-                            .map(li => li.textContent.trim())
-                            .filter(Boolean);
-                        if (bullets.length) {
-                            const opt = document.createElement('tr');
-                            opt.innerHTML = `
-                              <td></td>
-                              <td colspan="4">
-                                <ul class="mb-0">${bullets.map(b => `<li>${b}</li>`).join('')}</ul>
-                              </td>
-                            `;
-                            docTbody.appendChild(opt);
-                        }
                     });
 
                     if (!docTbody.children.length) {
                         docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No items found in invoice.</td></tr>`;
                     }
 
-                    // Notes / Options summary (hide default flags)
+                    // order-level notes only
                     const hideFlags = new Set(['No Vegetables','No Sweet','No Salty','No Spicy']);
                     const allBullets = Array.from(doc.querySelectorAll('li'))
+                        .filter(li => !invoiceTable?.contains(li))
                         .map(li => li.textContent.trim())
                         .filter(t => t && !hideFlags.has(t));
                     document.getElementById('docOptions').innerHTML = allBullets.length
                         ? `<ul class="mb-0">${allBullets.map(b => `<li>${b}</li>`).join('')}</ul>` : '—';
 
-                    // Subtotal auto-calc if missing
+                    // subtotal if missing
                     const subtotalEl = document.getElementById('docSubtotal');
                     if (subtotalEl.textContent === '—') {
                         let subtotal = 0;
@@ -295,18 +329,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     new bootstrap.Modal(document.getElementById('reportModal')).show();
                 })
                 .catch(() => {
-                    const docTbody = document.querySelector('#docTable tbody');
                     docTbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Failed to load sale details.</td></tr>`;
                     new bootstrap.Modal(document.getElementById('reportModal')).show();
                 });
         });
     });
 
-    // Reset when closed
+    // reset on close
     const reportModal = document.getElementById('reportModal');
     reportModal.addEventListener('hidden.bs.modal', function () {
-        document.querySelector('#docTable tbody').innerHTML =
-            '<tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>';
+        document.querySelector('#docTable tbody').innerHTML = loadingRow;
         document.getElementById('docOptions').textContent = '—';
         ['docInvoiceNo','docDate','docCashier','docGrand','docSubtotal','docDiscount',
          'docCashUsd','docCashRiel','docChangeUsd','docChangeRiel','docPayment','docTableName']
