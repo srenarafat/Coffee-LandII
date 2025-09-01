@@ -141,6 +141,7 @@ return [
     'date_of_birth' => 'ថ្ងៃកំណើត',
     'top_quantity_sale_products' => 'ផលិតផលលក់ច្រើនបំផុត',
     'export_csv' => 'ទាញយក CSV',
+    'export_pdf' => 'ទាញយក PDF',
     'today' => 'ថ្ងៃនេះ',
     'this_week' => 'សប្ដាហ៍នេះ',
     'this_month' => 'ខែនេះ',

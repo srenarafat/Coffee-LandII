@@ -141,6 +141,7 @@ return [
     'date_of_birth' => 'Date of Birth',
     'top_quantity_sale_products' => 'Top Quantity Sale Products',
     'export_csv' => 'Export CSV',
+    'export_pdf' => 'Export PDF',
     'today' => 'Today',
     'this_week' => 'This Week',
     'this_month' => 'This Month',
