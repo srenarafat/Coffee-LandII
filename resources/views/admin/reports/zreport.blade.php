@@ -15,9 +15,13 @@
 {{-- Top bar --}}
 <div class="d-flex justify-content-between align-items-center mb-3 no-print">
   <h4 class="fw-bold mb-0">Z-Report</h4>
-  <button onclick="window.print()" class="btn btn-outline-primary rounded-pill">
-    <i class="bi bi-printer"></i> Print
-  </button>
+  <div class="d-flex gap-2">
+    <a href="{{ route(auth()->user()->role . '.dashboard') }}"
+       class="btn btn-outline-secondary rounded-pill">Back to Dashboard</a>
+    <button onclick="window.print()" class="btn btn-outline-primary rounded-pill">
+      <i class="bi bi-printer"></i> Print
+    </button>
+  </div>
 </div>
 
 {{-- Brand header --}}

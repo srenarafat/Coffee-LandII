@@ -19,15 +19,28 @@
 @endphp
 
 <div class="container my-4">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h5 class="fw-bold text-uppercase mb-0">Slow Moving Products</h5>
+  {{-- Header: title + (search/min-days) + actions aligned right --}}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h5 class="fw-bold text-uppercase mb-0 me-3">Slow Moving Products</h5>
 
-    <div class="d-flex flex-wrap gap-2">
-      <input id="slowSearch" class="form-control form-control-sm" type="search"
-             placeholder="Search product or category…" style="min-width:220px">
-      <input id="minDays" class="form-control form-control-sm" type="number"
-             min="0" placeholder="Min days…" style="width:120px">
-      <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">🖨️ Print</button>
+    <div class="d-flex align-items-center flex-grow-1 gap-2">
+      <input id="slowSearch"
+             class="form-control form-control-sm"
+             type="search"
+             placeholder="Search product or category…"
+             style="max-width:260px">
+
+      <input id="minDays"
+             class="form-control form-control-sm"
+             type="number" min="0"
+             placeholder="Min days…"
+             style="width:120px">
+
+      <div class="ms-auto d-flex gap-2 slow-actions">
+        <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">🖨️ Print</button>
+        <a href="{{ route(auth()->user()->role . '.dashboard') }}"
+           class="btn btn-sm btn-outline-secondary">Back</a>
+      </div>
     </div>
   </div>
 
@@ -45,7 +58,7 @@
       <tbody>
         @foreach($products as $index => $product)
           @php
-            // --- robust image URL (supports absolute, 'product_images/*', or filename) ---
+            // robust image URL (absolute, 'product_images/*', or filename)
             $raw = trim($product->image ?? '');
             if ($raw) {
               if (\Illuminate\Support\Str::startsWith($raw, ['http://','https://'])) {
@@ -56,7 +69,7 @@
                 if (!\Illuminate\Support\Str::startsWith($p, 'product_images/')) {
                   $p = 'product_images/'.$p;
                 }
-                $imgUrl = asset('storage/'.$p); // public/storage/product_images/...
+                $imgUrl = asset('storage/'.$p);
               }
             } else {
               $imgUrl = asset('images/no-image.png');
@@ -107,7 +120,6 @@
     </table>
   </div>
 
-  {{-- Pagination (if you paginate $products) --}}
   @if(method_exists($products, 'links'))
     <div class="mt-3">{{ $products->links() }}</div>
   @endif
@@ -145,7 +157,7 @@
 @push('styles')
 <style>
   @media print {
-    #slowSearch, #minDays, button[onclick="window.print()"] { display: none !important; }
+    #slowSearch, #minDays, .slow-actions { display: none !important; }
   }
 </style>
 @endpush

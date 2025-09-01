@@ -8,14 +8,24 @@
 @endphp
 
 <div class="container my-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <h5 class="fw-bold text-uppercase mb-0">Top Products This Week</h5>
-        <div class="d-flex gap-2">
-            <input id="tpSearch" class="form-control form-control-sm" type="search"
-                   placeholder="Search product or category…" style="min-width:220px">
-            <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">🖨️ Print</button>
-        </div>
+    <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+  <h5 class="fw-bold text-uppercase mb-0 me-3">Top Products This Week</h5>
+
+  {{-- Right side: search (left) + actions (right) --}}
+  <div class="d-flex align-items-center flex-grow-1 gap-2">
+    <input id="tpSearch"
+           class="form-control form-control-sm"
+           type="search"
+           placeholder="Search product or category…"
+           style="max-width:260px">
+
+    <div class="ms-auto d-flex gap-2 tp-actions">
+      <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">🖨️ Print</button>
+      <a href="{{ route(auth()->user()->role . '.dashboard') }}"
+         class="btn btn-sm btn-secondary">Back to Dashboard</a>
     </div>
+  </div>
+</div>
 
     <div class="table-responsive">
         <table id="tpTable" class="table table-bordered align-middle">

@@ -5,19 +5,26 @@
   <div class="card shadow-sm border-0 rounded-4">
 
     {{-- Header --}}
-<div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-light">
-  <h5 class="mb-0 fw-bold text-brown d-flex align-items-center gap-2">
+<div class="card-header d-flex flex-wrap align-items-center bg-light">
+  <h5 class="mb-0 fw-bold text-brown d-flex align-items-center gap-2 me-3">
     📦 Low Ingredient Stock
     <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
       Threshold: 3
     </span>
   </h5>
 
-  <div class="d-flex gap-2">
-    <input id="lowStockSearch" type="search" class="form-control form-control-sm"
-           placeholder="Search ingredient…" style="min-width:220px">
-    <a href="{{ route(auth()->user()->role.'.ingredient-stock.low') }}"
-       class="btn btn-sm btn-outline-secondary">Refresh</a>
+  {{-- Right side: search (left) + buttons (right) --}}
+  <div class="d-flex align-items-center flex-grow-1 gap-2">
+    <input id="lowStockSearch" type="search"
+           class="form-control form-control-sm"
+           placeholder="Search ingredient…" style="max-width:260px">
+
+    <div class="ms-auto d-flex gap-2">
+      <a href="{{ route(auth()->user()->role.'.ingredient-stock.low') }}"
+         class="btn btn-sm btn-outline-secondary">Refresh</a>
+      <a href="{{ route(auth()->user()->role . '.dashboard') }}"
+         class="btn btn-sm btn-outline-secondary">Back</a>
+    </div>
   </div>
 </div>
 
