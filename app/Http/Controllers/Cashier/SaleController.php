@@ -389,9 +389,18 @@ class SaleController extends Controller
             }
         }
 
+        $subtotal        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $discountPercent = floatval($request->input('discount', 0));
+        $discountAmount  = $subtotal * ($discountPercent / 100);
+        $total           = $subtotal - $discountAmount;
+
+        $exchangeRate = Setting::first()->exchange_rate;
+        $limitUsd     = ceil($total / 100) * 100;
+        $limitRiel    = $limitUsd * $exchangeRate;
+
         $validator = Validator::make($request->all(), [
-            'cash_usd'  => 'numeric|min:0|max:100',
-            'cash_riel' => 'numeric|min:0|max:400000',
+            'cash_usd'  => "numeric|min:0|max:$limitUsd",
+            'cash_riel' => "numeric|min:0|max:$limitRiel",
             'discount'  => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -402,15 +411,9 @@ class SaleController extends Controller
                 ->withInput();
         }
 
-        $subtotal        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        $discountPercent = floatval($request->input('discount', 0));
-        $discountAmount  = $subtotal * ($discountPercent / 100);
-        $total           = $subtotal - $discountAmount;
-
-        $exchangeRate  = Setting::first()->exchange_rate;
-        $cashUsd       = floatval($request->input('cash_usd', 0));
-        $cashRiel      = intval(str_replace(',', '', $request->input('cash_riel', 0)));
-        $totalPaidUsd  = $cashUsd + ($cashRiel / $exchangeRate);
+        $cashUsd      = floatval($request->input('cash_usd', 0));
+        $cashRiel     = intval(str_replace(',', '', $request->input('cash_riel', 0)));
+        $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
 
         if ($totalPaidUsd < $total) {
             return back()->with('error', __('messages.insufficient_payment'));
@@ -486,11 +489,14 @@ class SaleController extends Controller
             return back()->with('error', __('messages.cart_empty'));
         }
 
-        $total   = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        $role    = auth()->user()->role === 'superadmin' ? 'superadmin'
-                    : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
-        $setting = Setting::first() ?? Setting::firstOrCreate([]);
-        $shops   = auth()->user()->role === 'superadmin' ? Shop::all() : null;
+        $total        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $role         = auth()->user()->role === 'superadmin' ? 'superadmin'
+                        : (auth()->user()->role === 'admin' ? 'admin' : 'cashier');
+        $setting      = Setting::first() ?? Setting::firstOrCreate([]);
+        $exchangeRate = $setting->exchange_rate;
+        $limitUsd     = ceil($total / 100) * 100;
+        $limitRiel    = $limitUsd * $exchangeRate;
+        $shops        = auth()->user()->role === 'superadmin' ? Shop::all() : null;
 
         $view = in_array(auth()->user()->role, ['admin', 'superadmin'])
             ? 'admin.pos.payment'
@@ -502,6 +508,8 @@ class SaleController extends Controller
             'discountPercent' => $setting->discount_percent ?? 0,
             'shops'           => $shops,
             'setting'         => $setting,
+            'limitUsd'        => $limitUsd,
+            'limitRiel'       => $limitRiel,
         ]);
     }
 

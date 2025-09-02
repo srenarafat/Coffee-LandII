@@ -10,7 +10,7 @@ class PaymentLimitTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function setupCart(): array
+    private function setupCart(int $total = 1): array
     {
         $shop = Shop::create(['name' => 'S1']);
         $user = User::factory()->create(['role' => 'cashier', 'shop_id' => $shop->id]);
@@ -20,7 +20,7 @@ class PaymentLimitTest extends TestCase
             'price' => 1,
             'category_id' => $category->id,
             'shop_id' => $shop->id,
-            'stock' => 5,
+            'stock' => $total,
         ]);
         Setting::create(['shop_name' => 'Shop', 'currency' => '$', 'discount_percent' => 0, 'exchange_rate' => 4000]);
 
@@ -120,5 +120,66 @@ class PaymentLimitTest extends TestCase
         $response->assertRedirect(route('cashier.invoice.print', ['sale' => $sale->id, 'auto' => 1]));
         $response->assertSessionHasNoErrors();
         $response->assertSessionMissing('error');
+    }
+    
+    public function test_tiered_payment_limits_for_usd(): void
+    {
+        foreach ([150 => 200, 250 => 300] as $total => $limit) {
+            [$user, $cart] = $this->setupCart($total);
+
+            $fail = $this->actingAs($user)
+                ->withSession(['cart' => $cart])
+                ->post('/cashier/pos/checkout', [
+                    'method'    => 'cash',
+                    'cash_usd'  => $limit + 1,
+                    'cash_riel' => 0,
+                ]);
+
+            $fail->assertSessionHas('error', __('messages.payment_limit_exceeded'));
+            $fail->assertSessionHasErrors('cash_usd');
+
+            $pass = $this->actingAs($user)
+                ->withSession(['cart' => $cart])
+                ->post('/cashier/pos/checkout', [
+                    'method'    => 'cash',
+                    'cash_usd'  => $limit,
+                    'cash_riel' => 0,
+                ]);
+
+            $sale = Sale::latest()->first();
+            $pass->assertRedirect(route('cashier.invoice.print', ['sale' => $sale->id, 'auto' => 1]));
+        }
+    }
+
+    public function test_tiered_payment_limits_for_riel(): void
+    {
+        $exchangeRate = 4000; // from setupCart settings
+
+        foreach ([150 => 200, 250 => 300] as $total => $limitUsd) {
+            [$user, $cart] = $this->setupCart($total);
+            $limitRiel = $limitUsd * $exchangeRate;
+
+            $fail = $this->actingAs($user)
+                ->withSession(['cart' => $cart])
+                ->post('/cashier/pos/checkout', [
+                    'method'    => 'cash',
+                    'cash_usd'  => 0,
+                    'cash_riel' => $limitRiel + 1,
+                ]);
+
+            $fail->assertSessionHas('error', __('messages.payment_limit_exceeded'));
+            $fail->assertSessionHasErrors('cash_riel');
+
+            $pass = $this->actingAs($user)
+                ->withSession(['cart' => $cart])
+                ->post('/cashier/pos/checkout', [
+                    'method'    => 'cash',
+                    'cash_usd'  => 0,
+                    'cash_riel' => $limitRiel,
+                ]);
+
+            $sale = Sale::latest()->first();
+            $pass->assertRedirect(route('cashier.invoice.print', ['sale' => $sale->id, 'auto' => 1]));
+        }
     }
 }
