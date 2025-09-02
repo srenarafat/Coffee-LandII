@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const exchangeRate = {{ $setting->exchange_rate }};
     const originalTotal = {{ $total ?? 0 }};
     let selectedInput = cashInputUsd;
+    let dynamicMax = 100;
 
 
     const allInputs = document.querySelectorAll('.payment-input');
@@ -240,17 +241,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function clampValues() {
         let usd = parseFloat(cashInputUsd.value) || 0;
-        if (usd > 100) {
-            cashInputUsd.value = '100';
-            usd = 100;
-            showToast("{{ __('messages.payment_limit_exceeded') }}");
+        if (usd > dynamicMax) {
+            cashInputUsd.value = dynamicMax.toString();
+            usd = dynamicMax;
+            showToast("{{ __('messages.payment_limit_exceeded', ['limit' => 100]) }}");
         }
 
         let riel = parseFloat(cashInputRiel.value) || 0;
         if (riel > 400000) {
             cashInputRiel.value = '400000';
             riel = 400000;
-            showToast("{{ __('messages.payment_limit_exceeded') }}");
+            showToast("{{ __('messages.payment_limit_exceeded', ['limit' => 400000]) }}");
         }
 
         return { usd, riel };
@@ -259,6 +260,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateChange() {
         const discountPercent = parseFloat(discountInput.value) || 0;
         const discountedTotal = originalTotal * ((100 - discountPercent) / 100);
+        dynamicMax = Math.min(1000, Math.max(100, Math.floor(discountedTotal / 100) * 100 + 100));
+        cashInputUsd.max = dynamicMax;
+
 
         const { usd, riel } = clampValues();
 

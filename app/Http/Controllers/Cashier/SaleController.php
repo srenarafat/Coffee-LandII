@@ -389,22 +389,26 @@ class SaleController extends Controller
             }
         }
 
-        $validator = Validator::make($request->all(), [
-            'cash_usd'  => 'numeric|max:100',
-            'cash_riel' => 'numeric|max:400000',
-        ]);
-
-        if ($validator->fails()) {
-            return back()
-                ->with('error', __('messages.payment_limit_exceeded'))
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         $subtotal        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
         $discountPercent = floatval($request->input('discount', 0));
         $discountAmount  = $subtotal * ($discountPercent / 100);
         $total           = $subtotal - $discountAmount;
+
+        $dynamicMax = max(100, $total * 2);
+
+        $validator = Validator::make($request->all(), [
+            'cash_usd'  => "numeric|max:$dynamicMax",
+            'cash_riel' => 'numeric|max:400000',
+        ]);
+
+        if ($validator->fails()) {
+            $limit = $validator->errors()->has('cash_usd') ? 100 : 400000;
+            return back()
+                ->with('error', __('messages.payment_limit_exceeded', ['limit' => $dynamicMax]))
+                ->withErrors($validator)
+                ->withInput();
+        }
+
 
         $exchangeRate  = Setting::first()->exchange_rate;
         $cashUsd       = floatval($request->input('cash_usd', 0));

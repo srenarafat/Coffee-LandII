@@ -266,8 +266,7 @@ return [
     'tip_change_unit' => 'Tip: to change unit of this ingredient, use the Unit field above.',
 
     'insufficient_payment' => 'Insufficient payment.',
-    'payment_limit_exceeded' => 'Payment exceeds allowed limit.',
-
+    'payment_limit_exceeded' => 'Payment exceeds allowed limit ($:limit).',
     'todays_sales' => "Today's Sales",
     'orders' => 'Orders',
     'items_sold' => 'Items Sold',
