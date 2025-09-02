@@ -77,12 +77,12 @@ body {
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
                         <input type="number" name="cash_usd" id="cashInputUsd" class="form-control payment-input"
-                            value="0" min="0" max="{{ $limitUsd }}" step="0.01">
+                            value="0" min="0" max="100" step="0.01">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} (៛)</label>
                         <input type="number" name="cash_riel" id="cashInputRiel" class="form-control payment-input"
-                            value="0" min="0" max="{{ $limitRiel }}" step="1">
+                            value="0" min="0" max="400000" step="1">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }})</label>
@@ -273,10 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     [discountInput, cashInputUsd, cashInputRiel].forEach(input => {
-        input.addEventListener('input', () => {
-            input.value = input.value.replace(/[^0-9.]/g, '');
-            updateChange();
-        });
+        input.addEventListener('input', updateChange);
     });
 
 
