@@ -69,20 +69,20 @@ body {
                 <div style="flex: 1 1 55%;">
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="fw-bold mb-0">{{ __('messages.discount_percent') }}</label>
-                        <input type="text" inputmode="decimal" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}"
-                            class="form-control w-50 payment-input">
+                        <input type="number" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}"
+                            class="form-control w-50 payment-input" min="0" max="100" step="0.01">
                     </div>
 
 
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
-                        <input type="text" inputmode="decimal" name="cash_usd" id="cashInputUsd" class="form-control payment-input"
-                            value="0" max="100">
+                        <input type="number" name="cash_usd" id="cashInputUsd" class="form-control payment-input"
+                            value="0" min="0" max="100" step="0.01">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} (៛)</label>
-                        <input type="text" inputmode="decimal" name="cash_riel" id="cashInputRiel" class="form-control payment-input"
-                            value="0" max="400000">
+                        <input type="number" name="cash_riel" id="cashInputRiel" class="form-control payment-input"
+                            value="0" min="0" max="400000" step="1">
                     </div>
                     <div class="mb-2">
                         <label>{{ __('messages.change') }} ({{ optional($setting)->currency ?? '$' }})</label>
@@ -273,7 +273,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     [discountInput, cashInputUsd, cashInputRiel].forEach(input => {
-        input.addEventListener('input', updateChange);
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^0-9.]/g, '');
+            updateChange();
+        });
     });
 
 

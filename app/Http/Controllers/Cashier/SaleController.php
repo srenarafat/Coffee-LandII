@@ -390,8 +390,9 @@ class SaleController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'cash_usd'  => 'numeric|max:100',
-            'cash_riel' => 'numeric|max:400000',
+            'cash_usd'  => 'numeric|min:0|max:100',
+            'cash_riel' => 'numeric|min:0|max:400000',
+            'discount'  => 'nullable|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
