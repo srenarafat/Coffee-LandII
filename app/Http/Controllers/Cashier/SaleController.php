@@ -394,11 +394,13 @@ class SaleController extends Controller
         $discountAmount  = $subtotal * ($discountPercent / 100);
         $total           = $subtotal - $discountAmount;
 
-        $dynamicMax = max(100, $total * 2);
+        $exchangeRate   = Setting::first()->exchange_rate;
+        $dynamicMaxUsd  = min(1000, max(100, floor($total / 100) * 100 + 100));
+        $dynamicMaxRiel = min(400000, floor(($total * $exchangeRate) / 1000) * 1000 + 1000);
 
         $validator = Validator::make($request->all(), [
-            'cash_usd'  => "numeric|max:$dynamicMax",
-            'cash_riel' => 'numeric|max:400000',
+            'cash_usd'  => "numeric|max:$dynamicMaxUsd",
+            'cash_riel' => "numeric|max:$dynamicMaxRiel",
             'discount'  => 'numeric|min:0|max:100',
         ]);
 
@@ -406,7 +408,7 @@ class SaleController extends Controller
             $error = $validator->errors()->first('discount');
 
             if (!$error) {
-                $error = __('messages.payment_limit_exceeded', ['limit' => $dynamicMax]);
+                $error = __('messages.payment_limit_exceeded', ['limit' => $dynamicMaxRiel]);
             }
 
             return back()
@@ -416,10 +418,9 @@ class SaleController extends Controller
         }
 
 
-        $exchangeRate  = Setting::first()->exchange_rate;
-        $cashUsd       = floatval($request->input('cash_usd', 0));
-        $cashRiel      = intval(str_replace(',', '', $request->input('cash_riel', 0)));
-        $totalPaidUsd  = $cashUsd + ($cashRiel / $exchangeRate);
+        $cashUsd      = floatval($request->input('cash_usd', 0));
+        $cashRiel     = intval(str_replace(',', '', $request->input('cash_riel', 0)));
+        $totalPaidUsd = $cashUsd + ($cashRiel / $exchangeRate);
 
         if ($totalPaidUsd < $total) {
             return back()->with('error', __('messages.insufficient_payment'));
