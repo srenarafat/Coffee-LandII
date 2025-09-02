@@ -399,12 +399,18 @@ class SaleController extends Controller
         $validator = Validator::make($request->all(), [
             'cash_usd'  => "numeric|max:$dynamicMax",
             'cash_riel' => 'numeric|max:400000',
+            'discount'  => 'numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
-            $limit = $validator->errors()->has('cash_usd') ? 100 : 400000;
+            $error = $validator->errors()->first('discount');
+
+            if (!$error) {
+                $error = __('messages.payment_limit_exceeded', ['limit' => $dynamicMax]);
+            }
+
             return back()
-                ->with('error', __('messages.payment_limit_exceeded', ['limit' => $dynamicMax]))
+                ->with('error', $error)
                 ->withErrors($validator)
                 ->withInput();
         }
