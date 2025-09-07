@@ -265,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const discountedTotal = originalTotal * ((100 - discountPercent) / 100);
         dynamicMax = Math.min(1000, Math.max(100, Math.floor(discountedTotal / 100) * 100 + 100));
         cashInputUsd.max = dynamicMax;
-
         dynamicMaxRiel = Math.min(4000000, Math.max(400000, Math.floor(discountedTotal / 100) * 400000 + 400000));
         cashInputRiel.max = dynamicMaxRiel;
         const { usd, riel } = clampValues();
