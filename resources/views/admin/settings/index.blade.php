@@ -61,6 +61,7 @@
                     </label>
                     <input type="number" step="0.01" min="0" max="100" class="form-control" id="discount_percent" name="discount_percent"
                         value="{{ old('discount_percent', optional($setting)->discount_percent) }}" required>
+                        <div id="discountAlert" class="text-danger small d-none">Discount cannot exceed 100%</div>
                 </div>
             </div>
 
@@ -98,6 +99,21 @@
                 toast.classList.add('animate__fadeOutUp');
                 setTimeout(() => toast.remove(), 800);
             }, 2000);
+        }
+        
+        const discountInput = document.getElementById('discount_percent');
+        const discountAlert = document.getElementById('discountAlert');
+
+        if (discountInput && discountAlert) {
+            discountInput.addEventListener('input', function () {
+                const value = parseFloat(this.value);
+                if (value > 100) {
+                    this.value = 100;
+                    discountAlert.classList.remove('d-none');
+                } else {
+                    discountAlert.classList.add('d-none');
+                }
+            });
         }
     });
 </script>

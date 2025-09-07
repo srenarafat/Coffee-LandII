@@ -72,7 +72,7 @@ body {
                         <input type="number" name="discount" id="discount" value="{{ old('discount', $discountPercent) }}"
                             class="form-control w-50 payment-input" min="0" max="100" step="0.01">
                     </div>
-
+                    <div id="discountAlert" class="text-danger small d-none">Discount cannot exceed 100%</div>
 
                     <div class="mb-2">
                         <label>{{ __('messages.cash_received') }} ({{ optional($setting)->currency ?? '$' }})</label>
@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const changeUsd = document.getElementById('changeUsd');
     const changeRiel = document.getElementById('changeRiel');
     const totalAmount = document.getElementById('totalAmount');
+    const discountAlert = document.getElementById('discountAlert');
 
 
     const exchangeRate = {{ $setting->exchange_rate }};
@@ -279,10 +280,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     
-    [discountInput, cashInputUsd, cashInputRiel].forEach(input => {
+    [cashInputUsd, cashInputRiel].forEach(input => {
         input.addEventListener('input', updateChange);
     });
 
+    discountInput.addEventListener('input', () => {
+        if (parseFloat(discountInput.value) > 100) {
+            discountInput.value = 100;
+            discountAlert.classList.remove('d-none');
+        } else {
+            discountAlert.classList.add('d-none');
+        }
+        updateChange();
+    });
 
     updateChange();
 });
