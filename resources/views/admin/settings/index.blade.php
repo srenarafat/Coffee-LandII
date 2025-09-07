@@ -59,7 +59,7 @@
                     <label for="discount_percent" class="form-label fw-semibold">
                         🎁 {{ __('messages.discount_percent') }}
                     </label>
-                    <input type="number" step="0.01" class="form-control" id="discount_percent" name="discount_percent"
+                    <input type="number" step="0.01" min="0" max="100" class="form-control" id="discount_percent" name="discount_percent"
                         value="{{ old('discount_percent', optional($setting)->discount_percent) }}" required>
                 </div>
             </div>

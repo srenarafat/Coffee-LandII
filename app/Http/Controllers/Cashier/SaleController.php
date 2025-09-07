@@ -389,10 +389,23 @@ class SaleController extends Controller
             }
         }
 
+        $discountValidator = Validator::make($request->all(), [
+            'discount' => 'numeric|min:0|max:100',
+        ]);
+
+        if ($discountValidator->fails()) {
+            $error = $discountValidator->errors()->first('discount');
+
+            return back()
+                ->with('error', $error)
+                ->withErrors($discountValidator)
+                ->withInput();
+        }
+
         $subtotal        = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
         $discountPercent = floatval($request->input('discount', 0));
         $discountAmount  = $subtotal * ($discountPercent / 100);
-        $total           = $subtotal - $discountAmount;
+        $total           = max(0, $subtotal - $discountAmount);
 
         $exchangeRate   = Setting::first()->exchange_rate;
         $dynamicMaxUsd  = min(1000, max(100, floor($total / 100) * 100 + 100));
@@ -401,15 +414,10 @@ class SaleController extends Controller
         $validator = Validator::make($request->all(), [
             'cash_usd'  => "numeric|max:$dynamicMaxUsd",
             'cash_riel' => "numeric|max:$dynamicMaxRiel",
-            'discount'  => 'numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
-            $error = $validator->errors()->first('discount');
-
-            if (!$error) {
-                $error = __('messages.payment_limit_exceeded', ['limit' => $dynamicMaxRiel]);
-            }
+            $error = __('messages.payment_limit_exceeded', ['limit' => $dynamicMaxRiel]);
 
             return back()
                 ->with('error', $error)
