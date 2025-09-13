@@ -195,8 +195,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.appendNumber = function(num) {
         if (!selectedInput) return;
 
-
         selectedInput.focus(); // 🟢 Force focus so box-shadow works correctly
+        if (num === '.' && (selectedInput === cashInputRiel || selectedInput.value.includes('.'))) return;
 
 
         const val = selectedInput.value;
@@ -205,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             selectedInput.value += num;
         }
-
 
         clampValues();
         selectedInput.dispatchEvent(new Event('input'));
