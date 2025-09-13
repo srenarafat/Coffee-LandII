@@ -196,16 +196,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedInput) return;
 
         selectedInput.focus(); // 🟢 Force focus so box-shadow works correctly
-        if (num === '.' && (selectedInput === cashInputRiel || selectedInput.value.includes('.'))) return;
+        
+        if (num === '.') {
+            if (selectedInput === cashInputRiel || selectedInput.value.includes('.')) return;
+            selectedInput.value += '.';
+            selectedInput.dispatchEvent(new Event('input'));
+            return;
+        }
 
         const val = selectedInput.value;
         if (val === '0' || /^0(?:\.0+)?$/.test(val)) {
-            selectedInput.value = num === '.' ? '0.' : num;
+            selectedInput.value = num;
         } else {
             selectedInput.value += num;
         }
 
-        clampValues();
+        if (!selectedInput.value.endsWith('.')) {
+            clampValues();
+        }
         selectedInput.dispatchEvent(new Event('input'));
     };
 
