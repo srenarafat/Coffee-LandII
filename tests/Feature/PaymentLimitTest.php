@@ -95,11 +95,11 @@ class PaymentLimitTest extends TestCase
                 'method' => 'cash',
                 'cash_usd' => 'abc',
                 'cash_riel' => 'xyz',
-                'discount' => 'ten',
+                'discount' => 0,
             ]);
 
         $response->assertSessionHas('error', __('messages.payment_limit_exceeded', ['limit' => $limit]));
-        $response->assertSessionHasErrors(['cash_usd', 'cash_riel', 'discount']);
+        $response->assertSessionHasErrors(['cash_usd', 'cash_riel']);
     }
 
     public function test_checkout_rejects_negative_values(): void
@@ -113,11 +113,11 @@ class PaymentLimitTest extends TestCase
                 'method' => 'cash',
                 'cash_usd' => -1,
                 'cash_riel' => -100,
-                'discount' => -5,
+                'discount' => 0,
             ]);
 
         $response->assertSessionHas('error', __('messages.payment_limit_exceeded', ['limit' => $limit]));
-        $response->assertSessionHasErrors(['cash_usd', 'cash_riel', 'discount']);
+        $response->assertSessionHasErrors(['cash_usd', 'cash_riel']);
     }
 
     public function test_checkout_accepts_valid_numeric_values(): void

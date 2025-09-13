@@ -130,22 +130,22 @@ body {
 
 
             {{-- Payment Method --}}
-            <div class="mb-4">
-                <div class="d-flex justify-content-between flex-wrap gap-2 pt-2">
-                    @foreach (['Cash' => 'Cash', 'ABA' => 'ABA', 'WING' => 'WING', 'ACLEDA' => 'ACLEDA'] as $value =>
-                    $label)
-                    <div class="text-center">
-                        <input type="radio" class="btn-check" name="method" id="method-{{ $value }}"
-                            value="{{ $value }}" {{ $value == 'cash' ? 'checked' : '' }}>
-                        <label class="btn btn-light" for="method-{{ $value }}">
-                            <img src="{{ asset("storage/payment_logos/{$value}.png") }}" width="80"
-                                alt="{{ $label }}"><br>
-                            <span class="fw-semibold">{{ $label }}</span>
-                        </label>
-                    </div>
-                    @endforeach
-                </div>
+<div class="mb-4">
+    <div class="d-flex justify-content-between flex-wrap gap-2 pt-2">
+        @foreach (['Cash' => 'Cash', 'ABA' => 'ABA', 'WING' => 'WING', 'ACLEDA' => 'ACLEDA'] as $value => $label)
+            @php $key = strtolower($value); @endphp
+            <div class="text-center">
+                <input type="radio" class="btn-check" name="method" id="method-{{ $value }}"
+                       value="{{ $value }}" {{ $key === 'cash' ? 'checked' : '' }}>
+                <label class="btn btn-light" for="method-{{ $value }}">
+                    <img src="{{ asset('storage/payment_logos/'.$key.'.png') }}" width="80" alt="{{ $label }}"><br>
+                    <span class="fw-semibold">{{ $label }}</span>
+                </label>
             </div>
+        @endforeach
+    </div>
+</div>
+
 
 
             {{-- Submit --}}
