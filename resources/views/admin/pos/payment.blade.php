@@ -199,14 +199,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (num === '.') {
             if (selectedInput === cashInputRiel || selectedInput.value.includes('.')) return;
-            selectedInput.value += '.';
+            selectedInput.value = (selectedInput.value === '' || selectedInput.value === '0')
+                ? '0.'
+                : selectedInput.value + '.';
             selectedInput.dispatchEvent(new Event('input'));
             return;
         }
 
+        if (!/^\d$/.test(num)) return;
+
         const val = selectedInput.value;
         if (val === '0' || /^0(?:\.0+)?$/.test(val)) {
-            selectedInput.value = num === '.' ? '0.' : num;
+            selectedInput.value = num;
         } else {
             selectedInput.value += num;
         }
